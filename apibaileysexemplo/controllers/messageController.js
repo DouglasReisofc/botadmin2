@@ -1,3 +1,5 @@
+const P = require("pino");
+const { downloadMediaMessage } = require("@whiskeysockets/baileys");
 const { getInstance, getSession } = require('../sessions/sessionManager');
 const { log } = require('../utils/logger');
 
@@ -100,4 +102,116 @@ async function sendPoll(req, res) {
   }
 }
 
-module.exports = { sendMessage, sendMedia, deleteMessage, sendPoll };
+// export at bottom
+
+async function sendReaction(req, res) {
+  const { instance, key, reaction } = req.body;
+  const session = getInstance(instance);
+  if (!session) return res.status(404).json({ error: 'Instance not found' });
+  try {
+    await session.sendMessage(key.remoteJid, { react: { text: reaction, key } });
+    res.json({ status: 'ok' });
+  } catch (e) {
+    log(`[sendReaction] error: ${e.message}`);
+    res.status(500).json({ error: e.message });
+  }
+}
+
+async function editMessage(req, res) {
+  const { instance, chatId, messageId, text } = req.body;
+  const session = getInstance(instance);
+  if (!session) return res.status(404).json({ error: 'Instance not found' });
+  try {
+    await session.sendMessage(chatId, { text, edit: messageId });
+    res.json({ status: 'edited' });
+  } catch (e) {
+    log(`[editMessage] error: ${e.message}`);
+    res.status(500).json({ error: e.message });
+  }
+}
+
+async function forwardWithMention(req, res) {
+  const { instance, number, messageId, newCaption = '' } = req.body;
+  const session = getSession(instance);
+  if (!session) return res.status(404).json({ error: 'Instance not found' });
+  try {
+    const jid = `${number}@s.whatsapp.net`;
+    const msg = await session.store.loadMessage(jid, messageId);
+    if (!msg) return res.status(404).json({ error: 'Message not found' });
+    const participants = session.store.chats.get(jid)?.participants?.map(p => p.id) || [];
+    await session.sock.sendMessage(jid, { forward: msg, text: newCaption, mentions: participants });
+    res.json({ status: 'forwarded' });
+  } catch (e) {
+    log(`[forwardWithMention] error: ${e.message}`);
+    res.status(500).json({ error: e.message });
+  }
+}
+
+async function convertQuotedToSticker(req, res) {
+  const { instance, remoteJid, quotedId, messageId } = req.body;
+  const session = getSession(instance);
+  if (!session) return res.status(404).json({ error: 'Instance not found' });
+  try {
+    const id = quotedId || messageId;
+    const msg = await session.store.loadMessage(remoteJid, id);
+    if (!msg) return res.status(404).json({ error: 'Message not found' });
+    const buffer = await downloadMediaMessage(msg, 'buffer', {}, { logger: P({ level: 'silent' }), reuploadRequest: session.sock.updateMediaMessage });
+    await session.sock.sendMessage(remoteJid, { sticker: buffer }, { quoted: msg });
+    res.json({ status: 'sticker sent' });
+  } catch (e) {
+    log(`[convertQuotedToSticker] error: ${e.message}`);
+    res.status(500).json({ error: e.message });
+  }
+}
+
+async function downloadMedia(req, res) {
+  const { instance, remoteJid, messageId } = req.body;
+  const session = getSession(instance);
+  if (!session) return res.status(404).json({ error: 'Instance not found' });
+  try {
+    const msg = await session.store.loadMessage(remoteJid, messageId);
+    if (!msg) return res.status(404).json({ error: 'Message not found' });
+    const buffer = await downloadMediaMessage(msg, 'buffer', {}, { logger: P({ level: 'silent' }), reuploadRequest: session.sock.updateMediaMessage });
+    res.json({ data: buffer.toString('base64') });
+  } catch (e) {
+    log(`[downloadMedia] error: ${e.message}`);
+    res.status(500).json({ error: e.message });
+  }
+}
+
+async function sendStickerFromUrl(req, res) {
+  const { instance, number, url, quotedId } = req.body;
+  const session = getInstance(instance);
+  if (!session) return res.status(404).json({ error: 'Instance not found' });
+  try {
+    const jid = `${number}@s.whatsapp.net`;
+    await session.sendMessage(jid, { sticker: { url } }, { quoted: buildQuoted(jid, quotedId) });
+    res.json({ status: 'sticker sent' });
+  } catch (e) {
+    log(`[sendStickerFromUrl] error: ${e.message}`);
+    res.status(500).json({ error: e.message });
+  }
+}
+
+async function pinQuoted(req, res) {
+  res.status(501).json({ error: 'not implemented' });
+}
+
+async function unpin(req, res) {
+  res.status(501).json({ error: 'not implemented' });
+}
+
+module.exports = {
+  sendMessage,
+  sendMedia,
+  deleteMessage,
+  sendPoll,
+  sendReaction,
+  editMessage,
+  forwardWithMention,
+  convertQuotedToSticker,
+  downloadMedia,
+  sendStickerFromUrl,
+  pinQuoted,
+  unpin
+};

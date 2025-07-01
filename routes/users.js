@@ -1044,21 +1044,22 @@ router.post('/enviarmensagem', isAuthenticated, upload.single('arquivo'), async 
 
             console.log('📤 Enviando mídia:', payload);
 
-            const response = await axios.post(`${apiUrl}/message/sendMedia/${instance}`, payload, {
+            const response = await axios.post(`${apiUrl}/api/message/media`, { instance, ...payload }, {
                 headers: { apikey }
             });
 
             console.log('✅ Mídia enviada:', response.data);
         } else if (mensagem) {
             const payload = {
+                instance,
                 number: grupo,
-                text: mensagem,
+                message: mensagem,
                 mentionAll: !!mencionarTodos
             };
 
             console.log('📤 Enviando texto:', payload);
 
-            const response = await axios.post(`${apiUrl}/message/sendText/${instance}`, payload, {
+            const response = await axios.post(`${apiUrl}/api/message`, payload, {
                 headers: { apikey }
             });
 

@@ -30,7 +30,20 @@ const {
   listInstances,
   getRecord
 } = require('../sessions/sessionManager');
-const { sendMessage, sendMedia, deleteMessage, sendPoll } = require('../controllers/messageController');
+const {
+  sendMessage,
+  sendMedia,
+  deleteMessage,
+  sendPoll,
+  sendReaction,
+  editMessage,
+  forwardWithMention,
+  convertQuotedToSticker,
+  downloadMedia,
+  sendStickerFromUrl,
+  pinQuoted,
+  unpin
+} = require('../controllers/messageController');
 const {
   createGroup,
   updateSubject,
@@ -47,7 +60,8 @@ const {
   updateDescription,
   updateSetting,
   toggleEphemeral,
-  listGroups
+  listGroups,
+  openGroupWindow
 } = require('../controllers/groupController');
 const { fetchStatus, block, unblock } = require('../controllers/contactController');
 
@@ -120,6 +134,14 @@ router.post('/message', checkInstance, sendMessage);
 router.post('/message/media', checkInstance, sendMedia);
 router.post('/message/poll', checkInstance, sendPoll);
 router.post('/message/delete', checkInstance, deleteMessage);
+router.post('/message/sendReaction', checkInstance, sendReaction);
+router.post('/message/edit', checkInstance, editMessage);
+router.post('/message/forwardWithMention', checkInstance, forwardWithMention);
+router.post('/message/convertQuotedToSticker', checkInstance, convertQuotedToSticker);
+router.post('/message/downloadMedia', checkInstance, downloadMedia);
+router.post('/message/sendStickerFromUrl', checkInstance, sendStickerFromUrl);
+router.post('/message/pinQuoted', checkInstance, pinQuoted);
+router.post('/message/unpin', checkInstance, unpin);
 
 // Group endpoints
 router.post('/group', checkInstance, createGroup);
@@ -138,6 +160,7 @@ router.post('/group/:id/description', checkInstance, updateDescription);
 router.post('/group/:id/setting', checkInstance, updateSetting);
 router.post('/group/:id/ephemeral', checkInstance, toggleEphemeral);
 router.get('/groups', checkInstance, listGroups);
+router.post('/group/:id/open', checkInstance, openGroupWindow);
 
 // Contact actions (PV)
 router.get('/contact/:id/status', checkInstance, fetchStatus);

@@ -14,52 +14,41 @@ function headers(apiKey) {
 
 async function sendText(serverUrl, apiKey, instance, number, text, quoted = null, mentionAll = false, mentionIds = []) {
   const base = sanitizeBase(serverUrl);
-  const payload = { number, text };
-  if (quoted) {
-    payload.quoted = typeof quoted === 'string' ? { key: { id: quoted } } : quoted;
-  }
+  const payload = { instance, number, message: text };
+  if (quoted) payload.quotedId = typeof quoted === 'string' ? quoted : quoted.key?.id;
   if (mentionAll) payload.mentionAll = true;
   if (mentionIds) {
     const arr = Array.isArray(mentionIds) ? mentionIds : [mentionIds];
     if (arr.length) payload.mentionIds = arr;
   }
-  const { data } = await axios.post(
-    `${base}/message/sendText/${instance}`,
-    payload,
-    { headers: headers(apiKey) }
-  );
+  const { data } = await axios.post(`${base}/api/message`, payload, { headers: headers(apiKey) });
   return data?.messageId || data?.id || null;
 }
 
 async function sendMedia(serverUrl, apiKey, instance, number, mediatype, mimetype, caption, media, fileName, quoted = null, mentionAll = false, mentionIds = []) {
   const base = sanitizeBase(serverUrl);
-  const payload = { number, mediatype, mimetype, caption, media, fileName };
-  if (quoted) {
-    payload.quoted = typeof quoted === 'string' ? { key: { id: quoted } } : quoted;
-  }
+  const payload = { instance, number, mimetype, media, caption, fileName };
+  if (quoted) payload.quotedId = typeof quoted === 'string' ? quoted : quoted.key?.id;
   if (mentionAll) payload.mentionAll = true;
   if (mentionIds) {
     const arr = Array.isArray(mentionIds) ? mentionIds : [mentionIds];
     if (arr.length) payload.mentionIds = arr;
   }
-  const { data } = await axios.post(
-    `${base}/message/sendMedia/${instance}`,
-    payload,
-    { headers: headers(apiKey) }
-  );
+  if (mediatype) payload.mediatype = mediatype;
+  const { data } = await axios.post(`${base}/api/message/media`, payload, { headers: headers(apiKey) });
   return data?.messageId || data?.id || null;
 }
 
 async function sendReaction(serverUrl, apiKey, instance, key, reaction) {
   const base = sanitizeBase(serverUrl);
-  const payload = { key, reaction };
-  await axios.post(`${base}/message/sendReaction/${instance}`, payload, { headers: headers(apiKey) });
+  const payload = { instance, key, reaction };
+  await axios.post(`${base}/api/message/sendReaction`, payload, { headers: headers(apiKey) });
 }
 
 async function sendPoll(serverUrl, apiKey, instance, number, question, options, allowsMultipleAnswers = false, mentionAll = false) {
   const base = sanitizeBase(serverUrl);
-  const payload = { number, question, options, allowsMultipleAnswers, mentionAll };
-  const { data } = await axios.post(`${base}/message/sendPoll/${instance}`, payload, { headers: headers(apiKey) });
+  const payload = { instance, number, question, options, multiple: allowsMultipleAnswers, mentionAll };
+  const { data } = await axios.post(`${base}/api/message/poll`, payload, { headers: headers(apiKey) });
   return data?.messageId || data?.id || null;
 }
 
@@ -76,32 +65,29 @@ async function markMessageAsRead(serverUrl, apiKey, instance, chatId) {
 }
 
 // Delete a message for everyone using the remote WhatsApp API
-async function deleteMessageForEveryone(serverUrl, apiKey, instance, messageId, chatId, participant, fromMe = true) {
-  const payload = { id: messageId, remoteJid: chatId, fromMe };
+async function deleteMessageForEveryone(serverUrl, apiKey, instance, messageId, chatId) {
   const base = sanitizeBase(serverUrl);
-  await axios.delete(`${base}/chat/deleteMessageForEveryone/${instance}`, {
-    data: payload,
-    headers: headers(apiKey)
-  });
+  const payload = { instance, number: chatId, messageId };
+  await axios.post(`${base}/api/message/delete`, payload, { headers: headers(apiKey) });
 }
 
 async function editText(serverUrl, apiKey, instance, chatId, messageId, text) {
   const base = sanitizeBase(serverUrl);
-  const payload = { chatId, messageId, text };
-  await axios.post(`${base}/message/edit/${instance}`, payload, { headers: headers(apiKey) });
+  const payload = { instance, chatId, messageId, text };
+  await axios.post(`${base}/api/message/edit`, payload, { headers: headers(apiKey) });
 }
 
 async function updateGroupParticipants(serverUrl, apiKey, instance, groupJid, participants, action) {
   const base = sanitizeBase(serverUrl);
-  const url = `${base}/group/updateParticipant/${instance}?groupJid=${groupJid}`;
-  const payload = { action, participants };
+  const url = `${base}/api/group/${groupJid}/${action}`;
+  const payload = { instance, participants };
   await axios.post(url, payload, { headers: headers(apiKey) });
 }
 
 async function setMessagesAdminsOnly(serverUrl, apiKey, instance, groupJid, onlyAdmins) {
   const base = sanitizeBase(serverUrl);
-  const payload = { groupJid, onlyAdmins };
-  await axios.post(`${base}/group/setMessagesAdminsOnly/${instance}`, payload, { headers: headers(apiKey) });
+  const payload = { instance, setting: onlyAdmins ? 'announcement' : 'not_announcement' };
+  await axios.post(`${base}/api/group/${groupJid}/setting`, payload, { headers: headers(apiKey) });
 }
 
 // === IA Utilities ===
@@ -132,76 +118,68 @@ async function getGroqReply(history, prompt, apiKey = GROQ_API_KEY) {
 
 async function acceptGroupInvite(serverUrl, instance, inviteCode, apiKey) {
   const base = sanitizeBase(serverUrl);
-  const url = `${base}/group/acceptGroupInvite/${instance}?inviteCode=${inviteCode}`;
-  const { data } = await axios.get(url, { headers: headers(apiKey) });
+  const url = `${base}/api/group/join`;
+  const { data } = await axios.post(url, { instance, code: inviteCode }, { headers: headers(apiKey) });
   return data;
 }
 
 async function getGroupInviteInfo(serverUrl, instance, inviteCode, apiKey) {
   const base = sanitizeBase(serverUrl);
-  const url = `${base}/group/inviteInfo/${instance}?inviteCode=${inviteCode}`;
+  const url = `${base}/api/group/invite/${inviteCode}?instance=${instance}`;
   const { data } = await axios.get(url, { headers: headers(apiKey) });
   return data;
 }
 
 async function findGroupInfos(serverUrl, instance, groupJid, apiKey) {
   const base = sanitizeBase(serverUrl);
-  const url = `${base}/group/findGroupInfos/${instance}?groupJid=${groupJid}`;
+  const url = `${base}/api/group/${groupJid}?instance=${instance}`;
   try {
     const { data } = await axios.get(url, { headers: headers(apiKey) });
     return data;
   } catch (err) {
     console.error('findGroupInfos error:', err.message);
-    throw err; // propagate so callers can fallback correctly
+    throw err;
   }
 }
 
 async function fixarMensagem(serverUrl, apiKey, instance, remoteJid, quotedId, duration) {
   const base = sanitizeBase(serverUrl);
-  const payload = { remoteJid, quotedId, duration };
-  await axios.post(`${base}/message/pinQuoted/${instance}`, payload, { headers: headers(apiKey) });
+  const payload = { instance, remoteJid, quotedId, duration };
+  await axios.post(`${base}/api/message/pinQuoted`, payload, { headers: headers(apiKey) });
 }
 
 async function desfixarMensagem(serverUrl, apiKey, instance, remoteJid, quotedId) {
   const base = sanitizeBase(serverUrl);
-  const serialized = `true_${remoteJid}_${quotedId}`;
-  await axios.post(`${base}/message/unpin/${instance}`, { serialized }, { headers: headers(apiKey) });
+  const payload = { instance, remoteJid, quotedId };
+  await axios.post(`${base}/api/message/unpin`, payload, { headers: headers(apiKey) });
 }
 
 async function openGroupWindow(serverUrl, apiKey, instance, groupJid) {
   const base = sanitizeBase(serverUrl);
-  const payload = { groupJid };
-  await axios.post(`${base}/group/openChatWindow/${instance}`, payload, { headers: headers(apiKey) });
+  const payload = { instance, id: groupJid };
+  await axios.post(`${base}/api/group/${groupJid}/open`, payload, { headers: headers(apiKey) }).catch(() => {});
 }
 
 // Converte uma mensagem (própria ou citada) em figurinha
 async function convertQuotedToSticker(serverUrl, apiKey, instance, remoteJid, opts) {
   const base = sanitizeBase(serverUrl);
-  const payload = { remoteJid };
+  const payload = { instance, remoteJid };
   if (opts?.quotedId) payload.quotedId = opts.quotedId;
   if (opts?.messageId) payload.messageId = opts.messageId;
-  const { data } = await axios.post(
-    `${base}/message/convertQuotedToSticker/${instance}`,
-    payload,
-    { headers: headers(apiKey) }
-  );
+  const { data } = await axios.post(`${base}/api/message/convertQuotedToSticker`, payload, { headers: headers(apiKey) });
   return data;
 }
 async function forwardWithMentionAll(serverUrl, apiKey, instance, number, messageId, newCaption = '') {
   const base = sanitizeBase(serverUrl);
-  const payload = { number, messageId };
+  const payload = { instance, number, messageId };
   if (newCaption) payload.newCaption = newCaption;
-  const { data } = await axios.post(
-    `${base}/message/forwardWithMention/${instance}`,
-    payload,
-    { headers: headers(apiKey) }
-  );
+  const { data } = await axios.post(`${base}/api/message/forwardWithMention`, payload, { headers: headers(apiKey) });
   return data;
 }
 async function downloadMedia(serverUrl, apiKey, instance, remoteJid, messageId) {
   const base = sanitizeBase(serverUrl);
-  const payload = { remoteJid, messageId };
-  const { data } = await axios.post(`${base}/message/downloadMedia/${instance}`, payload, { headers: headers(apiKey) });
+  const payload = { instance, remoteJid, messageId };
+  const { data } = await axios.post(`${base}/api/message/downloadMedia`, payload, { headers: headers(apiKey) });
   return data;
 }
 
@@ -275,13 +253,9 @@ async function synthesizeElevenTTS() { }
 // Envia um sticker a partir de uma URL
 async function sendStickerFromUrl(serverUrl, apiKey, instance, number, url, quotedId) {
   const base = sanitizeBase(serverUrl);
-  const payload = { number, url };
+  const payload = { instance, number, url };
   if (quotedId) payload.quotedId = quotedId;
-  const { data } = await axios.post(
-    `${base}/message/sendStickerFromUrl/${instance}`,
-    payload,
-    { headers: headers(apiKey) }
-  );
+  const { data } = await axios.post(`${base}/api/message/sendStickerFromUrl`, payload, { headers: headers(apiKey) });
   return data?.messageId || null;
 }
 

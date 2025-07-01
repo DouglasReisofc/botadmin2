@@ -180,6 +180,19 @@ async function toggleEphemeral(req, res) {
   }
 }
 
+async function openGroupWindow(req, res) {
+  const { id } = req.params;
+  const { instance } = req.body;
+  const session = getInstance(instance);
+  if (!session) return res.status(404).json({ error: 'Instance not found' });
+  try {
+    await session.groupMetadata(jid(id));
+    res.json({ status: 'ok' });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+}
+
 async function listGroups(req, res) {
   const { instance } = req.query;
   const session = getInstance(instance);
@@ -208,5 +221,6 @@ module.exports = {
   updateDescription,
   updateSetting,
   toggleEphemeral,
-  listGroups
+  listGroups,
+  openGroupWindow
 };

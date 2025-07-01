@@ -44,9 +44,9 @@ function buildConfigFields(config) {
 async function enviarTextoSite(texto, numero = null) {
     const config = (await SiteConfig.findOne()) || {};
     const { baseUrl, apiKey, instance, numero: numPadrao } = buildConfigFields(config);
-    const url = `${baseUrl}/message/sendText/${instance}`;
+    const url = `${baseUrl}/api/message`;
     const headers = { 'Content-Type': 'application/json', apikey: apiKey };
-    const data = { number: numero || numPadrao, text: texto };
+    const data = { instance, number: numero || numPadrao, message: texto };
     try {
         await axios.post(url, data, { headers });
     } catch (error) {
