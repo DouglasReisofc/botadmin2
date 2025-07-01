@@ -1,0 +1,232 @@
+<div class="cards">
+  <div class="card">
+    <div class="card-header">
+      <h3>Mensagem de Explicação</h3>
+    </div>
+    <% if (guide && guide.fileName) { %>
+      <% if (guide.type === 'video') { %>
+        <video src="<%= guide.fileName %>" controls style="width:100%; max-height:240px; margin-bottom:1rem;" aria-label="Vídeo de explicação"></video>
+      <% } else if (guide.type === 'image') { %>
+        <img src="<%= guide.fileName %>" style="width:100%; max-height:240px; margin-bottom:1rem;" alt="Imagem de explicação" />
+      <% } %>
+    <% } %>
+    <p style="margin-bottom:1rem;"><%= guide ? guide.message : 'Nenhuma mensagem definida.' %></p>
+    <button onclick="abrirMsgComandos()" class="submit-btn">Editar Mensagem</button>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Comandos Cadastrados</h3>
+    </div>
+    <div class="scroll-container">
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>Comando</th>
+            <th>Descrição</th>
+            <th>Categoria</th>
+            <th>Slug</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% comandos.forEach(c => { %>
+            <tr>
+              <td><%= c.name %></td>
+              <td><%= c.description %></td>
+              <td><%= c.category %></td>
+              <td><a href="/comandos/<%= c.slug %>" target="_blank"><%= c.slug %></a></td>
+              <td class="bot-actions">
+                <button class="bot-btn editar" onclick="abrirEditar('<%= c._id %>','<%- encodeURIComponent(c.name) %>','<%- encodeURIComponent(c.description) %>','<%- encodeURIComponent(c.category) %>','<%- encodeURIComponent(c.fileName || '') %>','<%= c.type %>')">Editar</button>
+                <button class="bot-btn excluir" onclick="abrirExcluir('<%= c._id %>')">Deletar</button>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <button onclick="abrirCriar()" class="submit-btn">Novo Comando</button>
+    <button onclick="abrirNovaCategoria()" class="submit-btn">Nova Categoria</button>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Categorias de Comandos</h3>
+    </div>
+    <div class="scroll-container">
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% cats.forEach(cat => { %>
+            <tr>
+              <td><%= cat.name %></td>
+              <td class="bot-actions">
+                <button class="bot-btn editar" onclick="abrirEditarCategoria('<%= cat._id %>','<%- encodeURIComponent(cat.name) %>')">Editar</button>
+                <button class="bot-btn excluir" onclick="abrirExcluirCategoria('<%= cat._id %>')">Deletar</button>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Tutoriais Explicativos</h3>
+    </div>
+    <div class="scroll-container">
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>Título</th>
+            <th>ID</th>
+            <th>Slug</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% tutorials.forEach(t => { %>
+            <tr>
+              <td><%= t.title %></td>
+              <td><%= t.tutorialId %></td>
+              <td><a href="/tutorials/<%= t.slug %>" target="_blank"><%= t.slug %></a></td>
+              <td class="bot-actions">
+                <button class="bot-btn editar" onclick="abrirEditarTutorial('<%= t._id %>','<%- encodeURIComponent(t.title) %>','<%- encodeURIComponent(t.tutorialId) %>','<%- encodeURIComponent(t.message) %>','<%- encodeURIComponent(t.fileName || '') %>','<%= t.type %>')">Editar</button>
+                <button class="bot-btn excluir" onclick="abrirExcluirTutorial('<%= t._id %>')">Deletar</button>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <button onclick="abrirCriarTutorial()" class="submit-btn">Novo Tutorial</button>
+  </div>
+</div>
+
+<div class="modal" id="msgCmdModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal('msgCmdModal')">&times;</button>
+    <h2>Mensagem de Explicação</h2>
+    <form action="/admin/comandos/guia" method="POST" enctype="multipart/form-data" class="modal-form">
+      <label for="msgText">Mensagem</label>
+      <textarea id="msgText" name="message" rows="4" required><%= guide ? guide.message : '' %></textarea>
+      <label for="msgVideoFile">Upload de vídeo (opcional)</label>
+      <input id="msgVideoFile" type="file" name="videoFile" accept="video/*">
+      <label for="msgImageFile">Upload de imagem (opcional)</label>
+      <input id="msgImageFile" type="file" name="imageFile" accept="image/*">
+      <div class="modal-footer">
+        <button type="button" class="submit-btn" onclick="closeModal('msgCmdModal')">Cancelar</button>
+        <button type="submit" class="submit-btn">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="cmdModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal('cmdModal')">&times;</button>
+    <h2 id="cmdTitle">Comando</h2>
+    <form id="cmdForm" class="modal-form" method="POST" enctype="multipart/form-data">
+      <input type="hidden" id="cmdId" name="id">
+      <label for="cmdName">Comando</label>
+      <input type="text" id="cmdName" name="name" required>
+      <label for="cmdDesc">Descrição</label>
+      <textarea id="cmdDesc" name="description" required></textarea>
+      <label for="cmdCategory">Categoria</label>
+      <select id="cmdCategory" name="category" required>
+        <option value="">Selecione</option>
+        <% categories.forEach(cat => { %>
+          <option value="<%= cat %>"><%= cat %></option>
+        <% }) %>
+      </select>
+      <div id="cmdFilePreview" style="margin:0.5rem 0;"></div>
+      <label for="cmdFile">Arquivo Tutorial (opcional)</label>
+      <input id="cmdFile" type="file" name="tutorialFile" accept="video/*,image/*">
+      <div class="modal-footer">
+        <button type="button" class="submit-btn" onclick="closeModal('cmdModal')">Cancelar</button>
+        <button type="submit" class="submit-btn">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="cmdDeleteModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal('cmdDeleteModal')">&times;</button>
+    <h2>Excluir Comando?</h2>
+    <div class="modal-footer">
+      <button class="submit-btn" onclick="confirmarExcluir()">Sim, deletar</button>
+      <button class="submit-btn" onclick="closeModal('cmdDeleteModal')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="catModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal('catModal')">&times;</button>
+    <h2 id="catTitle">Nova Categoria</h2>
+    <form id="catForm" action="/admin/comandos/categorias" method="POST" class="modal-form">
+      <input type="hidden" id="catId" name="id">
+      <label for="catName">Nome</label>
+      <input type="text" id="catName" name="name" required>
+      <div class="modal-footer">
+        <button type="button" class="submit-btn" onclick="closeModal('catModal')">Cancelar</button>
+        <button type="submit" class="submit-btn">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="catDeleteModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal('catDeleteModal')">&times;</button>
+    <h2>Excluir Categoria?</h2>
+    <div class="modal-footer">
+      <button class="submit-btn" onclick="confirmarExcluirCategoria()">Deletar</button>
+      <button class="submit-btn" onclick="closeModal('catDeleteModal')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="tutorialModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal('tutorialModal')">&times;</button>
+    <h2 id="tutorialTitle">Novo Tutorial</h2>
+    <form id="tutorialForm" method="POST" enctype="multipart/form-data" class="modal-form">
+      <input type="hidden" id="tutorialHiddenId" name="id">
+      <label for="tutTitle">Título</label>
+      <input id="tutTitle" type="text" name="title" required>
+      <label for="tutId">ID</label>
+      <input id="tutId" type="text" name="tutorialId" required>
+      <label for="tutMsg">Mensagem</label>
+      <textarea id="tutMsg" name="message" rows="4" required></textarea>
+      <div id="tutFilePreview" style="margin:0.5rem 0;"></div>
+      <label for="tutFile">Arquivo Tutorial (opcional)</label>
+      <input id="tutFile" type="file" name="tutorialFile" accept="video/*,image/*">
+      <div class="modal-footer">
+        <button type="button" class="submit-btn" onclick="closeModal('tutorialModal')">Cancelar</button>
+        <button type="submit" class="submit-btn">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="tutorialDeleteModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal('tutorialDeleteModal')">&times;</button>
+    <h2>Excluir Tutorial?</h2>
+    <div class="modal-footer">
+      <button class="submit-btn" onclick="confirmarExcluirTutorial()">Deletar</button>
+      <button class="submit-btn" onclick="closeModal('tutorialDeleteModal')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/admin.js"></script>
+<script src="/js/admin/comandos.js"></script>

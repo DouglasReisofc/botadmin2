@@ -1,0 +1,62 @@
+<h2 class="welcome">Escolha um plano</h2>
+<p class="subtitle">O valor será descontado do seu saldo. Escolha um plano novo ou renove o atual.</p>
+
+<% if (user.planoContratado && user.planoVencimento) { %>
+  <section class="plan-current">
+    <h3><i class="fa-solid fa-circle-info"></i> Plano atual</h3>
+    <ul>
+      <li><strong>Nome:</strong> <%= user.planoContratado.nome %></li>
+      <li><strong>Preço:</strong> R$ <%= user.planoContratado.preco.toFixed(2) %></li>
+      <li><strong>Vencimento:</strong> <%= new Date(user.planoVencimento).toLocaleDateString('pt-BR') %></li>
+      <li><strong>Limites:</strong> <%= user.planoContratado.limiteGrupos %> grupo(s) /
+        <%= user.planoContratado.limiteInstancias === 0 ? 'Sem instância dedicada' : user.planoContratado.limiteInstancias + ' Própria' %></li>
+    </ul>
+    <form action="/usuario/renovar-plano" method="POST">
+      <button type="submit" class="submit-btn">Renovar plano</button>
+    </form>
+  </section>
+<% } %>
+
+<div class="cards">
+  <% planos.forEach(plano => { %>
+    <div class="card">
+      <h3><%= plano.nome %></h3>
+      <p class="price">R$ <%= plano.preco.toFixed(2) %> / mês</p>
+      <ul class="plan-details">
+        <li><i class="fa-solid fa-calendar-alt"></i> Duração: <strong><%= plano.duracao %> dias</strong></li>
+        <li><i class="fa-solid fa-users"></i> Limite de grupos: <strong><%= plano.limiteGrupos %></strong></li>
+        <li><i class="fa-solid fa-server"></i> Instância:
+          <strong>
+            <%= plano.limiteInstancias === 0 ? 'Sem instância dedicada' : plano.limiteInstancias + ' dedicada' + (plano.limiteInstancias > 1 ? 's' : '') %>
+          </strong>
+        </li>
+        <% if (plano.includedAds > 0) { %>
+          <li><i class="fa-solid fa-bullhorn"></i> <%= plano.includedAds %> anúncio(s) incluso(s)</li>
+        <% } %>
+        <% if (plano.includedShortLinks > 0) { %>
+          <li><i class="fa-solid fa-link"></i> <%= plano.includedShortLinks %> shortlink(s) incluso(s)</li>
+        <% } %>
+        <% const cmds = Object.keys(plano.allowedCommands || {}).filter(c => plano.allowedCommands[c]); %>
+        <% if (cmds.length) { %>
+          <li><i class="fa-solid fa-check"></i> Comandos:</li>
+          <% cmds.forEach(function(c){ %>
+            <li class="cmd-item"><%= c %></li>
+          <% }); %>
+        <% } %>
+        <% if (plano.descricao) { %>
+          <li><i class="fa-solid fa-info-circle"></i> <%= plano.descricao %></li>
+        <% } %>
+      </ul>
+      <form action="/usuario/comprar-plano" method="POST">
+        <input type="hidden" name="planoId" value="<%= plano._id %>">
+        <button type="submit" class="submit-btn">
+          Assinar plano
+          <% if (plano.testeGratis && !user.testeGratisUsado) { %>
+            <br><small>Teste grátis por <%= plano.diasTeste || 7 %> dias</small>
+          <% } %>
+        </button>
+      </form>
+    </div>
+  <% }) %>
+
+</div>

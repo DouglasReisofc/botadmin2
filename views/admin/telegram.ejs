@@ -1,0 +1,16 @@
+<div class="config-wrapper">
+  <h3>Notificações do Telegram</h3>
+  <form action="/admin/telegram" method="POST" class="whatsapp-form">
+    <label for="telegramToken">Bot Token:</label>
+    <input type="text" id="telegramToken" name="telegramToken" value="<%= config.telegramToken || '' %>">
+    <label for="telegramChatId">ID do Grupo:</label>
+    <input type="text" id="telegramChatId" name="telegramChatId" value="<%= config.telegramChatId || '' %>">
+    <label for="telegramChannelId">ID do Canal:</label>
+    <input type="text" id="telegramChannelId" name="telegramChannelId" value="<%= config.telegramChannelId || '' %>">
+    <label class="switch-label">
+      <input type="checkbox" id="telegramNotify" name="telegramNotify" value="1" <%= config.telegramNotify ? 'checked' : '' %>>
+      Ativar notificações
+    </label>
+    <button type="submit" class="submit-btn">Salvar</button>
+  </form>
+</div>

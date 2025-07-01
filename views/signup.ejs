@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="<%= lang === 'ptbr' ? 'pt-BR' : (lang === 'enus' ? 'en-US' : 'es') %>">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= siteConfig?.signupSeo?.title || 'Cadastrar - Bot Admin' %></title>
+  <meta name="description" content="<%= siteConfig?.signupSeo?.description || '' %>">
+  <meta name="keywords" content="<%= siteConfig?.signupSeo?.keywords || '' %>">
+  <link rel="preload" href="<%= siteConfig?.logo || '/img/logo.webp' %>" as="image">
+  <link rel="stylesheet" href="/css/style.css" />
+  <% if (siteConfig) { %>
+  <style>
+    :root {
+      <% for(const [k,v] of Object.entries(siteConfig.themeDark || {})) { %>
+      <%= k %>: <%= v %>;
+      <% } %>
+    }
+    [data-theme="light"] {
+      <% for(const [k,v] of Object.entries(siteConfig.themeLight || {})) { %>
+      <%= k %>: <%= v %>;
+      <% } %>
+    }
+  </style>
+  <% } %>
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/fontawesome.min.css" as="style">
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/solid.min.css" as="style">
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/brands.min.css" as="style">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/fontawesome.min.css" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/solid.min.css" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/brands.min.css" media="print" onload="this.media='all'">
+  <noscript>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/fontawesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/solid.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/brands.min.css">
+  </noscript>
+<%- include("partials/analytics") %>
+</head>
+<body>
+  <a href="#conteudo" class="skip-link"><%= t('skip_to_content') %></a>
+  <%- include('partials/header_public', { showThemeToggle: true }) %>
+  <a href="<%= siteConfig?.logo || '/img/logo.webp' %>" style="display:none">Logo</a>
+
+  <main id="conteudo" style="padding-top: var(--header-height, 8rem); max-width: 400px; margin: auto;">
+    <div class="form-card">
+      <h2 style="color:#00ff88;text-align:center;margin-bottom:2rem"><i class="fas fa-user-plus"></i> <%= t('cadastro') %></h2>
+      <form action="/usuario/registrar" method="POST">
+        <label class="sr-only" for="reg-user"><%= t('usuario') %></label>
+        <input id="reg-user" class="input" type="text" name="username" placeholder="<%= t('usuario') %>" required>
+        <label class="sr-only" for="reg-pass"><%= t('senha') %></label>
+        <input id="reg-pass" class="input" type="password" name="password" placeholder="<%= t('senha') %>" required>
+        <label class="sr-only" for="reg-confirm"><%= t('confirmar_senha') %></label>
+        <input id="reg-confirm" class="input" type="password" name="confirmPassword" placeholder="<%= t('confirmar_senha') %>" required>
+        <div style="display:flex;gap:1rem;margin-bottom:1rem;">
+          <label class="sr-only" for="ddiSelect">DDI</label>
+          <select id="ddiSelect" name="ddi" class="input" style="max-width:110px;" required></select>
+          <label class="sr-only" for="whatsapp">WhatsApp</label>
+          <input id="whatsapp" class="input" type="tel" name="whatsapp" placeholder="<%= t('numero_exemplo') %>" required style="flex:1;">
+        </div>
+        <button class="btn" style="width:100%;margin-top:1rem" type="submit"><%= t('criar_conta') %></button>
+      </form>
+      <p style="margin-top:1rem;text-align:center"><%= t('ja_tem_conta') %> <a href="/entrar" style="color:#00ff88"><%= t('faca_login') %></a></p>
+    </div>
+  </main>
+
+  <script src="/js/ddi.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const selectDDI = document.getElementById('ddiSelect');
+      listaDDI.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.codigo.replace(/\D/g, '');
+        opt.textContent = `${p.bandeira} +${p.codigo.replace(/\D/g, '')} - ${p.nome}`;
+        if (p.codigo === '+55') opt.selected = true;
+        selectDDI.appendChild(opt);
+      });
+    });
+
+    function toggleDropdown(el) {
+      const dd = el.closest('.dropdown');
+      dd.classList.toggle('open');
+    }
+    document.addEventListener('click', e => {
+      const dd = document.querySelector('.dropdown');
+      if (dd && !dd.contains(e.target)) dd.classList.remove('open');
+    });
+
+    const toggleBtn = document.getElementById('theme-toggle');
+    if (toggleBtn) {
+      const icon = toggleBtn.querySelector('i');
+      const saved = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', saved);
+      icon.classList.toggle('fa-sun', saved === 'light');
+      icon.classList.toggle('fa-moon', saved === 'dark');
+      toggleBtn.addEventListener('click', () => {
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        const newTheme = isLight ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        icon.classList.toggle('fa-sun', newTheme === 'light');
+        icon.classList.toggle('fa-moon', newTheme === 'dark');
+      });
+    }
+  </script>
+</body>
+</html>

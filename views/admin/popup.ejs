@@ -1,0 +1,14 @@
+<div class="config-wrapper">
+  <h3>Número do WhatsApp</h3>
+  <form action="/admin/popup" method="POST" class="whatsapp-form">
+    <label for="whatsappNumber">Número:</label>
+    <input type="text" id="whatsappNumber" name="whatsappNumber" value="<%= config.whatsappNumber || '' %>" required>
+    <label for="messageBaseUrl">Base URL:</label>
+    <input type="text" id="messageBaseUrl" name="messageBaseUrl" value="<%= config.messageBaseUrl || '' %>" required>
+    <label for="messageApiKey">API Key:</label>
+    <input type="text" id="messageApiKey" name="messageApiKey" value="<%= config.messageApiKey || '' %>" required>
+    <label for="messageInstance">Instância:</label>
+    <input type="text" id="messageInstance" name="messageInstance" value="<%= config.messageInstance || '' %>" required>
+    <button type="submit" class="submit-btn">Salvar</button>
+  </form>
+</div>

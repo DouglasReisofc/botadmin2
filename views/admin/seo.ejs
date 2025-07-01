@@ -1,0 +1,176 @@
+<% /* SEO configuration page */ %>
+<div class="config-wrapper">
+  <h3>SEO Global</h3>
+  <form action="/admin/seo" method="POST" enctype="multipart/form-data" class="seo-form">
+    <input type="hidden" name="section" value="site">
+    <label>Título
+      <input type="text" name="title" value="<%= config.seo?.title || '' %>" required>
+    </label>
+    <label>Descrição
+      <textarea name="description" rows="3" required><%= config.seo?.description || '' %></textarea>
+    </label>
+    <label>Palavras-chave
+      <input type="text" name="keywords" value="<%= config.seo?.keywords || '' %>" required>
+    </label>
+    <label>Imagem (Open Graph)
+      <input type="file" name="seoImage" accept="image/*">
+    </label>
+    <% if (config.seo?.image) { %>
+      <div class="seo-preview">
+        <img src="<%= config.seo.image %>" style="max-width:200px;max-height:120px;" alt="SEO image">
+      </div>
+    <% } %>
+    <button type="submit" class="submit-btn">Salvar SEO</button>
+  </form>
+</div>
+
+<div class="config-wrapper">
+  <h3>SEO do Blog</h3>
+  <form action="/admin/seo" method="POST" enctype="multipart/form-data" class="seo-form">
+    <input type="hidden" name="section" value="blog">
+    <label>Título
+      <input type="text" name="title" value="<%= config.blogSeo?.title || '' %>" required>
+    </label>
+    <label>Descrição
+      <textarea name="description" rows="3" required><%= config.blogSeo?.description || '' %></textarea>
+    </label>
+    <label>Palavras-chave
+      <input type="text" name="keywords" value="<%= config.blogSeo?.keywords || '' %>" required>
+    </label>
+    <label>Imagem (Open Graph)
+      <input type="file" name="blogImage" accept="image/*">
+    </label>
+    <% if (config.blogSeo?.image) { %>
+      <div class="seo-preview">
+        <img src="<%= config.blogSeo.image %>" style="max-width:200px;max-height:120px;" alt="Blog image">
+      </div>
+    <% } %>
+    <button type="submit" class="submit-btn">Salvar SEO</button>
+  </form>
+</div>
+
+<div class="config-wrapper">
+  <h3>SEO dos Tutoriais</h3>
+  <form action="/admin/seo" method="POST" enctype="multipart/form-data" class="seo-form">
+    <input type="hidden" name="section" value="tutorials">
+    <label>Título
+      <input type="text" name="title" value="<%= config.tutorialsSeo?.title || '' %>" required>
+    </label>
+    <label>Descrição
+      <textarea name="description" rows="3" required><%= config.tutorialsSeo?.description || '' %></textarea>
+    </label>
+    <label>Palavras-chave
+      <input type="text" name="keywords" value="<%= config.tutorialsSeo?.keywords || '' %>" required>
+    </label>
+    <label>Imagem (Open Graph)
+      <input type="file" name="tutorialsImage" accept="image/*">
+    </label>
+    <% if (config.tutorialsSeo?.image) { %>
+      <div class="seo-preview">
+        <img src="<%= config.tutorialsSeo.image %>" style="max-width:200px;max-height:120px;" alt="Tutorials image">
+      </div>
+    <% } %>
+    <button type="submit" class="submit-btn">Salvar SEO</button>
+  </form>
+</div>
+
+<div class="config-wrapper">
+  <h3>SEO dos Termos</h3>
+  <form action="/admin/seo" method="POST" enctype="multipart/form-data" class="seo-form">
+    <input type="hidden" name="section" value="terms">
+    <label>Título
+      <input type="text" name="title" value="<%= config.termsSeo?.title || '' %>" required>
+    </label>
+    <label>Descrição
+      <textarea name="description" rows="3" required><%= config.termsSeo?.description || '' %></textarea>
+    </label>
+    <label>Palavras-chave
+      <input type="text" name="keywords" value="<%= config.termsSeo?.keywords || '' %>" required>
+    </label>
+    <label>Imagem (Open Graph)
+      <input type="file" name="termsImage" accept="image/*">
+    </label>
+    <% if (config.termsSeo?.image) { %>
+      <div class="seo-preview">
+        <img src="<%= config.termsSeo.image %>" style="max-width:200px;max-height:120px;" alt="Terms image">
+      </div>
+    <% } %>
+    <button type="submit" class="submit-btn">Salvar SEO</button>
+  </form>
+</div>
+
+<div class="config-wrapper">
+  <h3>SEO da Privacidade</h3>
+  <form action="/admin/seo" method="POST" enctype="multipart/form-data" class="seo-form">
+    <input type="hidden" name="section" value="privacy">
+    <label>Título
+      <input type="text" name="title" value="<%= config.privacySeo?.title || '' %>" required>
+    </label>
+    <label>Descrição
+      <textarea name="description" rows="3" required><%= config.privacySeo?.description || '' %></textarea>
+    </label>
+    <label>Palavras-chave
+      <input type="text" name="keywords" value="<%= config.privacySeo?.keywords || '' %>" required>
+    </label>
+    <label>Imagem (Open Graph)
+      <input type="file" name="privacyImage" accept="image/*">
+    </label>
+    <% if (config.privacySeo?.image) { %>
+      <div class="seo-preview">
+        <img src="<%= config.privacySeo.image %>" style="max-width:200px;max-height:120px;" alt="Privacy image">
+      </div>
+    <% } %>
+  <button type="submit" class="submit-btn">Salvar SEO</button>
+  </form>
+</div>
+
+<div class="config-wrapper">
+  <h3>SEO da Página de Login</h3>
+  <form action="/admin/seo" method="POST" enctype="multipart/form-data" class="seo-form">
+    <input type="hidden" name="section" value="login">
+    <label>Título
+      <input type="text" name="title" value="<%= config.loginSeo?.title || '' %>" required>
+    </label>
+    <label>Descrição
+      <textarea name="description" rows="3" required><%= config.loginSeo?.description || '' %></textarea>
+    </label>
+    <label>Palavras-chave
+      <input type="text" name="keywords" value="<%= config.loginSeo?.keywords || '' %>" required>
+    </label>
+    <label>Imagem (Open Graph)
+      <input type="file" name="loginImage" accept="image/*">
+    </label>
+    <% if (config.loginSeo?.image) { %>
+      <div class="seo-preview">
+        <img src="<%= config.loginSeo.image %>" style="max-width:200px;max-height:120px;" alt="Login image">
+      </div>
+    <% } %>
+    <button type="submit" class="submit-btn">Salvar SEO</button>
+  </form>
+</div>
+
+<div class="config-wrapper">
+  <h3>SEO da Página de Cadastro</h3>
+  <form action="/admin/seo" method="POST" enctype="multipart/form-data" class="seo-form">
+    <input type="hidden" name="section" value="signup">
+    <label>Título
+      <input type="text" name="title" value="<%= config.signupSeo?.title || '' %>" required>
+    </label>
+    <label>Descrição
+      <textarea name="description" rows="3" required><%= config.signupSeo?.description || '' %></textarea>
+    </label>
+    <label>Palavras-chave
+      <input type="text" name="keywords" value="<%= config.signupSeo?.keywords || '' %>" required>
+    </label>
+    <label>Imagem (Open Graph)
+      <input type="file" name="signupImage" accept="image/*">
+    </label>
+    <% if (config.signupSeo?.image) { %>
+      <div class="seo-preview">
+        <img src="<%= config.signupSeo.image %>" style="max-width:200px;max-height:120px;" alt="Signup image">
+      </div>
+    <% } %>
+    <button type="submit" class="submit-btn">Salvar SEO</button>
+  </form>
+</div>
+

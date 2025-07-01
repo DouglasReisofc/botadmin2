@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9" xmlns:video="https://www.google.com/schemas/sitemap-video/1.1" xmlns:image="https://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://botadmin.shop/</loc>
+    <video:video>
+      <video:content_loc>https://botadmin.shop/img/banner_1750139707300.webm</video:content_loc>
+      <video:title>Banner</video:title>
+    </video:video>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/entrar</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/cadastrar</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/tutorials</loc>
+    <video:video>
+      <video:content_loc>https://botadmin.shop/arquivos/admin/cmd_1750532816467.webm</video:content_loc>
+      <video:title>!banextremo</video:title>
+    </video:video>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/blog</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/termos</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/privacidade</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/blog/como-ter-um-bot-whatsapp-gratis-em-poucos-passos</loc>
+    <image:image>
+      <image:loc>https://botadmin.shop/arquivos/admin/post_1750572680240.webp</image:loc>
+      <image:title>Como ter um bot WhatsApp grátis em poucos passos</image:title>
+    </image:image>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/blog/bot-admin-bloqueio-de-spam</loc>
+    <image:image>
+      <image:loc>https://botadmin.shop/arquivos/admin/post_1750882785714.webp</image:loc>
+      <image:title>Bot Admin bloqueio de spam</image:title>
+    </image:image>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+</urlset>

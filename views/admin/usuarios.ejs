@@ -1,0 +1,150 @@
+<!-- views/usuarios.ejs -->
+<div class="cards">
+  <div class="card">
+    <div class="card-header">
+      <h3>Usuários Registrados</h3>
+    </div>
+
+    <!-- Scroll interno para manter responsividade -->
+    <div class="scroll-container">
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>WhatsApp</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% usuarios.forEach(user => { %>
+            <tr>
+              <td><%= user.nome %></td>
+              <td><%= user.whatsapp || 'Não informado' %></td>
+              <td><%= user.status %></td>
+              <td class="bot-actions">
+                <button
+                  class="bot-btn editar"
+                  onclick="openEditModal(
+                    '<%= user._id %>',
+                    '<%= user.nome %>',
+                    '<%= user.whatsapp %>',
+                    '<%= user.status %>',
+                    '<%= user.apikey %>',
+                    '<%= user.premium %>',
+                    <%= user.saldo %>,
+                    <%= user.admin %>
+                  )"
+                >
+                  Editar
+                </button>
+                <a
+                  class="bot-btn painel"
+                  href="/admin/usuarios/login/<%= user._id %>"
+                  target="_blank"
+                >
+                  Painel
+                </a>
+                <button
+                  class="bot-btn excluir"
+                  onclick="openDeleteModal('<%= user._id %>')"
+                >
+                  Deletar
+                </button>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <button onclick="openCreateModal()" class="submit-btn">
+      Criar Novo Usuário
+    </button>
+  </div>
+</div>
+
+<!-- Modal de Criação -->
+<div class="modal" id="createModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal('createModal')">&times;</button>
+    <h2>Criar Novo Usuário</h2>
+    <form action="/admin/usuarios/criar" method="POST" class="modal-form">
+      <div class="form-group">
+        <label for="nome">Nome:</label>
+        <input type="text" id="nome" name="nome" required>
+      </div>
+      <div class="form-group">
+        <label for="whatsapp">WhatsApp:</label>
+        <input type="text" id="whatsapp" name="whatsapp" required>
+      </div>
+      <div class="form-group">
+        <label for="senha">Senha:</label>
+        <input type="password" id="senha" name="senha" required>
+      </div>
+      <button type="submit" class="submit-btn">Criar Usuário</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal de Edição -->
+<div class="modal" id="editModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal('editModal')">&times;</button>
+    <h2>Editar Usuário</h2>
+    <form id="editForm" class="modal-form" method="POST">
+      <div class="form-group">
+        <label for="editNome">Nome:</label>
+        <input type="text" id="editNome" name="nome" required>
+      </div>
+      <div class="form-group">
+        <label for="editWhatsapp">WhatsApp:</label>
+        <input type="text" id="editWhatsapp" name="whatsapp" required>
+      </div>
+      <div class="form-group">
+        <label for="editStatus">Status:</label>
+        <select id="editStatus" name="status">
+          <option value="ativo">Ativo</option>
+          <option value="inativo">Inativo</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="editApikey">API Key:</label>
+        <input type="text" id="editApikey" name="apikey" required>
+      </div>
+      <div class="form-group">
+        <label for="editPremium">Premium (Expiração):</label>
+        <input type="date" id="editPremium" name="premium">
+      </div>
+      <div class="form-group">
+        <label for="editSaldo">Saldo:</label>
+        <input type="number" id="editSaldo" name="saldo" required>
+      </div>
+      <div class="form-group">
+        <label for="editAdmin">Admin:</label>
+        <select id="editAdmin" name="admin">
+          <option value="false">Não</option>
+          <option value="true">Sim</option>
+        </select>
+      </div>
+      <button type="submit" class="submit-btn">Atualizar Usuário</button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal de Deleção -->
+<div class="modal" id="deleteModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal('deleteModal')">&times;</button>
+    <h2>Confirma exclusão deste usuário?</h2>
+    <div class="modal-footer">
+      <button id="confirmDelete" class="submit-btn">Sim, Deletar</button>
+      <button type="button" class="submit-btn" onclick="closeModal('deleteModal')">
+        Cancelar
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/admin/usuarios.js"></script>
+<script src="/js/admin.js"></script>

@@ -1,0 +1,210 @@
+<%- include("partials/analytics") %>
+    <div class="dashboard-cards">
+
+      <% if (banners && banners.length) { %>
+        <section class="partner-section">
+          <div class="partner-ads">
+            <div class="video-card partner-ad"></div>
+            <% if (banners.length > 1) { %>
+              <button class="ad-nav prev" onclick="changeBanner(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+              <button class="ad-nav next" onclick="changeBanner(1)"><i class="fa-solid fa-chevron-right"></i></button>
+            <% } %>
+          </div>
+        </section>
+      <% } %>
+
+
+      <% if (comandos && comandos.length) { %>
+        <section class="card command-card">
+          <h3><i class="fa-solid fa-terminal"></i> Comandos
+            <% if (commandGuideMsg) { %>
+            <button class="cmd-action" style="float:right" aria-label="Sobre os comandos" onclick="openCmdGuideModal()" title="Sobre os comandos"><i class="fa-solid fa-question-circle" aria-hidden="true"></i></button>
+            <% } %>
+          </h3>
+          <% for(const cat in commandCategories) { %>
+            <details class="cmd-cat">
+              <summary><%= cat %></summary>
+              <ul class="command-list command-scroll">
+              <% commandCategories[cat].forEach(c => { %>
+                <li>
+                  <span class="cmd-name"><%= c.name %></span>
+                  <button class="cmd-action cmd-copy" aria-label="Copiar comando" onclick="copyCmd('<%= c.name %>')" title="Copiar"><i class="fa-solid fa-copy" aria-hidden="true"></i></button>
+                  <button class="cmd-action cmd-info" aria-label="Explicação" onclick="openCmdModal('<%= c._id %>')" title="Explicação"><i class="fa-solid fa-circle-info" aria-hidden="true"></i></button>
+                </li>
+              <% }) %>
+              </ul>
+            </details>
+          <% } %>
+        </section>
+        <% comandos.forEach(c => { %>
+          <div class="modal" id="cmd-modal-<%= c._id %>">
+            <div class="modal-content" style="max-width:480px; text-align:center;">
+              <h3><%= c.name %></h3>
+              <% if (c.fileName) { %>
+                <% if (c.type === 'video') { %>
+                  <video src="<%= c.fileName %>" controls style="width:100%; max-height:240px; margin-top:1rem;"></video>
+                <% } else { %>
+                  <img src="<%= c.fileName %>" style="width:100%; max-height:240px; margin-top:1rem;" alt="Tutorial" />
+                <% } %>
+              <% } %>
+              <p style="margin-top:1rem;"> <%= c.description %> </p>
+              <button class="submit-btn" style="margin-top:2rem;" onclick="closeModal('cmd-modal-<%= c._id %>')">OK</button>
+            </div>
+          </div>
+        <% }) %>
+        <div class="modal" id="cmd-guide-modal">
+          <div class="modal-content" style="max-width:480px; text-align:center;">
+            <% if (commandGuideType === 'video') { %>
+              <video src="<%= commandGuideFile %>" controls style="width:100%; max-height:240px; margin-bottom:1rem;"></video>
+            <% } else if (commandGuideType === 'image') { %>
+              <img src="<%= commandGuideFile %>" style="width:100%; max-height:240px; margin-bottom:1rem;" alt="Tutorial" />
+            <% } %>
+            <p><%= commandGuideMsg %></p>
+            <button class="submit-btn" style="margin-top:2rem;" onclick="closeModal('cmd-guide-modal')">OK</button>
+          </div>
+        </div>
+        <% } %>
+
+      <!-- CARD 2 - INFORMAÇÕES DO USUÁRIO -->
+      <section class="card">
+        <h3><i class="fa-solid fa-user-shield"></i> Informações da Conta</h3>
+        <ul style="list-style: none; padding: 0; margin: 1rem 0;">
+          <li><span class="label">API Key</span> <span class="value"><%= apikey %></span></li>
+          <li><span class="label">Limite</span> <span class="value"><%= limit %> requisições restantes</span></li>
+          <li><span class="label">Saldo</span> <span class="value">R$ <%= saldo %> disponível</span></li>
+          <li><span class="label">WhatsApp</span> <span class="value"><%= whatsapp %></span></li>
+          <li><span class="label">Premium</span> <span class="value"><%= vencimento %></span></li>
+          <li><span class="label">Grupos Cadastrados</span> <span class="value"><%= totalGrupos %> grupos</span></li>
+          <li><span class="label">Divulgações Restantes</span> <span class="value"><%= adsRestante %></span></li>
+        </ul>
+      </section>
+
+    </div>
+
+
+    <script>
+      function toggleMute(btn) {
+        const video = btn.parentElement.querySelector('video');
+        if (!video) return;
+        video.muted = !video.muted;
+        btn.innerHTML = video.muted ? '<i class="fa-solid fa-volume-xmark" aria-hidden="true"></i>' : '<i class="fa-solid fa-volume-high" aria-hidden="true"></i>';
+        btn.setAttribute('aria-label', video.muted ? 'Ativar áudio' : 'Desativar áudio');
+      }
+
+      function openModal(id) {
+        const modal = document.getElementById(id);
+        if (!modal) return;
+        modal.classList.add('active');
+        document.body.classList.add('no-scroll');
+        const handler = evt => { if (evt.target === modal) closeModal(id); };
+        modal.addEventListener('click', handler);
+        modal._closer = handler;
+      }
+
+      function closeModal(id) {
+        const modal = document.getElementById(id);
+        if (!modal) return;
+        modal.classList.remove('active');
+        document.body.classList.remove('no-scroll');
+        if (modal._closer) {
+          modal.removeEventListener('click', modal._closer);
+          modal._closer = null;
+        }
+      }
+
+      function openCmdModal(id) {
+        openModal('cmd-modal-' + id);
+      }
+
+      function openCmdGuideModal() {
+        openModal('cmd-guide-modal');
+      }
+
+      function copyCmd(cmd) {
+        navigator.clipboard.writeText(cmd);
+      }
+
+      const bannersData = <%- JSON.stringify(banners || []) %>;
+      let bannerIndex = -1;
+      if (bannersData.length) {
+        bannerIndex = Math.floor(Math.random() * bannersData.length);
+        loadBanner(bannerIndex);
+      }
+
+      function loadBanner(idx) {
+        const container = document.querySelector('.partner-ad');
+        if (!container || !bannersData[idx]) return;
+        const ban = bannersData[idx];
+        container.innerHTML = '';
+        container.classList.add('active');
+        if (ban.type === 'video') {
+          const video = document.createElement('video');
+          video.className = 'video-banner';
+          video.autoplay = true;
+          video.muted = true;
+          video.loop = true;
+          video.playsInline = true;
+          const src = document.createElement('source');
+          src.src = '/img/' + ban.fileName;
+          src.type = 'video/webm';
+          video.appendChild(src);
+          container.appendChild(video);
+          const muteBtn = document.createElement('button');
+          muteBtn.className = 'mute-btn';
+          muteBtn.setAttribute('aria-label', 'Ativar áudio');
+          muteBtn.innerHTML = '<i class="fa-solid fa-volume-xmark" aria-hidden="true"></i>';
+          muteBtn.addEventListener('click', () => toggleMute(muteBtn));
+          container.appendChild(muteBtn);
+        } else {
+          const img = document.createElement('img');
+          img.src = '/img/' + ban.fileName;
+          img.className = 'video-banner';
+          img.alt = 'banner';
+          container.appendChild(img);
+        }
+        const msg = document.createElement('div');
+        msg.className = 'video-message';
+        const title = document.createElement('h2');
+        title.className = 'banner-title';
+        title.textContent = ban.text;
+        msg.appendChild(title);
+        if (ban.buttonText && ban.buttonUrl) {
+          const btn = document.createElement('a');
+          btn.href = ban.buttonUrl;
+          btn.className = 'btn banner-btn';
+          btn.innerHTML = '<i class="fa-solid fa-plus-circle"></i> ' + ban.buttonText;
+          msg.appendChild(btn);
+        }
+        const shortcuts = [
+          { url: '/grupos', label: 'Cadastrar Grupo', icon: 'fa-solid fa-users' },
+          { url: '/grupos/ativacoes', label: 'Ativações', icon: 'fa-solid fa-bolt' },
+          { url: '/conectarwhatsapp', label: 'WhatsApp', icon: 'fa-brands fa-whatsapp' },
+          { url: '/planos', label: 'Planos', icon: 'fa-solid fa-crown' }
+        ];
+        const quickTitle = document.createElement('div');
+        quickTitle.className = 'quick-title';
+        quickTitle.textContent = 'Atalhos Úteis';
+        const quick = document.createElement('div');
+        quick.className = 'quick-links';
+        shortcuts.forEach(sc => {
+          const a = document.createElement('a');
+          a.href = sc.url;
+          a.className = 'quick-btn';
+          a.innerHTML = `<i class="${sc.icon}"></i> ${sc.label}`;
+          quick.appendChild(a);
+        });
+        msg.appendChild(quickTitle);
+        msg.appendChild(quick);
+        container.appendChild(msg);
+      }
+
+      function changeBanner(step) {
+        if (!bannersData.length) return;
+        if (bannerIndex === -1) {
+          bannerIndex = Math.floor(Math.random() * bannersData.length);
+        } else {
+          bannerIndex = (bannerIndex + step + bannersData.length) % bannersData.length;
+        }
+        loadBanner(bannerIndex);
+      }
+    </script>

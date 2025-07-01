@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Verificar WhatsApp - Bot Admin</title>
+  <link rel="icon" type="image/png" href="/img/favicon.png" sizes="40x40">
+  <link rel="stylesheet" href="/css/painel.css" />
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/fontawesome.min.css" as="style">
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/solid.min.css" as="style">
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/brands.min.css" as="style">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/fontawesome.min.css" media="print" onload="this.media='all'"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/solid.min.css" media="print" onload="this.media='all'"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/brands.min.css" media="print" onload="this.media='all'"/>
+  <noscript>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/fontawesome.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/solid.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/brands.min.css" />
+  </noscript>
+<%- include("partials/analytics") %>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #121212;
+      color: #e0e0e0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding: 20px;
+    }
+
+    .verification-container {
+      max-width: 400px;
+      width: 100%;
+      background-color: #1e1e1e;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      padding: 2rem;
+      text-align: center;
+      position: relative;
+    }
+
+    h2 {
+      color: #00ff88;
+      margin-bottom: 2rem;
+    }
+
+    .alert {
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+      display: block;
+      font-weight: bold;
+    }
+
+    .alert-danger {
+      background-color: #ff4d4d;
+      color: #fff;
+    }
+
+    .alert-success {
+      background-color: #4caf50;
+      color: #fff;
+    }
+
+    .input-group {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+
+    .input-group i {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #00ff88;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 10px 40px;
+      border: 1px solid #00ff88;
+      border-radius: 8px;
+      background-color: #2a2a2a;
+      color: #fff;
+      font-size: 1rem;
+    }
+
+    .input-group input:focus {
+      outline: none;
+      border-color: #00cc66;
+    }
+
+    .btn {
+      background-color: #00ff88;
+      color: #121212;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .btn:hover {
+      background-color: #00cc66;
+    }
+
+    a {
+      color: #00ff88;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .edit-link {
+      display: block;
+      margin-top: 2rem;
+      color: #00ff88;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    /* Estilização básica do modal */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7);
+      display: none; /* inicialmente escondido */
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background-color: #1e1e1e;
+      padding: 2rem;
+      border-radius: 12px;
+      max-width: 400px;
+      width: 100%;
+      position: relative;
+    }
+
+    .modal-content h2 {
+      color: #00ff88;
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-content label {
+      display: block;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+      color: #e0e0e0;
+    }
+
+    .modal-content select,
+    .modal-content input[type="tel"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #00ff88;
+      border-radius: 8px;
+      background-color: #2a2a2a;
+      color: #fff;
+      font-size: 1rem;
+    }
+
+    .modal-content .submit-btn {
+      margin-top: 1.5rem;
+      width: 100%;
+      padding: 10px;
+      background-color: #00ff88;
+      color: #121212;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .modal-content .submit-btn:hover {
+      background-color: #00cc66;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 1.5rem;
+      color: #fff;
+      cursor: pointer;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="verification-container">
+    <h2><i class="fas fa-mobile-alt"></i> Verificação WhatsApp</h2>
+
+    <% if (success_msg.length > 0) { %>
+      <div class="alert alert-success">
+        <i class="fas fa-check-circle"></i> <%= success_msg %>
+      </div>
+    <% } %>
+
+    <% if (error_msg.length > 0) { %>
+      <div class="alert alert-danger">
+        <i class="fas fa-exclamation-triangle"></i> <%= error_msg %>
+      </div>
+    <% } %>
+
+    <% if (error.length > 0) { %>
+      <div class="alert alert-danger">
+        <i class="fas fa-times-circle"></i> <%= error %>
+      </div>
+    <% } %>
+
+    <!-- -------- Formulário de Verificação -------- -->
+    <form action="/usuario/verificar-whatsapp" method="POST">
+      <div class="input-group">
+        <i class="fab fa-whatsapp"></i>
+        <input type="text" name="codigoVerificacao" placeholder="Digite o código recebido" required />
+      </div>
+      <button type="submit" class="btn" style="width: 100%; margin-top: 1rem;">
+        Verificar Código
+      </button>
+    </form>
+    <!-- ---------- Fim do Formulário de Verificação ---------- -->
+
+    <p style="margin-top: 1rem;">
+      Não recebeu? <a href="/usuario/reenviar-codigo">Reenviar código</a>
+    </p>
+
+    <span class="edit-link" onclick="abrirModal()">
+      Informou o número errado? Editar número
+    </span>
+  </div>
+
+  <!-- ========= Modal de edição do número ========= -->
+  <div class="modal" id="modal-editar">
+    <div class="modal-content">
+      <span class="close-btn" onclick="fecharModal()">&times;</span>
+      <h2>Atualizar WhatsApp</h2>
+
+      <!-- -------- Formulário de Atualização -------- -->
+      <form action="/usuario/atualizar-whatsapp" method="POST">
+        <label for="ddiSelectEdit">DDI:</label>
+        <select name="ddi" id="ddiSelectEdit" required>
+          <!-- As opções serão preenchidas via JavaScript -->
+        </select>
+
+        <label for="novoWhatsapp">Número:</label>
+        <input type="tel" name="novoWhatsapp" id="novoWhatsapp" placeholder="Ex: 11999999999" required />
+
+        <button type="submit" class="submit-btn">Atualizar Número</button>
+      </form>
+      <!-- ------ Fim do Formulário de Atualização ------ -->
+
+    </div>
+  </div>
+
+  <script src="/js/ddi.js"></script>
+  <script>
+    // Trata abrir/fechar modal
+    function abrirModal() {
+      document.getElementById('modal-editar').classList.add('active');
+    }
+
+    function fecharModal() {
+      document.getElementById('modal-editar').classList.remove('active');
+    }
+
+    // Preenche o select de DDI com base no JSON (listaDDI)
+    const ddiSelectEdit = document.getElementById('ddiSelectEdit');
+    listaDDI.forEach(pais => {
+      const opt = document.createElement('option');
+      opt.value = pais.codigo.replace(/\D/g, '');
+      opt.textContent = `${pais.bandeira} +${pais.codigo.replace(/\D/g, '')} - ${pais.nome}`;
+      if (pais.codigo.replace(/\D/g, '') === '55') opt.selected = true;
+      ddiSelectEdit.appendChild(opt);
+    });
+  </script>
+</body>
+</html>

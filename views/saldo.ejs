@@ -1,0 +1,65 @@
+<main class="content">
+  <div class="cards">
+    <section class="card">
+      <h3><i class="fa-solid fa-id-badge"></i> Olá, <%= nome %></h3>
+      <p><strong>WhatsApp:</strong> <%= whatsapp || 'não cadastrado' %></p>
+      <h2 style="margin-top:8px">Saldo: R$ <%= saldo.toFixed(2) %></h2>
+
+      <button class="submit-btn" onclick="abrirModalPix()">
+        <i class="fa-brands fa-pix"></i> Adicionar saldo
+      </button>
+    </section>
+
+    <section class="card" style="background: rgba(0,255,136,0.05); border: 1px solid rgba(0,255,136,0.2); margin-bottom: 2rem;">
+      <p style="font-size: 1rem; color: var(--texto-cinza); line-height: 1.6;">
+        Utilize seu saldo para alugar robôs em seus grupos, adquirir limites para as APIs exclusivas do sistema e desbloquear outras funcionalidades premium. Este painel oferece liberdade para você gerenciar tudo com autonomia e praticidade.
+      </p>
+    </section>
+  </div>
+</main>
+</div>
+
+<div id="modalPix" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="fecharModalPix()">&times;</span>
+    <h2 class="modal-title"><i class="fa-brands fa-pix"></i> Adicionar Saldo</h2>
+    <form action="/usuario/saldo" method="POST" class="modal-form">
+      <label for="valor">Valor (R$):</label>
+      <input id="valor" name="valor" type="number" min="1" step="0.01" required>
+
+      <label for="metodoId">Método de pagamento:</label>
+      <select id="metodoId" name="metodoId" required>
+        <option value="" disabled selected>Escolha…</option>
+        <% metodos.forEach(m => { %>
+          <option value="<%= m._id %>"><%= m.titulo || m.nome %></option>
+        <% }) %>
+      </select>
+
+      <button type="submit" class="submit-btn"><i class="fa-solid fa-check"></i> Gerar Pagamento</button>
+    </form>
+  </div>
+</div>
+
+<% if (qrCode && pixCode) { %>
+  <div id="modalPixResult" class="modal active">
+    <div class="modal-content">
+      <span class="close-btn" onclick="fecharModalPixResult()">&times;</span>
+      <h2 class="modal-title"><i class="fa-solid fa-qrcode"></i> PIX Gerado</h2>
+      <div class="pix-info">
+        <img class="pix-qr" src="data:image/png;base64,<%= qrCode %>" alt="QR Code PIX">
+        <div class="pix-copy">
+          <input id="pixCodeInput" type="text" value="<%= pixCode %>" readonly>
+          <button type="button" class="copy-btn" onclick="copiarPix()"><i class="fa-solid fa-copy"></i> Copiar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+<% } %>
+<script>
+  // Se não houver pagamentoId, deixamos como null para o script externo lidar.
+  const pagamentoId = "<%= pagamentoId || '' %>";
+</script>
+<!-- Referência ao script externo -->
+<script src="/js/usuarios/saldo.js"></script>
+</body>
+</html>

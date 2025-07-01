@@ -1,0 +1,34 @@
+<nav class="sidenav" aria-label="Menu lateral">
+  <a href="/painel" class="<%= path === '/painel' ? 'active' : '' %>">
+    <i class="fa-solid fa-chart-line"></i> <%= t('painel') %>
+  </a>
+
+  <div class="dropdown <%= path.startsWith('/grupos') && !path.startsWith('/grupos/autorespostas') ? 'open' : '' %>">
+    <a href="#" class="dropdown-toggle <%= path.startsWith('/grupos') && !path.startsWith('/grupos/autorespostas') ? 'active' : '' %>" onclick="toggleDropdown(this)">
+      <i class="fa-solid fa-robot"></i> <%= t('meus_grupos') %> <span class="arrow">&#9662;</span>
+    </a>
+    <div class="dropdown-menu">
+      <a href="/grupos"             class="<%= path === '/grupos'             ? 'active' : '' %>"><i class="fa-solid fa-plus-circle"></i> <%= t('cadastrar_grupos') %></a>
+      <a href="/grupos/tabela"      class="<%= path === '/grupos/tabela'      ? 'active' : '' %>"><i class="fa-solid fa-table"></i> <%= t('tabela') %></a>
+      <a href="/grupos/ads"         class="<%= path === '/grupos/ads'         ? 'active' : '' %>"><i class="fa-solid fa-bullhorn"></i> <%= t('anuncios') %></a>
+      <a href="/grupos/mensagem"    class="<%= path === '/grupos/mensagem'    ? 'active' : '' %>"><i class="fa-solid fa-paper-plane"></i> <%= t('enviar_mensagem') %></a>
+      <a href="/grupos/sorteio"     class="<%= path === '/grupos/sorteio'     ? 'active' : '' %>"><i class="fa-solid fa-gift"></i> <%= t('sorteios') %></a>
+      <a href="/grupos/ativacoes"  class="<%= path === '/grupos/ativacoes'  ? 'active' : '' %>"><i class="fa-solid fa-sliders"></i> <%= t('comandos') %></a>
+      <a href="/grupos/horario"    class="<%= path === '/grupos/horario'    ? 'active' : '' %>"><i class="fa-solid fa-clock"></i> <%= t('abrir_fechar_grupo') %></a>
+    </div>
+  </div>
+
+  <a href="/grupos/autorespostas" class="<%= path === '/grupos/autorespostas' ? 'active' : '' %>"><i class="fa-solid fa-reply"></i> <%= t('autorespostas') %></a>
+  <a href="/conectarwhatsapp" class="<%= path === '/conectarwhatsapp' ? 'active' : '' %>">
+  <i class="fa-brands fa-whatsapp"></i> <%= t('conectar_whatsapp') %>
+  </a>
+
+  <a href="/saldo"    class="<%= path === '/saldo'    ? 'active' : '' %>"><i class="fa-solid fa-wallet"></i> <%= t('add_saldo') %></a>
+  <a href="/planos"   class="<%= path === '/planos'   ? 'active' : '' %>"><i class="fa-solid fa-tags"></i> <%= t('planos') %></a>
+  <a href="/extras"   class="<%= path === '/extras'   ? 'active' : '' %>"><i class="fa-solid fa-plus"></i> <%= t('extras') %></a>
+  <a href="/meus-anuncios" class="<%= path.startsWith('/meus-anuncios') ? 'active' : '' %>"><i class="fa-solid fa-bullhorn"></i> <%= t('meus_anuncios') %></a>
+  <a href="/links" class="<%= path.startsWith('/links') ? 'active' : '' %>"><i class="fa-solid fa-link"></i> <%= t('encurtador_monitor') %></a>
+  <a href="/api-docs" class="<%= path === '/api-docs' ? 'active' : '' %>"><i class="fa-solid fa-book"></i> <%= t('documentacao_api') %></a>
+</nav>
+
+

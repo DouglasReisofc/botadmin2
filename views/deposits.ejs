@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Usuários</title>
+    <link rel="icon" type="image/png" href="/img/favicon.png" sizes="40x40">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/fontawesome.min.css" as="style">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/solid.min.css" as="style">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/brands.min.css" as="style">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/fontawesome.min.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/solid.min.css" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/brands.min.css" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/fontawesome.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/solid.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/brands.min.css">
+    </noscript>
+<%- include("partials/analytics") %>
+    <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fa-solid fa-rocket"></i>
+            </div>
+            <h2>AdminPro</h2>
+        </div>
+
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="/admin" class="nav-link active">
+                    <i class="fa-solid fa-gauge"></i>
+                    Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/admin/usuarios" class="nav-link">
+                    <i class="fa-solid fa-user"></i>
+                    Usuários
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/admin/planos" class="nav-link">
+                    <i class="fa-solid fa-calendar-check"></i>
+                    Planos
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/admin/bots" class="nav-link">
+                    <i class="fa-solid fa-cogs"></i>
+                    Bots
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/admin/api" class="nav-link">
+                    <i class="fa-solid fa-code"></i>
+                    API
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/admin/pagamentos" class="nav-link">
+                    <i class="fa-brands fa-pix"></i>
+                    PAGAMENTOS
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/admin/deposits" class="nav-link">
+                    <i class="fa-brands fa-pix"></i>
+                    DEPOSITOS
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-toggle" onclick="toggleSidebar()">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <h3 class="header-text">Admin - Gerenciar Depositos</h3>
+        </div>
+        <div class="header-actions">
+            <button class="logout-btn" onclick="window.location.href='/usuario/sair'">
+                <i class="fa-solid fa-sign-out-alt"></i> Sair
+            </button>
+        </div>
+    </header>
+
+  <!-- Main Content -->
+  <main class="main">
+    <% if (success_msg.length > 0) { %>
+      <div class="alert success">
+        <i class="fa-solid fa-circle-check"></i> <%= success_msg %>
+      </div>
+    <% } %>
+
+    <% if (error_msg.length > 0) { %>
+      <div class="alert error">
+        <i class="fa-solid fa-circle-exclamation"></i> <%= error_msg %>
+      </div>
+    <% } %>
+
+    <% if (error.length > 0) { %>
+      <div class="alert error">
+        <i class="fa-solid fa-circle-xmark"></i> <%= error %>
+      </div>
+    <% } %>
+
+    <div class="card">
+      <div class="card-header">
+        <h3>Depósitos Registrados</h3>
+      </div>
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>ID Pagamento</th>
+            <th>Usuário</th>
+            <th>Valor</th>
+            <th>Status</th>
+            <th>Referência</th>
+            <th>Data</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% depositos.forEach(d => { %>
+            <tr>
+              <td><%= d.id || 'Indefinido' %></td>
+              <td><%= d.usuario?.nome || 'Usuário removido' %></td>
+              <td>R$ <%= d.valor.toFixed(2) %></td>
+              <td><%= d.status %></td>
+              <td><%= d.referencia || 'N/A' %></td>
+              <td><%= new Date(d.criadoEm).toLocaleString('pt-BR') %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    function toggleSidebar() {
+      document.querySelector('.sidebar').classList.toggle('open');
+    }
+  </script>
+</body>
+</html>

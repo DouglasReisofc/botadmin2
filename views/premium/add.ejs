@@ -1,0 +1,35 @@
+<section id="pricing">
+    <div class="row pricing-content">
+        <center>
+            <%- include('../layouts/msg')  %> 
+            <%- include('../layouts/errors')  %> 
+        </center>
+    </div>
+    <div class="row pricing-content">
+        <center>
+            <h2>ADICIONAR PREMIUM</h2>
+            <form method="POST" action="/moderador/add">
+                <div class="form-group">
+                    <input style="font-family:Arial, FontAwesome" name="username" type="text" class="form-control" placeholder="&#xf007;   Usuário" required>
+                </div>
+                <div class="form-group">
+                    <input style="font-family:Arial, FontAwesome" name="expired" type="text" class="form-control" placeholder="&#xf017;   Expiração" required>
+                </div>
+                <p>#Expiração, Exemplo: 30d = 30 Dias, 1m = 1 Mês</p>
+                <div class="form-group">
+                    <input style="font-family:Arial, FontAwesome" name="customKey" type="text" class="form-control" placeholder="&#xf084;   Nova key = Personalizar" required>
+                </div>
+                <div class="form-group">
+                    <input style="font-family:Arial, FontAwesome" name="token" type="text" class="form-control" id="token" placeholder="&#xf084;   Token" required>
+                </div>
+                <p>Token necessário para confirmar que você é proprietário!</p>
+                <button type="submit" class="button button-primary">Adicionar Premium</button>
+            </form>
+            <div>
+                <p> </p>
+                <p>Voltar ao início!</p>
+                <a class="button button-primary" href="/moderador">Voltar</a>
+            </div>
+        </center>      
+    </div>
+</section>

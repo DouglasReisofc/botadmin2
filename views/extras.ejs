@@ -1,0 +1,40 @@
+<h2 class="welcome">Planos Extras</h2>
+<p class="subtitle">Adquira complementos para sua conta.</p>
+<div class="filter" style="margin-bottom:1rem;">
+  <label for="extraType">Tipo</label>
+  <select id="extraType" onchange="filtrarExtras()" class="submit-btn">
+    <option value="all">Todos</option>
+    <option value="premium">Premium</option>
+    <option value="ads">Ads</option>
+    <option value="shortener">Encurtador</option>
+  </select>
+</div>
+<div class="cards">
+  <% extras.forEach(extra => { %>
+    <div class="card" data-type="<%= extra.tipo %>">
+      <h3><%= extra.nome %></h3>
+      <p class="price">R$ <%= extra.preco.toFixed(2) %></p>
+      <ul class="plan-details">
+        <li><strong>Tipo:</strong> <%= extra.tipo %></li>
+        <li><strong>Duração:</strong> <%= extra.dias %> dias</li>
+        <% if (extra.tipo === 'ads') { %>
+        <li><strong>Anúncios:</strong> <%= extra.quantidadeAds %></li>
+        <% } else if (extra.tipo === 'shortener') { %>
+        <li><strong>Links:</strong> <%= extra.quantidadeLinks %></li>
+        <% } %>
+      </ul>
+      <form action="/usuario/comprar-extra" method="POST">
+        <input type="hidden" name="extraId" value="<%= extra._id %>">
+        <button type="submit" class="submit-btn">Comprar</button>
+      </form>
+    </div>
+  <% }) %>
+</div>
+<script>
+  function filtrarExtras(){
+    const t = document.getElementById('extraType').value;
+    document.querySelectorAll('.cards .card').forEach(c => {
+      c.style.display = (t === 'all' || c.dataset.type === t) ? 'block' : 'none';
+    });
+  }
+</script>

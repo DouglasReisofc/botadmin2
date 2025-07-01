@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="<%= lang === 'ptbr' ? 'pt-BR' : (lang === 'enus' ? 'en-US' : 'es') %>">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= siteConfig?.tutorialsSeo?.title || 'Tutoriais - Bot Admin' %></title>
+  <meta name="description" content="<%= siteConfig?.tutorialsSeo?.description || '' %>">
+  <meta name="keywords" content="<%= siteConfig?.tutorialsSeo?.keywords || '' %>">
+  <meta property="og:title" content="<%= siteConfig?.tutorialsSeo?.title || 'Tutoriais - Bot Admin' %>">
+  <meta property="og:description" content="<%= siteConfig?.tutorialsSeo?.description || '' %>">
+  <meta property="og:image" content="<%= siteConfig?.tutorialsSeo?.image || (siteUrl + '/img/banner.png') %>">
+  <meta property="og:url" content="<%= siteUrl + '/tutorials' %>">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="<%= siteConfig?.tutorialsSeo?.title || 'Tutoriais - Bot Admin' %>">
+  <meta name="twitter:description" content="<%= siteConfig?.tutorialsSeo?.description || '' %>">
+  <meta name="twitter:image" content="<%= siteConfig?.tutorialsSeo?.image || (siteUrl + '/img/banner.png') %>">
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="preload" href="<%= siteConfig?.logo || '/img/logo.webp' %>" as="image" />
+  <% if (siteConfig) { %>
+  <style>
+    :root {
+      <% for(const [k,v] of Object.entries(siteConfig.themeDark || {})) { %>
+      <%= k %>: <%= v %>;
+      <% } %>
+    }
+    [data-theme="light"] {
+      <% for(const [k,v] of Object.entries(siteConfig.themeLight || {})) { %>
+      <%= k %>: <%= v %>;
+      <% } %>
+    }
+  </style>
+  <% } %>
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/fontawesome.min.css" as="style" />
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/solid.min.css" as="style" />
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/brands.min.css" as="style" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/fontawesome.min.css" media="print" onload="this.media='all'" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/solid.min.css" media="print" onload="this.media='all'" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/brands.min.css" media="print" onload="this.media='all'" />
+  <noscript>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/fontawesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/solid.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/brands.min.css">
+  </noscript>
+<%- include("partials/analytics") %>
+</head>
+<body>
+  <a href="#conteudo" class="skip-link"><%= t('skip_to_content') %></a>
+  <%- include('partials/header_public', { showThemeToggle: true }) %>
+  <a href="<%= siteConfig?.logo || '/img/logo.webp' %>" style="display:none">Logo</a>
+  <main id="conteudo" style="padding:var(--header-height, 8rem) 2rem 2rem; max-width:900px; margin:auto;">
+    <h2 style="color:#00ff88;text-align:center;margin-bottom:2rem"><%= t('como_usar_comandos') %></h2>
+    <div class="search-bar">
+      <input type="text" id="search" placeholder="<%= t('pesquisar_comando') %>">
+      <select id="viewFilter">
+        <option value="commands">Comandos</option>
+        <option value="tutorials">Tutoriais</option>
+      </select>
+    </div>
+    <h3 id="commandsTitle" style="margin-bottom:1rem">Comandos</h3>
+    <div id="commandsSection" class="cards tutorial-list">
+      <% comandos.forEach(c => { %>
+        <article class="card tutorial-card" data-search="<%- (c.name + ' ' + c.description).replace(/\"/g,'&quot;').toLowerCase() %>">
+          <h3><a href="/comandos/<%= c.slug %>"><%= c.name %></a></h3>
+          <% if (c.fileName) { %>
+            <% if (c.type === 'video') { %>
+              <video src="<%= c.fileName %>" controls style="width:100%;max-height:200px;margin:0.5rem 0;"></video>
+            <% } else { %>
+              <img src="<%= c.fileName %>" alt="<%= c.name %>" style="width:100%;max-height:200px;margin:0.5rem 0;" />
+            <% } %>
+          <% } %>
+          <p><%- c.description.replace(/\r?\n/g, '<br>') %></p>
+        </article>
+      <% }) %>
+      <% if (!comandos.length) { %>
+        <p><%= t('nenhum_comando') %></p>
+      <% } %>
+    </div>
+
+    <% if (tutorials && tutorials.length) { %>
+      <h3 id="tutorialsTitle" style="margin:2rem 0 1rem">Tutoriais</h3>
+      <div id="tutorialsSection" class="cards tutorial-list" style="display:none;">
+        <% tutorials.forEach(t => { %>
+        <article class="card tutorial-card" data-search="<%- (t.title + ' ' + t.message).replace(/\"/g,'&quot;').toLowerCase() %>" id="tutorial-<%= t.tutorialId %>">
+            <h3><a href="/tutorials/<%= t.slug %>"><%= t.title %></a></h3>
+            <% if (t.fileName) { %>
+              <% if (t.type === 'video') { %>
+                <video src="<%= t.fileName %>" controls style="width:100%;max-height:200px;margin:0.5rem 0;"></video>
+              <% } else { %>
+                <img src="<%= t.fileName %>" alt="<%= t.title %>" style="width:100%;max-height:200px;margin:0.5rem 0;" />
+              <% } %>
+            <% } %>
+            <p><%- t.message.replace(/\r?\n/g, '<br>') %></p>
+          </article>
+        <% }) %>
+      </div>
+    <% } %>
+  </main>
+  <script>
+    function toggleDropdown(el){ const dd=el.closest('.dropdown'); dd.classList.toggle('open'); }
+    document.addEventListener('click',e=>{ const dd=document.querySelector('.dropdown'); if(dd && !dd.contains(e.target)) dd.classList.remove('open'); });
+    const toggleBtn=document.getElementById('theme-toggle');
+    if(toggleBtn){ const icon=toggleBtn.querySelector('i'); const saved=localStorage.getItem('theme')||'dark'; document.documentElement.setAttribute('data-theme',saved); icon.classList.toggle('fa-sun',saved==='light'); icon.classList.toggle('fa-moon',saved==='dark'); toggleBtn.addEventListener('click',()=>{ const isLight=document.documentElement.getAttribute('data-theme')==='light'; const newTheme=isLight?'dark':'light'; document.documentElement.setAttribute('data-theme',newTheme); localStorage.setItem('theme',newTheme); icon.classList.toggle('fa-sun',newTheme==='light'); icon.classList.toggle('fa-moon',newTheme==='dark'); }); }
+    const searchInput=document.getElementById('search');
+    const filterSelect=document.getElementById('viewFilter');
+    const commandsSection=document.getElementById('commandsSection');
+    const tutorialsSection=document.getElementById('tutorialsSection');
+    const commandsTitle=document.getElementById('commandsTitle');
+    const tutorialsTitle=document.getElementById('tutorialsTitle');
+
+    function filterCards(){
+      const term=searchInput.value.toLowerCase();
+      const active=filterSelect.value==='commands'?commandsSection:tutorialsSection;
+      active.querySelectorAll('.tutorial-card').forEach(card=>{
+        const text=(card.dataset.search||card.innerText).toLowerCase();
+        card.style.display=text.includes(term)?'':'none';
+      });
+    }
+
+    function updateView(){
+      const showCommands=filterSelect.value==='commands';
+      commandsSection.style.display=showCommands?'':'none';
+      commandsTitle.style.display=showCommands?'':'none';
+      tutorialsSection.style.display=!showCommands?'':'none';
+      tutorialsTitle.style.display=!showCommands?'':'none';
+      filterCards();
+    }
+
+    searchInput?.addEventListener('input',filterCards);
+    filterSelect?.addEventListener('change',updateView);
+    window.addEventListener('load',updateView);
+  </script>
+</body>
+</html>

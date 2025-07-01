@@ -1,0 +1,227 @@
+<main class="content">
+  <div class="cards">
+    <section class="card">
+      <h3><i class="fa-solid fa-code"></i> Documentação da API</h3>
+
+      <p>
+        <strong style="color:#7300ff;">API Key:</strong> <%= apikey %><br>
+        <strong style="color:#ffbb00;">Limite de Requests:</strong> <%= limit %><br>
+        <strong style="color:#4dff00;">Saldo:</strong> R$ <%= saldo %>
+      </p>
+
+      <input type="text" id="apiSearch" class="api-search" placeholder="🔍 Buscar endpoint...">
+
+      <div class="scroll-container" id="apiList">
+
+        <!-- 📅 DOWNLOADS -->
+        <div class="api-category">
+          <div class="category-header" onclick="toggleCategory(this)">📥 Downloads <i class="fa fa-caret-down"></i></div>
+          <div class="category-content">
+
+            <div class="api-item">
+              <div class="api-name">Download Global (YouTube, Instagram...)</div>
+              <div class="api-actions">
+                <button class="api-btn" onclick="copyUrl('<%= siteUrl %>/api/download/globalvideo?url=URL_DO_VIDEO&apikey=<%= apikey %>')">
+                  <i class="fa-solid fa-copy"></i>
+                </button>
+                <a class="api-btn api-test" target="_blank"
+                  href="<%= siteUrl %>/api/download/globalvideo?url=https://youtu.be/mOPN9PC0cSY&apikey=<%= apikey %>">
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+              </div>
+            </div>
+
+            <div class="api-item">
+              <div class="api-name">Download TikTok</div>
+              <div class="api-actions">
+                <button class="api-btn" onclick="copyUrl('<%= siteUrl %>/api/download/tiktok?url=URL_DO_VIDEO&apikey=<%= apikey %>')">
+                  <i class="fa-solid fa-copy"></i>
+                </button>
+                <a class="api-btn api-test" target="_blank"
+                  href="<%= siteUrl %>/api/download/tiktok?url=https://www.tiktok.com/t/ZP8jnAVab/&apikey=<%= apikey %>">
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 🔊 VOZ / ÁUDIO -->
+        <div class="api-category">
+          <div class="category-header" onclick="toggleCategory(this)">🔊 Voz / Áudio <i class="fa fa-caret-down"></i></div>
+          <div class="category-content">
+
+            <div class="api-item">
+              <div class="api-name">Texto para Áudio (TTS)</div>
+              <div class="api-actions">
+                <button class="api-btn" onclick="copyUrl('<%= siteUrl %>/api/geraraudio?texto=Olá%20mundo&voz=bueno&apikey=<%= apikey %>')">
+                  <i class="fa-solid fa-copy"></i>
+                </button>
+                <a class="api-btn api-test" target="_blank"
+                  href="<%= siteUrl %>/api/geraraudio?texto=Olá%20mundo&voz=bueno&apikey=<%= apikey %>">
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 🔮 PESQUISA / IA -->
+        <div class="api-category">
+          <div class="category-header" onclick="toggleCategory(this)">🔮 Pesquisa / IA <i class="fa fa-caret-down"></i></div>
+          <div class="category-content">
+
+            <div class="api-item">
+              <div class="api-name">Buscar resposta com IA</div>
+              <div class="api-actions">
+                <button class="api-btn" onclick="copyUrl('<%= siteUrl %>/api/ia/responder?pergunta=Quem%20descobriu%20o%20Brasil&apikey=<%= apikey %>')">
+                  <i class="fa-solid fa-copy"></i>
+                </button>
+                <a class="api-btn api-test" target="_blank"
+                  href="<%= siteUrl %>/api/ia/responder?pergunta=Quem%20descobriu%20o%20Brasil&apikey=<%= apikey %>">
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 🔞 +18 / NSFW -->
+        <div class="api-category">
+          <div class="category-header" onclick="toggleCategory(this)">🔞 +18 / NSFW <i class="fa fa-caret-down"></i></div>
+          <div class="category-content">
+
+            <div class="api-item">
+              <div class="api-name">Imagem Hentai</div>
+              <div class="api-actions">
+                <button class="api-btn" onclick="copyUrl('<%= siteUrl %>/api/nsfw/hentai?apikey=<%= apikey %>')">
+                  <i class="fa-solid fa-copy"></i>
+                </button>
+                <a class="api-btn api-test" target="_blank"
+                  href="<%= siteUrl %>/api/nsfw/hentai?apikey=<%= apikey %>">
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </div>
+</main>
+</div>
+
+<script>
+  function copyUrl(url) {
+    navigator.clipboard.writeText(url)
+      .then(() => alert('✅ URL copiada com sucesso!'))
+      .catch(err => alert('❌ Erro ao copiar'));
+  }
+
+  function toggleCategory(header) {
+    const content = header.nextElementSibling;
+    content.style.display = content.style.display === 'none' ? 'block' : 'none';
+    const icon = header.querySelector('i');
+    icon.classList.toggle('fa-caret-down');
+    icon.classList.toggle('fa-caret-up');
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.category-content').forEach(c => c.style.display = 'none');
+
+    const searchInput = document.getElementById('apiSearch');
+    searchInput.addEventListener('input', () => {
+      const search = searchInput.value.toLowerCase();
+      document.querySelectorAll('.api-category').forEach(category => {
+        let hasMatch = false;
+        const items = category.querySelectorAll('.api-item');
+        items.forEach(item => {
+          const name = item.querySelector('.api-name').innerText.toLowerCase();
+          const show = name.includes(search);
+          item.style.display = show ? 'flex' : 'none';
+          if (show) hasMatch = true;
+        });
+        category.style.display = hasMatch ? 'block' : 'none';
+      });
+    });
+  });
+</script>
+
+<style>
+  .api-category {
+    margin-top: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .category-header {
+    background: #333;
+    color: #fff;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .category-header:hover {
+    background: #444;
+  }
+
+  .category-content {
+    background: #222;
+    padding: 10px;
+  }
+
+  .api-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #111;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+  }
+
+  .api-name {
+    color: #fff;
+    font-size: 14px;
+  }
+
+  .api-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .api-btn {
+    background: #555;
+    border: none;
+    padding: 6px 10px;
+    color: #fff;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  .api-btn:hover {
+    background: #666;
+  }
+
+  .api-test {
+    background: #007bff;
+  }
+
+  .api-search {
+    width: 100%;
+    padding: 8px 10px;
+    margin-bottom: 15px;
+    border: 1px solid #888;
+    border-radius: 5px;
+  }
+</style>

@@ -1,0 +1,78 @@
+<div class="cards">
+  <div class="card">
+    <h3>Anúncios de Parceiro</h3>
+    <button class="submit-btn" onclick="openCreateAd()">Novo Anúncio</button>
+  </div>
+
+  <% if (ads.length) { %>
+    <% ads.forEach(ad => { %>
+      <div class="card">
+        <% if (ad.type === 'video') { %>
+          <video class="banner-media" autoplay muted loop playsinline>
+            <source src="/img/<%= ad.fileName %>" type="video/webm" />
+          </video>
+        <% } else { %>
+          <img src="/img/<%= ad.fileName %>" class="banner-media" alt="ad" />
+        <% } %>
+        <p style="margin-top:0.5rem;"><%= ad.text %></p>
+        <p style="font-size:0.8rem;">Exibido <%= ad.displayCount %> vezes / Cliques <%= ad.clickCount || 0 %></p>
+        <p style="font-size:0.8rem;">Usuário: <%= ad.user ? ad.user.nome + ' (' + ad.user._id + ')' : 'Nenhum' %></p>
+        <form action="/admin/anuncios/<%= ad._id %>/ativar" method="POST" style="margin-top:0.5rem;">
+          <input type="hidden" name="ativo" value="<%= !ad.active %>">
+          <button type="submit" class="submit-btn"><%= ad.active ? 'Desativar' : 'Ativar' %></button>
+        </form>
+        <button class="submit-btn" style="margin-top:0.5rem;background:#5555ff;" onclick="abrirEditarAd('<%= ad._id %>','<%= ad.text.replace(/'/g, '\\&#39;') %>','<%= ad.link %>','<%= ad.user ? ad.user._id : '' %>')">Editar</button>
+        <a href="/admin/anuncios/deletar/<%= ad._id %>" class="submit-btn" style="background:#ff5555;margin-top:0.5rem;">Excluir</a>
+      </div>
+    <% }) %>
+  <% } else { %>
+    <p>Nenhum anúncio cadastrado.</p>
+  <% } %>
+</div>
+
+<div class="modal" id="createAdModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="fecharModal('createAdModal')">&times;</button>
+    <h2>Novo Anúncio</h2>
+    <form id="createAdForm" class="modal-form" action="/admin/anuncios" method="POST" enctype="multipart/form-data">
+      <label for="createAdFile">Arquivo</label>
+      <input type="file" id="createAdFile" name="arquivo" accept="video/*,image/*" required>
+      <label for="createAdText">Texto</label>
+      <input type="text" id="createAdText" name="text" maxlength="80" class="input">
+      <label for="createAdLink">Link</label>
+      <input type="url" id="createAdLink" name="link" class="input">
+      <div class="user-search-container">
+        <input type="text" id="userSearch" placeholder="Buscar usuário" class="input">
+        <select id="newAdUser" name="userId" class="input">
+          <option value="">Nenhum</option>
+        </select>
+      </div>
+      <button type="submit" class="submit-btn">Salvar</button>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="editAdModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="fecharModal('editAdModal')">&times;</button>
+    <h2>Editar Anúncio</h2>
+    <form id="editAdForm" class="modal-form" method="POST" enctype="multipart/form-data">
+      <input type="hidden" id="editAdId" name="id">
+      <label for="editAdFile">Arquivo (opcional)</label>
+      <input type="file" id="editAdFile" name="arquivo" accept="video/*,image/*">
+      <label for="editAdText">Texto</label>
+      <input type="text" id="editAdText" name="text" maxlength="80">
+      <label for="editAdLink">Link</label>
+      <input type="url" id="editAdLink" name="link">
+      <div class="user-search-container">
+        <input type="text" id="editUserSearch" placeholder="Buscar usuário" class="input">
+        <select id="editAdUser" name="userId" class="input">
+          <option value="">Nenhum</option>
+        </select>
+      </div>
+      <button type="submit" class="submit-btn">Salvar</button>
+    </form>
+  </div>
+</div>
+<script src="/js/admin.js"></script>
+<script src="/js/admin/anuncios.js"></script>

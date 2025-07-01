@@ -1,0 +1,52 @@
+<div class="cards">
+  <div class="card">
+    <div class="card-header">
+      <h3>Novo Banner</h3>
+    </div>
+    <form action="/admin/banner" method="POST" enctype="multipart/form-data" class="modal-form">
+      <label>Arquivo
+        <input type="file" name="arquivo" accept="video/*,image/*" required>
+      </label>
+      <label>Mensagem
+        <input type="text" name="text" required>
+      </label>
+      <label>Texto do Botão (opcional)
+        <input type="text" name="buttonText" placeholder="Ex: Saiba mais">
+      </label>
+      <label>Link do Botão (opcional)
+        <input type="url" name="buttonUrl" placeholder="https://">
+      </label>
+      <button type="submit" class="submit-btn">Salvar Banner</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Banners</h3>
+    </div>
+    <div class="scroll-container">
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>Arquivo</th>
+            <th>Mensagem</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% banners.forEach(b => { %>
+            <tr>
+              <td><%= b.fileName %></td>
+              <td><%= b.text %></td>
+              <td class="bot-actions">
+                <a href="/admin/banner/editar/<%= b._id %>" class="bot-btn">Editar</a>
+                <a href="/admin/banner/deletar/<%= b._id %>" class="bot-btn excluir">Deletar</a>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script src="/js/admin.js"></script>

@@ -1,0 +1,57 @@
+<div class="cards">
+  <div class="card">
+    <div class="card-header">
+      <h3>Novo Post</h3>
+    </div>
+    <form action="/admin/posts" method="POST" enctype="multipart/form-data" class="modal-form">
+      <label>Título
+        <input type="text" name="title" required>
+      </label>
+      <label>Mensagem
+        <textarea name="message" rows="4" required></textarea>
+      </label>
+      <label>Texto do Botão (opcional)
+        <input type="text" name="buttonLabel" placeholder="Ex: Saiba mais">
+      </label>
+      <label>Link do Botão (opcional)
+        <input type="url" name="buttonUrl" placeholder="https://">
+      </label>
+      <label>Arquivo (opcional)
+        <input type="file" name="file" accept="image/*,video/*">
+      </label>
+      <button type="submit" class="submit-btn">Salvar Post</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Posts</h3>
+    </div>
+    <div class="scroll-container">
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>Título</th>
+            <th>Data</th>
+            <th>Slug</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% posts.forEach(p => { %>
+            <tr>
+              <td><%= p.title %></td>
+              <td><%= new Date(p.createdAt).toLocaleDateString('pt-BR') %></td>
+              <td><a href="/blog/<%= p.slug %>" target="_blank"><%= p.slug %></a></td>
+              <td class="bot-actions">
+                <a href="/admin/posts/deletar/<%= p._id %>" class="bot-btn excluir">Deletar</a>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script src="/js/admin.js"></script>
+

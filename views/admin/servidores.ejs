@@ -1,0 +1,153 @@
+<!-- views/servidores.ejs -->
+<div class="cards">
+  <div class="card">
+    <div class="card-header">
+      <h3>Servidores cadastrados</h3>
+    </div>
+
+    <div class="scroll-container">
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Base URL</th>
+            <th>Limite</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% servidores.forEach(s => { %>
+            <tr>
+              <td><%= s.nome %></td>
+              <td><%= s.baseUrl %></td>
+              <td><%= s.sessionLimit === 0 ? 'ilimitado' : s.sessionLimit %></td>
+              <td><%= s.status ? 'Ativo' : 'Inativo' %></td>
+              <td class="bot-actions">
+                <button
+                  class="bot-btn editar"
+                  onclick="abrirEditar(
+                    '<%= s._id %>',
+                    '<%= s.nome %>',
+                    '<%= s.baseUrl %>',
+                    '<%= s.globalapikey %>',
+                    <%= s.sessionLimit %>,
+                    <%= s.status %>
+                  )"
+                >Editar</button>
+                <button
+                  class="bot-btn excluir"
+                  onclick="abrirExcluir('<%= s._id %>')"
+                >Deletar</button>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <button onclick="abrirCriar()" class="submit-btn">
+      Novo Servidor
+    </button>
+  </div>
+</div>
+
+<!-- Modal de Criar/Editar Servidor -->
+<div class="modal" id="srvModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="fecharModal('srvModal')">&times;</button>
+    <h2 id="srvTitle">Servidor</h2>
+    <form id="srvForm" method="POST" class="modal-form">
+      <input type="hidden" id="srvId" name="id">
+      <div class="form-group">
+        <label for="fNome">Nome:</label>
+        <input type="text" id="fNome" name="nome" required>
+      </div>
+      <div class="form-group">
+        <label for="fBase">Base URL:</label>
+        <input type="text" id="fBase" name="baseUrl" required>
+      </div>
+      <div class="form-group">
+        <label for="fKey">Chave Global:</label>
+        <input type="text" id="fKey" name="globalapikey" required>
+      </div>
+      <div class="form-group">
+        <label for="fLimit">Limite sessões:</label>
+        <input type="number" id="fLimit" name="sessionLimit" min="0" value="0">
+      </div>
+      <div class="form-group">
+        <label for="fStatus">Status:</label>
+        <select id="fStatus" name="status">
+          <option value="true">Ativo</option>
+          <option value="false">Inativo</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="submit-btn" onclick="fecharModal('srvModal')">
+          Cancelar
+        </button>
+        <button type="submit" class="submit-btn">
+          Salvar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal de Confirmar Exclusão -->
+<div class="modal" id="srvExcluirModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="fecharModal('srvExcluirModal')">&times;</button>
+    <h2>Excluir Servidor?</h2>
+    <div class="modal-footer">
+      <button class="submit-btn" onclick="confirmarExcluir()">Sim, deletar</button>
+      <button class="submit-btn" onclick="fecharModal('srvExcluirModal')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- 1) carrega admin.js com openModalById/closeModal e helpers -->
+<script src="/js/admin.js"></script>
+
+<!-- 2) inline: lógica de CRUD de servidor -->
+<script>
+  let excluirId = null;
+
+  function abrirCriar() {
+    document.getElementById('srvForm').action = '/admin/servidores/criar';
+    document.getElementById('srvTitle').textContent = 'Novo Servidor';
+    document.getElementById('srvId').value = '';
+    document.getElementById('fNome').value = '';
+    document.getElementById('fBase').value = '';
+    document.getElementById('fKey').value = '';
+    document.getElementById('fLimit').value = 0;
+    document.getElementById('fStatus').value = 'true';
+    openModalById('srvModal');
+  }
+
+  function abrirEditar(id, nome, baseUrl, key, limit, status) {
+    document.getElementById('srvForm').action = `/admin/servidores/editar/${id}`;
+    document.getElementById('srvTitle').textContent = 'Editar Servidor';
+    document.getElementById('srvId').value = id;
+    document.getElementById('fNome').value = nome;
+    document.getElementById('fBase').value = baseUrl;
+    document.getElementById('fKey').value = key;
+    document.getElementById('fLimit').value = limit;
+    document.getElementById('fStatus').value = status ? 'true' : 'false';
+    openModalById('srvModal');
+  }
+
+  function abrirExcluir(id) {
+    excluirId = id;
+    openModalById('srvExcluirModal');
+  }
+
+  function confirmarExcluir() {
+    if (!excluirId) return;
+    window.location.href = `/admin/servidores/deletar/${excluirId}`;
+  }
+
+  function fecharModal(modalId) {
+    closeModal(modalId);
+  }
+</script>

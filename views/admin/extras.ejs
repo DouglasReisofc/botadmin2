@@ -1,0 +1,157 @@
+<div class="cards">
+  <div class="card">
+    <div class="card-header">
+      <h3>Planos Extras</h3>
+    </div>
+    <div class="scroll-container">
+      <% if (!extras || !extras.length) { %>
+        <p>Nenhum plano extra cadastrado.</p>
+      <% } else { %>
+        <table class="user-table">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Preço</th>
+              <th>Tipo</th>
+              <th>Dias</th>
+              <th>Qtd. Anúncios</th>
+              <th>Qtd. Links</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% extras.forEach(extra => { %>
+              <tr>
+                <td><%= extra.nome %></td>
+                <td>R$ <%= extra.preco.toFixed(2) %></td>
+                <td><%= extra.tipo %></td>
+                <td><%= extra.dias %></td>
+                <td><%= extra.tipo === 'ads' ? (extra.quantidadeAds || 0) : '-' %></td>
+                <td><%= extra.tipo === 'shortener' ? (extra.quantidadeLinks || 0) : '-' %></td>
+                <td class="bot-actions">
+                  <button class="bot-btn editar" onclick="openEdit('<%= extra._id %>','<%= extra.nome %>',<%= extra.preco %>,'<%= extra.tipo %>',<%= extra.dias %>,<%= extra.quantidadeAds || 0 %>,<%= extra.quantidadeLinks || 0 %>)">Editar</button>
+                  <button class="bot-btn excluir" onclick="openDelete('<%= extra._id %>')">Deletar</button>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      <% } %>
+    </div>
+    <button onclick="openCreate()" class="submit-btn">Criar Plano Extra</button>
+  </div>
+</div>
+
+<div class="modal" id="createModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal('createModal')">&times;</button>
+    <h2>Novo Plano Extra</h2>
+    <form id="createForm" action="/admin/extras/criar" method="POST" class="modal-form">
+      <label for="nome">Nome</label>
+      <input type="text" name="nome" id="nome" required>
+      <label for="preco">Preço</label>
+      <input type="number" name="preco" id="preco" step="0.01" required>
+      <label for="tipo">Tipo</label>
+      <select name="tipo" id="tipo" required>
+        <option value="premium">Premium</option>
+        <option value="ads">Anúncios</option>
+        <option value="shortener">Encurtador</option>
+      </select>
+      <label for="dias">Dias</label>
+      <input type="number" name="dias" id="dias" required>
+      <div id="createQtdWrapper" style="display:none;">
+        <label for="quantidadeAds">Qtd. Anúncios</label>
+        <input type="number" name="quantidadeAds" id="quantidadeAds">
+      </div>
+      <div id="createLinkWrapper" style="display:none;">
+        <label for="quantidadeLinks">Qtd. Links</label>
+        <input type="number" name="quantidadeLinks" id="quantidadeLinks">
+      </div>
+    </form>
+    <div class="modal-footer">
+      <button type="button" class="submit-btn" onclick="closeModal('createModal')">Cancelar</button>
+      <button class="submit-btn" onclick="document.getElementById('createForm').submit()">Criar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="editModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal('editModal')">&times;</button>
+    <h2>Editar Plano Extra</h2>
+    <form id="editForm" class="modal-form" method="POST">
+      <label for="editNome">Nome</label>
+      <input type="text" id="editNome" name="nome" required>
+      <label for="editPreco">Preço</label>
+      <input type="number" id="editPreco" name="preco" step="0.01" required>
+      <label for="editTipo">Tipo</label>
+      <select id="editTipo" name="tipo" required>
+        <option value="premium">Premium</option>
+        <option value="ads">Anúncios</option>
+        <option value="shortener">Encurtador</option>
+      </select>
+      <label for="editDias">Dias</label>
+      <input type="number" id="editDias" name="dias" required>
+      <div id="editQtdWrapper" style="display:none;">
+        <label for="editQuantidadeAds">Qtd. Anúncios</label>
+        <input type="number" id="editQuantidadeAds" name="quantidadeAds">
+      </div>
+      <div id="editLinkWrapper" style="display:none;">
+        <label for="editQuantidadeLinks">Qtd. Links</label>
+        <input type="number" id="editQuantidadeLinks" name="quantidadeLinks">
+      </div>
+    </form>
+    <div class="modal-footer">
+      <button type="button" class="submit-btn" onclick="closeModal('editModal')">Cancelar</button>
+      <button class="submit-btn" onclick="document.getElementById('editForm').submit()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="deleteModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal('deleteModal')">&times;</button>
+    <h2>Excluir plano extra?</h2>
+    <div class="modal-footer">
+      <button id="confirmDelete" class="submit-btn">Deletar</button>
+      <button class="submit-btn" onclick="closeModal('deleteModal')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleQtd(select){
+  const adWrapper = document.getElementById(select.id === 'tipo' ? 'createQtdWrapper' : 'editQtdWrapper');
+  const linkWrapper = document.getElementById(select.id === 'tipo' ? 'createLinkWrapper' : 'editLinkWrapper');
+  adWrapper.style.display = select.value === 'ads' ? 'block' : 'none';
+  linkWrapper.style.display = select.value === 'shortener' ? 'block' : 'none';
+}
+document.getElementById('tipo').addEventListener('change', function(){ toggleQtd(this); });
+document.getElementById('editTipo').addEventListener('change', function(){ toggleQtd(this); });
+
+function openCreate(){
+  document.getElementById('quantidadeAds').value='';
+  document.getElementById('quantidadeLinks').value='';
+  document.getElementById('tipo').value='premium';
+  toggleQtd(document.getElementById('tipo'));
+  document.getElementById('createModal').classList.add('active');
+}
+
+function openEdit(id,nome,preco,tipo,dias,qtd,qtdLinks){
+  const form=document.getElementById('editForm');
+  form.action=`/admin/extras/editar/${id}`;
+  document.getElementById('editNome').value=nome;
+  document.getElementById('editPreco').value=preco;
+  document.getElementById('editTipo').value=tipo;
+  document.getElementById('editDias').value=dias;
+  document.getElementById('editQuantidadeAds').value=qtd;
+  document.getElementById('editQuantidadeLinks').value=qtdLinks;
+  toggleQtd(document.getElementById('editTipo'));
+  document.getElementById('editModal').classList.add('active');
+}
+function openDelete(id){
+  document.getElementById('confirmDelete').onclick=()=>{window.location=`/admin/extras/deletar/${id}`};
+  document.getElementById('deleteModal').classList.add('active');
+}
+function closeModal(id){ document.getElementById(id).classList.remove('active'); }
+</script>

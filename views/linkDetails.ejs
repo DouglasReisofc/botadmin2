@@ -1,0 +1,52 @@
+<h2 class="welcome">Detalhes do Link</h2>
+<div class="card">
+  <p><strong>Original:</strong> <%= link.originalUrl %></p>
+  <p>
+    <strong>Link:</strong>
+    <input type="text" id="shortUrl" class="short-link-input" value="<%= siteUrl %>/l/<%= link.code %>" readonly>
+    <button class="copy-btn" style="margin-left:0.5rem;" onclick="copyLink()"><i class="fa-solid fa-copy"></i></button>
+  </p>
+  <p><strong>Total de Cliques:</strong> <%= link.clickCount %></p>
+</div>
+<div class="card">
+  <h3>Logs</h3>
+  <% if (!logs || !logs.length) { %>
+    <p>Nenhum acesso registrado.</p>
+  <% } else { %>
+    <table class="user-table">
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>IP</th>
+          <th>País</th>
+          <th>Aplicativo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% logs.forEach(lg => { %>
+          <tr>
+            <td><%= lg.timestamp.toLocaleString('pt-BR') %></td>
+            <td><%= lg.ip %></td>
+            <td><%= lg.country || '-' %></td>
+            <td><%= lg.app %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <% if (page > 1) { %>
+      <a href="?p=<%= page - 1 %>" class="bot-btn" style="margin-right:0.5rem;">Anterior</a>
+    <% } %>
+    <% if (hasMore) { %>
+      <a href="?p=<%= page + 1 %>" class="bot-btn">Próxima</a>
+    <% } %>
+  <% } %>
+</div>
+<script>
+  function copyLink(){
+    const input = document.getElementById('shortUrl');
+    input.select();
+    navigator.clipboard.writeText(input.value);
+    input.classList.add('flash');
+    setTimeout(() => input.classList.remove('flash'), 400);
+  }
+</script>

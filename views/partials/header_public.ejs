@@ -1,0 +1,50 @@
+<header class="header">
+  <div class="header-left"></div>
+
+  <div class="header-center">
+    <div class="branding">
+      <a href="/" class="brand-link" aria-label="Página inicial">
+        <img src="<%= siteConfig?.logo || '/img/logo.webp' %>" alt="Bot Admin" class="logo-img" style="<%= siteConfig?.logoStyle || '' %>">
+        <h1 class="logo-title">Bot Admin</h1>
+      </a>
+    </div>
+  </div>
+
+  <div class="header-right">
+    <% if (typeof showThemeToggle === 'undefined' || showThemeToggle) { %>
+      <button id="theme-toggle" class="theme-toggle-btn" aria-label="Alternar tema">
+        <i class="fa-solid fa-moon"></i>
+      </button>
+    <% } %>
+
+    <select id="lang-select" aria-label="Idioma">
+      <option value="ptbr" <%= lang === 'ptbr' ? 'selected' : '' %>>PT</option>
+      <option value="enus" <%= lang === 'enus' ? 'selected' : '' %>>EN</option>
+      <option value="es" <%= lang === 'es' ? 'selected' : '' %>>ES</option>
+    </select>
+
+    <% if (typeof showDropdown === 'undefined' || showDropdown) { %>
+      <div class="nav-buttons dropdown">
+        <button class="btn dropdown-toggle" onclick="toggleDropdown(this)" aria-label="Conta">
+          <i class="fa-solid fa-user"></i><span class="arrow">&#9660;</span>
+        </button>
+        <div class="dropdown-menu">
+          <a href="/entrar"><i class="fa-solid fa-right-to-bracket"></i> <%= t('entrar') %></a>
+          <a href="/cadastrar"><i class="fa-solid fa-user-plus"></i> <%= t('cadastrar') %></a>
+          <a href="/tutorials"><i class="fa-solid fa-book"></i> <%= t('tutoriais') %></a>
+          <a href="/blog"><i class="fa-solid fa-blog"></i> <%= t('blog') %></a>
+        </div>
+      </div>
+    <% } else { %>
+      <div class="nav-buttons">
+        <a href="/entrar" class="btn"><%= t('entrar') %></a>
+        <a href="/cadastrar" class="btn"><%= t('cadastrar') %></a>
+      </div>
+    <% } %>
+  </div>
+</header>
+<script>
+  document.getElementById('lang-select').addEventListener('change', e => {
+    fetch('/lang?lang=' + e.target.value).then(() => location.reload());
+  });
+</script>

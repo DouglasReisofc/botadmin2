@@ -1,0 +1,104 @@
+<h2 class="welcome">Meus Links</h2>
+
+<section class="links-form">
+  <form action="/links" method="POST" class="modal-form">
+    <label for="url">URL original</label>
+    <input type="url" name="url" id="url" required>
+    <button type="submit" class="submit-btn">Encurtar</button>
+  </form>
+</section>
+
+<section class="links-table">
+  <h3>Links Criados</h3>
+  <% if (!links.length) { %>
+    <p>Nenhum link criado.</p>
+  <% } else { %>
+    <div class="table-wrapper">
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Link</th>
+            <th>URL Original</th>
+            <th>Ativo?</th>
+            <th>Cliques</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% links.forEach(l => { %>
+            <tr>
+              <td data-label="Código"><%= l.code %></td>
+              <td data-label="Link">
+                <input
+                  type="text"
+                  class="short-link-input"
+                  value="<%= siteUrl %>/l/<%= l.code %>"
+                  readonly
+                >
+                <button class="copy-btn" onclick="copyLink(this)">
+                  <i class="fa-solid fa-copy"></i>
+                </button>
+              </td>
+              <td data-label="URL Original"><%= l.originalUrl %></td>
+              <td data-label="Ativo?"><%= l.active ? 'Sim' : 'Não' %></td>
+              <td data-label="Cliques"><%= l.clickCount %></td>
+              <td data-label="Ações">
+                <button
+                  class="bot-btn editar"
+                  onclick="openEditLink('<%= l.code %>', '<%= l.originalUrl.replace(/'/g, '\\&#39;') %>')"
+                >
+                  Editar
+                </button>
+                <form
+                  action="/links/<%= l.code %>/ativar"
+                  method="POST"
+                  style="display:inline;"
+                >
+                  <input type="hidden" name="ativo" value="<%= !l.active %>">
+                  <button type="submit" class="bot-btn">
+                    <%= l.active ? 'Desativar' : 'Ativar' %>
+                  </button>
+                </form>
+                <a href="/links/<%= l.code %>" class="bot-btn detalhes">
+                  Detalhes
+                </a>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</section>
+
+<div class="modal" id="editLinkModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="fecharModal('editLinkModal')">&times;</button>
+    <h2>Editar Link</h2>
+    <form id="editLinkForm" class="modal-form" method="POST">
+      <label for="editLinkUrl">URL Original</label>
+      <input type="url" id="editLinkUrl" name="url" required>
+      <button type="submit" class="submit-btn">Salvar</button>
+    </form>
+  </div>
+</div>
+
+<script src="/js/admin.js"></script>
+<script>
+  function openEditLink(code, url){
+    document.getElementById('editLinkForm').action = `/links/${code}/editar`;
+    document.getElementById('editLinkUrl').value = url;
+    openModalById('editLinkModal');
+  }
+  function fecharModal(id){
+    closeModal(id);
+  }
+  function copyLink(btn){
+    const input = btn.previousElementSibling;
+    input.select();
+    navigator.clipboard.writeText(input.value);
+    input.classList.add('flash');
+    setTimeout(() => input.classList.remove('flash'), 400);
+  }
+</script>

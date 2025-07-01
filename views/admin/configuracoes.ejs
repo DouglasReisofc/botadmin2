@@ -1,0 +1,61 @@
+<%
+function isGradient(v){
+  return typeof v === 'string' && v.includes('linear-gradient');
+}
+function parseGrad(v){
+  const m = /linear-gradient\((\d+)deg,\s*(#[0-9A-Fa-f]{3,8}),\s*(#[0-9A-Fa-f]{3,8})\)/.exec(v||'');
+  return m ? {angle:m[1],start:m[2],end:m[3]} : {angle:45,start:'#000000',end:'#ffffff'};
+}
+%>
+<div class="config-wrapper">
+  <h3>Personalizar Cores</h3>
+  <form action="/admin/configuracoes/cores" method="POST" class="color-form">
+    <section class="theme-section">
+      <h4>Tema escuro</h4>
+      <ul class="color-list">
+        <% for(const key in darkTheme) { const val = config.themeDark[key] || darkTheme[key]; %>
+          <li class="color-item">
+            <label for="dark-<%= key %>"><%= key %></label>
+            <% if (isGradient(val)) { const g = parseGrad(val); %>
+              <div class="gradient-picker" data-theme="dark" data-var="<%= key %>">
+                <input type="hidden" class="theme-input" data-theme="dark" data-var="<%= key %>" id="dark-<%= key %>" name="dark[<%= key %>]" value="<%= val %>">
+                <input type="color" class="grad-color1 color-input" value="<%= g.start %>">
+                <input type="color" class="grad-color2 color-input" value="<%= g.end %>">
+                <input type="range" class="grad-angle" min="0" max="360" value="<%= g.angle %>">
+                <span class="grad-preview" style="display:inline-block;width:40px;height:20px;background:<%= val %>;"></span>
+              </div>
+            <% } else { %>
+              <input class="theme-input color-input" data-theme="dark" data-var="<%= key %>" id="dark-<%= key %>" name="dark[<%= key %>]" value="<%= val %>">
+            <% } %>
+          </li>
+        <% } %>
+      </ul>
+    </section>
+    <section class="theme-section">
+      <h4>Tema claro</h4>
+      <ul class="color-list">
+        <% for(const key in lightTheme) { const val = config.themeLight[key] || lightTheme[key]; %>
+          <li class="color-item">
+            <label for="light-<%= key %>"><%= key %></label>
+            <% if (isGradient(val)) { const g = parseGrad(val); %>
+              <div class="gradient-picker" data-theme="light" data-var="<%= key %>">
+                <input type="hidden" class="theme-input" data-theme="light" data-var="<%= key %>" id="light-<%= key %>" name="light[<%= key %>]" value="<%= val %>">
+                <input type="color" class="grad-color1 color-input" value="<%= g.start %>">
+                <input type="color" class="grad-color2 color-input" value="<%= g.end %>">
+                <input type="range" class="grad-angle" min="0" max="360" value="<%= g.angle %>">
+                <span class="grad-preview" style="display:inline-block;width:40px;height:20px;background:<%= val %>;"></span>
+              </div>
+            <% } else { %>
+              <input class="theme-input color-input" data-theme="light" data-var="<%= key %>" id="light-<%= key %>" name="light[<%= key %>]" value="<%= val %>">
+            <% } %>
+          </li>
+        <% } %>
+      </ul>
+    </section>
+    <button type="submit" class="submit-btn">Salvar Cores</button>
+  </form>
+</div>
+<script src="/js/admin.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@melloware/coloris/dist/coloris.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@melloware/coloris/dist/coloris.min.css" />
+<script src="/js/admin/config.js"></script>

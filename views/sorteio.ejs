@@ -1,0 +1,246 @@
+<main class="content">
+  <div class="cards">
+    <section class="card">
+      <h3><i class="fa-solid fa-filter"></i> Grupos</h3>
+      <div style="display:flex;flex-direction:column;gap:1rem;margin-bottom:1.5rem">
+        <select id="grupoSelect" onchange="filtrarGrupo()">
+          <% bots.forEach(b => { %>
+            <option
+              value="<%= b._id %>"
+              <%= grupoSelecionado && b._id.equals(grupoSelecionado._id) ? 'selected' : '' %>>
+              <%= b.nomeGrupo || b.groupId %>
+            </option>
+          <% }) %>
+        </select>
+
+        <% if (grupoSelecionado) { %>
+          <div style="color:var(--texto-cinza);font-size:.9rem">
+            <i class="fa-solid fa-hashtag"></i>
+            <strong>ID:</strong> <%= grupoSelecionado.groupId %> |
+            <i class="fa-solid fa-calendar-days"></i>
+            <strong>Venc:</strong>
+            <%= grupoSelecionado.vencimento
+                ? new Date(grupoSelecionado.vencimento).toLocaleDateString('pt-BR')
+                : '-' %>
+          </div>
+        <% } %>
+
+        <button class="novo-bot-btn" onclick="abrirModalNovo()">
+          <i class="fa-solid fa-plus"></i> Novo Sorteio
+        </button>
+      </div>
+
+      <% const lista = grupoSelecionado
+           ? (sorteiosPorGrupo[grupoSelecionado._id] || [])
+           : [];
+      %>
+      <% if (!grupoSelecionado) { %>
+        <p>Selecione um grupo acima.</p>
+      <% } else if (!lista.length) { %>
+        <p>Nenhum sorteio ativo.</p>
+      <% } else { %>
+        <ul class="bot-list">
+          <% lista.forEach(s => {
+             const isAuto = s.tipo === 'automatico';
+          %>
+            <li class="bot-item">
+              <div class="bot-details">
+                <span class="tipo-sorteio">
+                  <%= isAuto ? 'Automático' : 'Manual' %>
+                </span>
+                <h4 class="titulo-sorteio"
+                    title="<%- s.pergunta.replace(/"/g, '&quot;') %>">
+                  <%- s.pergunta %>
+                </h4>
+                <p>
+                  <i class="fa-solid fa-calendar-days"></i> Fim:
+                  <%= s.sortearEm
+                      ? new Date(s.sortearEm).toLocaleString('pt-BR')
+                      : '—' %>
+                </p>
+                <p>
+                  <i class="fa-solid fa-user-group"></i> Limite:
+                  <%= s.maxParticipantes || 'Sem limite' %>
+                </p>
+                <% if (isAuto) { %>
+                  <p>
+                    <i class="fa-solid fa-award"></i> Vencedores (pré-definido):
+                    <%= s.winnersCount %>
+                  </p>
+                <% } %>
+                <p>
+                  <i class="fa-solid fa-users"></i> Total:
+                  <%= s.participantes.length %>
+                </p>
+              </div>
+              <div class="bot-actions">
+                <% if (isAuto) { %>
+                  <button class="bot-btn editar"
+                          onclick="abrirModalAddAuto('<%= grupoSelecionado._id %>', '<%= s.serialized %>')">
+                    <i class="fa-solid fa-user-plus"></i> ADD
+                  </button>
+                <% } else { %>
+                  <button class="bot-btn editar"
+                          onclick="abrirModalEdit('<%= grupoSelecionado._id %>', '<%= s.serialized %>')">
+                    <i class="fa-solid fa-pen"></i> EDITAR
+                  </button>
+                <% } %>
+
+                <button class="bot-btn renovar"
+                        onclick="abrirModalConfirmacao('<%= grupoSelecionado._id %>', '<%= s.serialized %>', '<%= s.participantes.length %>')">
+                  <i class="fa-solid fa-check"></i> SORTEAR
+                </button>
+
+                <form action="/usuario/grupos/sorteio/apagar" method="POST" style="display:inline">
+                  <input type="hidden" name="grupo" value="<%= grupoSelecionado._id %>">
+                  <input type="hidden" name="serialized" value="<%= s.serialized %>">
+                  <button class="bot-btn excluir">
+                    <i class="fa-solid fa-trash"></i> Apagar
+                  </button>
+                </form>
+              </div>
+            </li>
+          <% }) %>
+        </ul>
+      <% } %>
+    </section>
+  </div>
+</main>
+
+<div id="modalConfirmar" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="fecharModalConfirmacao()">&times;</span>
+    <form id="formConfirmarSorteio" method="POST" action="/usuario/grupos/sorteio/finalizar">
+      <input type="hidden" name="grupo" id="confirmGrupo">
+      <input type="hidden" name="serialized" id="confirmSerialized">
+
+      <label for="numWinners" style="font-weight:bold; display:block; margin-bottom:.5rem">
+        Quantos vencedores?
+      </label>
+
+      <input type="number" name="numWinners" id="numWinners" min="1" value="1" required
+             style="width:100%; padding:.5rem .75rem; font-size:1rem; border:1px solid #ccc; border-radius:8px;
+                    background:#f9f9f9; transition:border .3s; outline:none"
+             onfocus="this.style.borderColor='#999'">
+
+      <button class="submit-btn" style="margin-top:1.2rem">
+        <i class="fa-solid fa-check"></i> Confirmar Sorteio
+      </button>
+    </form>
+  </div>
+</div>
+
+<div id="modalNovo" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="fecharModalNovo()">&times;</span>
+    <form class="modal-form" action="/usuario/grupos/sorteio" method="POST" onsubmit="ajustarTipoNovo()">
+      <input type="hidden" name="type" id="novoType" value="manual">
+      <input type="hidden" name="grupo" id="novoGrupo">
+
+      <h2 class="modal-title"><i class="fa-solid fa-plus-circle"></i> Novo Sorteio</h2>
+
+      <label>Tipo de Sorteio</label>
+      <div class="toggle-row">
+        Manual
+        <label class="switch"><input type="checkbox" id="novoTipo"><span class="slider"></span></label>
+        Automático
+      </div>
+
+      <label>Pergunta</label>
+      <textarea name="pergunta" class="texto-pergunta" placeholder="Digite o texto completo do sorteio…" required></textarea>
+
+      <div id="novoManual">
+        <button type="button" class="submit-btn" onclick="abrirModalPart('novo')">
+          <i class="fa-solid fa-user-plus"></i> ADD Participantes
+        </button>
+        <div id="listaResumoNovo" class="lista-part" style="margin-top:.5rem"></div>
+        <div id="inputsPartNovo"></div>
+      </div>
+
+      <div id="novoAuto" style="display:none">
+        <label>Data de Término</label>
+        <input type="datetime-local" name="endDate">
+        <label>Limite de Pessoas</label>
+        <input type="number" name="maxParticipants" min="1" placeholder="Ex: 50">
+        <label>Vencedores</label>
+        <input type="number" name="winnersCount" min="1" placeholder="Ex: 3">
+      </div>
+
+      <button class="submit-btn"><i class="fa-solid fa-save"></i> Criar Sorteio</button>
+    </form>
+  </div>
+</div>
+
+<div id="modalEdit" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="fecharModalEdit()">&times;</span>
+    <form class="modal-form" action="/usuario/grupos/sorteio/editar" method="POST" onsubmit="ajustarTipoEdit()">
+      <input type="hidden" name="type" id="editType" value="manual">
+      <input type="hidden" name="grupo" id="editGrupo">
+      <input type="hidden" name="serialized" id="editSerialized">
+
+      <h2 class="modal-title"><i class="fa-solid fa-pen"></i> Editar Sorteio</h2>
+
+      <div id="editToggleContainer" class="toggle-row">
+        <label>Tipo de Sorteio</label>
+        <label class="switch"><input type="checkbox" id="editTipo"><span class="slider"></span></label>
+        <span>Automático</span>
+      </div>
+
+      <label>Pergunta</label>
+      <textarea name="pergunta" id="editPergunta" class="texto-pergunta" required></textarea>
+
+      <div id="editManual">
+        <button type="button" class="submit-btn" onclick="abrirModalPart('edit')">
+          <i class="fa-solid fa-user-plus"></i> ADD Participantes
+        </button>
+        <div id="listaResumoEdit" class="lista-part" style="margin-top:.5rem"></div>
+        <div id="inputsPartEdit"></div>
+      </div>
+
+      <div id="editAuto" style="display:none">
+        <label>Data de Término</label>
+        <input type="datetime-local" name="endDate" id="editEndDate">
+        <label>Limite de Pessoas</label>
+        <input type="number" name="maxParticipants" id="editMaxParticipantsAuto" min="1">
+        <label>Vencedores</label>
+        <input type="number" name="winnersCount" id="editWinnersCount" min="1">
+      </div>
+
+      <button class="submit-btn"><i class="fa-solid fa-save"></i> Salvar</button>
+    </form>
+  </div>
+</div>
+
+<div id="modalAddAuto" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="fecharModalAddAuto()">&times;</span>
+    <h2 class="modal-title"><i class="fa-solid fa-user-plus"></i> Participantes</h2>
+    <form class="modal-form" action="/usuario/grupos/sorteio/editar" method="POST">
+      <input type="hidden" name="type" value="automatic">
+      <input type="hidden" name="grupo" id="addAutoGrupo">
+      <input type="hidden" name="serialized" id="addAutoSerialized">
+      <input type="text" id="searchAutoPart" placeholder="Buscar…" oninput="filterAutoList()" style="margin-bottom:.5rem">
+      <div id="autoPartList" class="scroll-list"></div>
+      <button class="submit-btn"><i class="fa-solid fa-check"></i> Salvar</button>
+    </form>
+  </div>
+</div>
+
+<div id="modalPart" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="fecharModalPart()">&times;</span>
+    <h2 class="modal-title"><i class="fa-solid fa-users"></i> Participantes</h2>
+    <input type="text" id="buscaPart" placeholder="Buscar…" style="margin-bottom:.8rem">
+    <div id="listaPart" class="scroll-list"></div>
+    <button class="submit-btn" onclick="confirmarPart()"><i class="fa-solid fa-check"></i> Concluir</button>
+  </div>
+</div>
+
+<script>
+  const bots = <%- JSON.stringify(bots) %>;
+  const sorteiosPorGrupo = <%- JSON.stringify(sorteiosPorGrupo) %>;
+</script>
+<script src="/js/grupos/sorteio.js"></script>
+</body>
+</html>

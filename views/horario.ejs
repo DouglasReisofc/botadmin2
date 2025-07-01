@@ -1,0 +1,41 @@
+<main class="content" role="main">
+  <div class="card">
+    <h3><i class="fa-solid fa-filter"></i> Selecione o Grupo</h3>
+    <form action="/grupos/horario" method="GET" class="grupo-filtro-form">
+      <label class="switch-label">Grupo:</label>
+      <select name="grupo" id="grupoSelect" onchange="this.form.submit()" class="grupo-select">
+        <% bots.forEach(bot => { %>
+          <option value="<%= bot.groupId %>" <%= grupoSelecionado && bot.groupId === grupoSelecionado.groupId ? 'selected' : '' %>>
+            <%= bot.nomeGrupo || bot.groupId %>
+          </option>
+        <% }) %>
+      </select>
+    </form>
+  </div>
+
+  <% if (grupoSelecionado) { %>
+    <form class="card" action="/usuario/grupos/horario" method="POST">
+      <input type="hidden" name="botId" value="<%= grupoSelecionado._id %>">
+      <h3 class="grupo-nome"><i class="fa-solid fa-clock"></i> Horários do Grupo</h3>
+      <label>Horário para Abrir (HH:MM):</label>
+      <input type="time" name="abrir" value="<%= grupoSelecionado.horarioGrupo.abrir %>" <%= !grupoSelecionado.botAdmin ? 'disabled' : '' %>>
+      <label style="margin-top:.5rem;">Horário para Fechar (HH:MM):</label>
+      <input type="time" name="fechar" value="<%= grupoSelecionado.horarioGrupo.fechar %>" <%= !grupoSelecionado.botAdmin ? 'disabled' : '' %>>
+      <div class="switch-group" style="margin-top:0.5rem;">
+        <span class="switch-label">Agendamento Ativo</span>
+        <label class="toggle-switch">
+          <input type="checkbox" name="ativo" <%= grupoSelecionado.horarioGrupo.ativo ? 'checked' : '' %> <%= !grupoSelecionado.botAdmin ? 'disabled' : '' %>/>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <% if (!grupoSelecionado.botAdmin) { %>
+        <p style="color:red;margin-top:0.5rem;">Conceda direitos de administrador ao bot para ativar esta função.</p>
+      <% } %>
+      <button class="submit-btn" style="margin-top:1rem;" type="submit">
+        <i class="fa-solid fa-save"></i> Salvar
+      </button>
+    </form>
+  <% } else { %>
+    <p>Você ainda não possui grupos configurados.</p>
+  <% } %>
+</main>

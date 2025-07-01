@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="<%= lang === 'ptbr' ? 'pt-BR' : (lang === 'enus' ? 'en-US' : 'es') %>">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta name="description" content="<%= siteConfig?.seo?.description || 'Controle Total do WhatsApp com IA e automação.' %>">
+  <meta name="keywords" content="<%= siteConfig?.seo?.keywords || 'WhatsApp, Automação, Bot' %>">
+  <meta name="robots" content="index, follow">
+  <title><%= siteConfig?.seo?.title || 'Bot Admin - Automatizar Grupos' %></title>
+
+  <link rel="preload" href="<%= siteConfig?.logo || '/img/logo.webp' %>" as="image">
+
+  <meta property="og:title" content="<%= siteConfig?.seo?.title || 'Bot Admin - Automatizar Grupos' %>">
+  <meta property="og:description" content="<%= siteConfig?.seo?.description || 'Automatize seus grupos com IA e uma API poderosa.' %>">
+  <meta property="og:image" content="<%= siteConfig?.seo?.image || (siteUrl + '/img/' + (typeof banner !== 'undefined' && banner ? banner.fileName : 'banner.png')) %>">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:url" content="<%= siteUrl %>">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@botadmin">
+  <meta name="twitter:title" content="<%= siteConfig?.seo?.title || 'Bot Admin - Automatizar Grupos' %>">
+  <meta name="twitter:description" content="<%= siteConfig?.seo?.description || 'Automatize seus grupos com IA e uma API poderosa para moderação inteligente.' %>">
+  <meta name="twitter:image" content="<%= siteConfig?.seo?.image || (siteUrl + '/img/' + (typeof banner !== 'undefined' && banner ? banner.fileName : 'banner.png')) %>">
+  <link rel="icon" type="image/png" href="/img/favicon.png" sizes="32x32">
+  <link rel="apple-touch-icon" href="/img/favicon.png">
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/fontawesome.min.css" as="style">
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/solid.min.css" as="style">
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/brands.min.css" as="style">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/fontawesome.min.css" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/solid.min.css" media="print" onload="this.media='all'">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/brands.min.css" media="print" onload="this.media='all'">
+  <noscript>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/fontawesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/solid.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/brands.min.css">
+  </noscript>
+<%- include("partials/analytics") %>
+  <link rel="stylesheet" href="/css/style.css">
+  <% if (siteConfig) { %>
+  <style>
+    :root {
+      <% for(const [k,v] of Object.entries(siteConfig.themeDark || {})) { %>
+      <%= k %>: <%= v %>;
+      <% } %>
+    }
+    [data-theme="light"] {
+      <% for(const [k,v] of Object.entries(siteConfig.themeLight || {})) { %>
+      <%= k %>: <%= v %>;
+      <% } %>
+    }
+  </style>
+  <% } %>
+</head>
+<body>
+  <a href="#conteudo" class="skip-link"><%= t('skip_to_content') %></a>
+
+  <%- include('partials/header_public', { showDropdown: true }) %>
+  <a href="<%= siteConfig?.logo || '/img/logo.webp' %>" style="display:none">Logo</a>
+  <% if (typeof banner !== 'undefined' && banner && banner.type === 'video') { %>
+  <a href="/img/<%= banner.fileName %>" style="display:none">Video</a>
+  <% } %>
+  <main id="conteudo" style="padding-top: var(--header-height, 8rem);">
+  <section class="hero">
+    <h1 class="gradient-text"><%= t('controle_total') %></h1>
+    <p style="color: #7bff00; font-size: 1.2rem;"><%= t('automatize_grupos') %></p>
+    <p style="font-size: 1.5rem; background: linear-gradient(45deg, #8A2BE2, #ffe047, #FF1493); background-size: 300% 300%; -webkit-background-clip: text; color: transparent; font-weight: bold; animation: gradientAnimation 3s ease infinite;">
+      <%= t('slogan_trabalho') %>
+    </p>
+  <a href="/cadastrar" class="btn main-cta"><%= t('comecar_gratis') %></a>
+</section>
+
+  <section class="banner-section">
+    <% if (typeof banner !== 'undefined' && banner) { %>
+      <% if (banner.type === 'video') { %>
+        <div class="banner-wrapper">
+          <video autoplay muted loop playsinline preload="auto" class="banner-media" aria-label="Banner">
+            <source src="img/<%= banner.fileName %>" type="video/webm" />
+            Seu navegador não suporta vídeos .webm.
+          </video>
+          <button class="mute-btn" aria-label="Ativar áudio" onclick="toggleMute(this)"><i class="fa-solid fa-volume-xmark" aria-hidden="true"></i></button>
+        </div>
+      <% } else { %>
+        <img src="img/<%= banner.fileName %>" class="banner-media" alt="Banner" />
+      <% } %>
+    <% } %>
+    <div class="banner-message">
+      <h2 class="banner-title"><%= banner?.text || 'Teste gratuitamente o melhor bot para seu grupo no WhatsApp' %></h2>
+      <% if (banner?.buttonText && banner?.buttonUrl) { %>
+        <a href="<%= banner.buttonUrl %>" class="btn banner-btn">
+          <i class="fa-solid fa-plus-circle"></i> <%= banner.buttonText %>
+        </a>
+      <% } %>
+    </div>
+  </section>
+
+  <div class="cards">
+    <div class="card">
+      <i class="fas fa-brain"></i>
+      <h3><%= t('ia_avancada') %></h3>
+      <p><%= t('ia_avancada_desc') %></p>
+    </div>
+    <div class="card">
+      <i class="fas fa-shield-alt"></i>
+      <h3><%= t('moderacao') %></h3>
+      <p><%= t('moderacao_desc') %></p>
+    </div>
+    <div class="card">
+      <i class="fas fa-bolt"></i>
+      <h3><%= t('velocidade') %></h3>
+      <p><%= t('velocidade_desc') %></p>
+    </div>
+    <div class="card">
+      <i class="fas fa-bullhorn"></i>
+      <h3><%= t('divulgacao_auto') %></h3>
+      <p><%= t('divulgacao_auto_desc') %></p>
+    </div>
+    <div class="card">
+      <i class="fas fa-cogs"></i>
+      <h3><%= t('comandos_diversos') %></h3>
+      <p><%= t('comandos_diversos_desc') %></p>
+    </div>
+  </div>
+
+  <% if (typeof planos !== 'undefined' && planos.length) { %>
+    <section class="planos">
+      <h2 class="welcome"><%= t('planos_disponiveis') %></h2>
+      <div class="cards">
+        <% planos.forEach(plano => { %>
+          <div class="card">
+            <h3><%= plano.nome %></h3>
+            <p class="price">R$ <%= plano.preco.toFixed(2) %> / mês</p>
+            <ul class="plan-details">
+              <li><i class="fa-solid fa-calendar-alt"></i> Duração: <strong><%= plano.duracao %> dias</strong></li>
+              <li><i class="fa-solid fa-users"></i> Limite de grupos: <strong><%= plano.limiteGrupos %></strong></li>
+              <li><i class="fa-solid fa-server"></i> Instância: <strong><%= plano.limiteInstancias === 0 ? 'Sem instância dedicada' : plano.limiteInstancias + ' dedicada' + (plano.limiteInstancias > 1 ? 's' : '') %></strong></li>
+              <% if (plano.includedAds > 0) { %>
+                <li><i class="fa-solid fa-bullhorn"></i> <%= plano.includedAds %> anúncio(s) incluso(s)</li>
+              <% } %>
+              <% if (plano.includedShortLinks > 0) { %>
+                <li><i class="fa-solid fa-link"></i> <%= plano.includedShortLinks %> shortlink(s) incluso(s)</li>
+              <% } %>
+              <% const cmds = Object.keys(plano.allowedCommands || {}).filter(c => plano.allowedCommands[c]); %>
+              <% if (cmds.length) { %>
+                <li><i class="fa-solid fa-check"></i> Comandos:</li>
+                <% cmds.forEach(function(c){ %>
+                  <li class="cmd-item"><%= c %></li>
+                <% }); %>
+              <% } %>
+              <% if (plano.descricao) { %>
+                <li><i class="fa-solid fa-info-circle"></i> <%= plano.descricao %></li>
+              <% } %>
+            </ul>
+            <a href="/cadastrar" class="submit-btn" style="display:inline-block;text-decoration:none;text-align:center">Assinar plano</a>
+          </div>
+        <% }) %>
+      </div>
+    </section>
+  <% } %>
+
+  </main>
+  <footer class="footer">
+    <p>© 2024 Bot Admin - Todos os direitos reservados</p>
+    <div style="margin-top: 1rem;">
+      <a href="/termos" title="Leia nossos Termos de Serviço">Termos</a>
+      <a href="/privacidade" title="Política de Privacidade">Privacidade</a>
+    </div>
+  </footer>
+
+  <a href="https://wa.me/<%= siteConfig?.whatsappNumber || '559295333643' %>" class="floating-btn" aria-label="WhatsApp" title="WhatsApp" target="_blank" rel="noopener">
+    <i class="fab fa-whatsapp" aria-hidden="true"></i>
+  </a>
+
+
+  <div id="alertModal" class="modal-overlay" onclick="hideModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div id="alertMessage" class="alert"></div>
+      <button class="btn" style="margin-top: 1rem;" onclick="hideModal()">Fechar</button>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const success = "<%= typeof success_msg !== 'undefined' && success_msg.length > 0 ? success_msg : '' %>";
+      const error = "<%= typeof error_msg !== 'undefined' && error_msg.length > 0 ? error_msg : '' %>";
+      const alertBox = document.getElementById('alertMessage');
+      if (success) {
+        alertBox.className = 'alert success';
+        alertBox.innerHTML = '<i class="fa-solid fa-circle-check"></i> ' + success;
+        showAlert();
+      } else if (error) {
+        alertBox.className = 'alert error';
+        alertBox.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ' + error;
+        showAlert();
+      }
+    });
+
+    function showAlert() {
+      const modal = document.getElementById('alertModal');
+      if (modal) modal.style.display = 'flex';
+    }
+    function hideModal() {
+      const modal = document.getElementById('alertModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function toggleDropdown(el) {
+      const dd = el.closest('.dropdown');
+      dd.classList.toggle('open');
+    }
+  document.addEventListener('click', e => {
+      const dd = document.querySelector('.dropdown');
+      if (dd && !dd.contains(e.target)) dd.classList.remove('open');
+    });
+
+    const toggleBtn = document.getElementById('theme-toggle');
+    if (toggleBtn) {
+      const icon = toggleBtn.querySelector('i');
+      const saved = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', saved);
+      icon.classList.toggle('fa-sun', saved === 'light');
+      icon.classList.toggle('fa-moon', saved === 'dark');
+      toggleBtn.addEventListener('click', () => {
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        const newTheme = isLight ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        icon.classList.toggle('fa-sun', newTheme === 'light');
+        icon.classList.toggle('fa-moon', newTheme === 'dark');
+      });
+    }
+
+  function toggleMute(btn) {
+      const video = btn.parentElement.querySelector('video');
+      if (!video) return;
+      video.muted = !video.muted;
+      btn.innerHTML = video.muted ? '<i class="fa-solid fa-volume-xmark" aria-hidden="true"></i>' : '<i class="fa-solid fa-volume-high" aria-hidden="true"></i>';
+      btn.setAttribute('aria-label', video.muted ? 'Ativar áudio' : 'Desativar áudio');
+    }
+  </script>
+  <script>
+    const initialReferrer = <%- JSON.stringify(typeof initialReferrer !== 'undefined' ? initialReferrer : '') %>;
+    fetch('https://ipwho.is/')
+      .then(r => r.json())
+      .then(info => {
+        fetch('/logvisit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            referrer: document.referrer || initialReferrer,
+            path: location.pathname,
+            info
+          })
+        });
+      })
+      .catch(() => {});
+  </script>
+</body>
+</html>

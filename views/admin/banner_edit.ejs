@@ -1,0 +1,24 @@
+<div class="cards">
+  <div class="card">
+    <div class="card-header">
+      <h3>Editar Banner</h3>
+    </div>
+    <form action="/admin/banner/editar/<%= banner._id %>" method="POST" enctype="multipart/form-data" class="modal-form">
+      <p>Arquivo atual: <%= banner.fileName %></p>
+      <label>Arquivo (opcional)
+        <input type="file" name="arquivo" accept="video/*,image/*">
+      </label>
+      <label>Mensagem
+        <input type="text" name="text" value="<%= banner.text %>" required>
+      </label>
+      <label>Texto do Botão (opcional)
+        <input type="text" name="buttonText" value="<%= banner.buttonText %>" placeholder="Ex: Saiba mais">
+      </label>
+      <label>Link do Botão (opcional)
+        <input type="url" name="buttonUrl" value="<%= banner.buttonUrl %>" placeholder="https://">
+      </label>
+      <button type="submit" class="submit-btn">Salvar Alterações</button>
+    </form>
+  </div>
+</div>
+<script src="/js/admin.js"></script>

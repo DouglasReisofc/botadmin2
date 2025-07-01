@@ -1,0 +1,144 @@
+<main class="content" role="main">
+  <div class="card">
+    <h3><i class="fa-solid fa-filter"></i> Selecione o Grupo</h3>
+    <form action="/grupos/autorespostas" method="GET" class="grupo-filtro-form">
+      <label class="switch-label">Grupo:</label>
+      <select name="grupo" id="grupoSelect" onchange="this.form.submit()" class="grupo-select">
+        <% bots.forEach(bot => { %>
+          <option value="<%= bot.groupId %>" <%= grupoSelecionado && bot.groupId === grupoSelecionado.groupId ? 'selected' : '' %>>
+            <%= bot.nomeGrupo || bot.groupId %>
+          </option>
+        <% }) %>
+      </select>
+      <button type="button" onclick="abrirModalNovaResp()" class="submit-btn novo-anuncio-btn">
+        <i class="fa-solid fa-plus"></i> Nova Resposta
+      </button>
+    </form>
+    <% if (grupoSelecionado) { %>
+      <div class="switch-group" style="margin-top:0.5rem;">
+        <span class="switch-label">autoresposta</span>
+        <label class="toggle-switch">
+          <input
+            type="checkbox"
+            class="toggle-autoresp"
+            data-bot-id="<%= grupoSelecionado._id %>"
+            data-field="comando"
+            data-command="autoresposta"
+            <%= grupoSelecionado.comandos.autoresposta ? 'checked' : '' %> />
+          <span class="slider"></span>
+        </label>
+      </div>
+    <% } %>
+  </div>
+
+  <% if (grupoSelecionado) { %>
+    <h3>Autorespostas Cadastradas</h3>
+    <% if (grupoSelecionado.autoResponses && grupoSelecionado.autoResponses.length) { %>
+      <div class="card-grid">
+        <% grupoSelecionado.autoResponses.forEach(resp => { %>
+          <div class="card">
+            <div class="card-header">
+              <strong>Gatilho:</strong> <%= (resp.triggers || [resp.trigger]).join(', ') %>
+            </div>
+            <div class="card-body">
+              <% if (resp.responseText) { %>
+                <p><%= resp.responseText.length > 100 ? resp.responseText.substring(0,100) + '...' : resp.responseText %></p>
+              <% } %>
+              <% if (resp.hasMedia && resp.mimetype && resp.filePath) { %>
+                <img src="/<%= resp.filePath %>" class="anuncio-avatar" alt="Imagem">
+              <% } %>
+              <p><strong>Ao conter texto?</strong> <%= resp.contains ? 'Sim' : 'Não' %></p>
+              <p><strong>Enviar como sticker:</strong> <%= resp.asSticker ? 'Sim' : 'Não' %></p>
+            </div>
+            <div class="bot-actions">
+              <button class="bot-btn editar" type="button" onclick='abrirModalEditarResp("<%= grupoSelecionado.groupId %>","<%= resp._id %>", <%- JSON.stringify(resp.triggers || [resp.trigger]) %>, `<%= resp.responseText %>`, "<%= resp.hasMedia ? resp.filePath : '' %>", <%= resp.contains %>, <%= resp.asSticker %>)'>
+                <i class="fa-solid fa-pen-to-square"></i> Editar
+              </button>
+              <form action="/usuario/apagar-autoresposta" method="POST" class="inline-form">
+                <input type="hidden" name="grupo" value="<%= grupoSelecionado.groupId %>">
+                <input type="hidden" name="respId" value="<%= resp._id %>">
+                <button type="submit" class="bot-btn desativar" onclick="return confirm('Excluir autoresposta?')">
+                  <i class="fas fa-trash-alt"></i> Excluir
+                </button>
+              </form>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <p>📭 Nenhuma autoresposta cadastrada.</p>
+    <% } %>
+  <% } %>
+</main>
+
+<div id="modalNovaResp" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="fecharModalNovaResp()">&times;</span>
+    <h2 class="modal-title"><i class="fa-solid fa-plus"></i> Nova Autoresposta</h2>
+    <form id="formNovaResp" action="/usuario/salvar-autoresposta" method="POST" enctype="multipart/form-data" class="modal-form">
+      <input type="hidden" name="grupo" value="<%= grupoSelecionado ? grupoSelecionado.groupId : '' %>">
+      <label>Palavras-chave:</label>
+      <div class="tag-input" id="novoTagContainer">
+        <input type="text" id="novoTagInput" placeholder="Digite e pressione Enter">
+      </div>
+      <input type="hidden" name="gatilhos" id="novoTagValues">
+      <label>Resposta de texto (opcional):</label>
+      <textarea name="resposta" rows="3"></textarea>
+      <label>Mídia (opcional):</label>
+      <input type="file" name="arquivo" onchange="validarTamanhoArquivo(this)">
+      <div class="switch-group">
+        <span class="switch-label" id="novoTipoTexto">Frase Completa</span>
+        <label class="toggle-switch">
+          <input type="checkbox" name="contem" id="novoTipoSwitch">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="switch-group">
+        <span class="switch-label">Enviar como sticker</span>
+        <label class="toggle-switch">
+          <input type="checkbox" name="sticker">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <button type="submit" class="submit-btn"><i class="fa-solid fa-save"></i> Salvar</button>
+    </form>
+  </div>
+</div>
+
+<div id="modalEditarResp" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="fecharModalEditarResp()">&times;</span>
+    <h2 class="modal-title"><i class="fa-solid fa-pen-to-square"></i> Editar Autoresposta</h2>
+    <img id="editarMiniatura" class="avatar-thumb" src="#" alt="Imagem atual" style="display:none;">
+    <form id="formEditarResp" action="/usuario/editar-autoresposta" method="POST" enctype="multipart/form-data" class="modal-form">
+      <input type="hidden" name="grupo" id="editarGrupoId">
+      <input type="hidden" name="respId" id="editarRespId">
+      <label>Palavras-chave:</label>
+      <div class="tag-input" id="editarTagContainer">
+        <input type="text" id="editarTagInput" placeholder="Digite e pressione Enter">
+      </div>
+      <input type="hidden" name="gatilhos" id="editarTagValues">
+      <label>Resposta de texto (opcional):</label>
+      <textarea name="resposta" id="editarResposta" rows="3"></textarea>
+      <label>Mídia (opcional):</label>
+      <input type="file" name="arquivo" onchange="validarTamanhoArquivo(this)">
+      <div class="switch-group">
+        <span class="switch-label" id="editarTipoTexto">Frase Completa</span>
+        <label class="toggle-switch">
+          <input type="checkbox" name="contem" id="editarTipoSwitch">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="switch-group">
+        <span class="switch-label">Enviar como sticker</span>
+        <label class="toggle-switch">
+          <input type="checkbox" name="sticker" id="editarSticker">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <button type="submit" class="submit-btn"><i class="fa-solid fa-save"></i> Atualizar</button>
+    </form>
+  </div>
+</div>
+
+<script src="/js/grupos/autorespostas.js"></script>

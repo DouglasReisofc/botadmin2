@@ -1,0 +1,28 @@
+<header class="header">
+  <div class="header-left">
+    <button class="menu-btn nav-btn" aria-label="Menu">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+  </div>
+
+  <div class="header-center">
+    <div class="branding">
+      <img src="<%= siteConfig?.logo || '/img/logo.webp' %>" alt="Bot Admin" class="logo-img" style="<%= siteConfig?.logoStyle || '' %>">
+      <h1 class="logo-title">Bot Admin</h1>
+      <span class="sr-only">Bot Admin</span>
+    </div>
+  </div>
+
+  <div class="header-right">
+    <button id="theme-toggle" class="theme-toggle-btn" aria-label="Alternar tema">
+      <i class="fa-solid fa-moon"></i>
+    </button>
+
+    <form action="/usuario/sair" method="GET">
+      <button class="logout-btn" aria-label="Sair">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        <span class="logout-text">Sair</span>
+      </button>
+    </form>
+  </div>
+</header>

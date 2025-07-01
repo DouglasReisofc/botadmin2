@@ -1,0 +1,125 @@
+<div class="cards">
+  <% if (success_msg?.length) { %>
+    <div class="alert success">
+      <i class="fa-solid fa-circle-check"></i> <%= success_msg %>
+    </div>
+  <% } %>
+  <% if (error_msg?.length) { %>
+    <div class="alert error">
+      <i class="fa-solid fa-circle-exclamation"></i> <%= error_msg %>
+    </div>
+  <% } %>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Idiomas</h3>
+    </div>
+    <div class="scroll-container">
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Código</th>
+            <th>Chaves</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% idiomas.forEach(i => { %>
+            <tr>
+              <td><%= i.name %></td>
+              <td><%= i.code %></td>
+              <td><%= Object.keys(i.translations || {}).length %></td>
+              <td class="bot-actions">
+                <button class="bot-btn editar" onclick="abrirEditar('<%= i._id %>','<%- encodeURIComponent(i.name) %>','<%= i.code %>', '<%- encodeURIComponent(JSON.stringify(i.translations || {})) %>')">Editar</button>
+                <button class="bot-btn excluir" onclick="abrirExcluir('<%= i._id %>')">Excluir</button>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <button onclick="abrirCriar()" class="submit-btn">Novo Idioma</button>
+  </div>
+</div>
+
+<!-- Modal Criar -->
+<div class="modal" id="modalCriar">
+  <div class="modal-content">
+    <button class="close-btn" onclick="fechar('modalCriar')">&times;</button>
+    <h2>Novo Idioma</h2>
+    <form action="/admin/idiomas/criar" method="POST" class="modal-form">
+      <div class="form-group">
+        <label>Nome:</label>
+        <input name="name" required>
+      </div>
+      <div class="form-group">
+        <label>Código:</label>
+        <input name="code" required>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="submit-btn" onclick="fechar('modalCriar')">Cancelar</button>
+        <button type="submit" class="submit-btn">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Editar -->
+<div class="modal" id="modalEditar">
+  <div class="modal-content">
+    <button class="close-btn" onclick="fechar('modalEditar')">&times;</button>
+    <h2>Editar Idioma</h2>
+    <form id="formEditar" action="" method="POST" class="modal-form">
+      <div class="form-group">
+        <label>Nome:</label>
+        <input name="name" id="editName" required>
+      </div>
+      <div class="form-group">
+        <label>Código:</label>
+        <input name="code" id="editCode" required>
+      </div>
+      <div class="form-group">
+        <label>Traduções (JSON):</label>
+        <textarea name="translations" id="editTranslations" rows="10" required></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="submit-btn" onclick="fechar('modalEditar')">Cancelar</button>
+        <button type="submit" class="submit-btn">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Excluir -->
+<div class="modal" id="modalExcluir">
+  <div class="modal-content">
+    <button class="close-btn" onclick="fechar('modalExcluir')">&times;</button>
+    <h2>Confirmar exclusão</h2>
+    <form id="formExcluir" action="" method="GET" class="modal-form">
+      <p>Tem certeza que deseja excluir?</p>
+      <div class="modal-footer">
+        <button type="button" class="submit-btn" onclick="fechar('modalExcluir')">Cancelar</button>
+        <button type="submit" class="submit-btn">Excluir</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function abrirCriar(){ document.getElementById('modalCriar').style.display='block'; }
+  function abrirEditar(id,name,code,tr){
+    const f=document.getElementById('formEditar');
+    f.action='/admin/idiomas/editar/'+id;
+    document.getElementById('editName').value=decodeURIComponent(name);
+    document.getElementById('editCode').value=code;
+    document.getElementById('editTranslations').value=decodeURIComponent(tr);
+    document.getElementById('modalEditar').style.display='block';
+  }
+  function abrirExcluir(id){
+    const f=document.getElementById('formExcluir');
+    f.action='/admin/idiomas/deletar/'+id;
+    document.getElementById('modalExcluir').style.display='block';
+  }
+  function fechar(id){ document.getElementById(id).style.display='none'; }
+</script>

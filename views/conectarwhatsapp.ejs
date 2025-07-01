@@ -1,0 +1,269 @@
+<!-- views/conectarwhatsapp.ejs -->
+
+<div class="container">
+
+  <% if (!podeCriar) { %>
+    <div class="alert-box" style="margin-top:1rem; line-height:1.35;">
+      <svg class="alert-icon" viewBox="0 0 24 24">
+        <path d="M12 2L2 22h20L12 2zM12 9v4m0 4h.01"/>
+      </svg>
+      <% if (limite === 0) { %>
+        Plano sem instâncias próprias.<br>Use instâncias globais.
+      <% } else { %>
+        Limite atingido (<%= usadas %>/<%= limite %>).<br>Faça upgrade.
+      <% } %>
+    </div>
+  <% } %>
+
+  <% if (ilimitado) { %>
+    <div class="card info-card" style="margin-top:1rem; text-align:center;">
+      <h3>Plano ilimitado</h3>
+      <p>Você pode criar quantas instâncias desejar.</p>
+      <a href="/planos" class="submit-btn" style="margin-top:1rem; width:auto;">Trocar plano</a>
+    </div>
+  <% } %>
+
+  <% if (podeCriar) { %>
+    <div class="card" style="max-width:420px; margin:1.5rem auto 2rem auto; position:relative;">
+      <button type="button" class="icon-help"
+              onclick="openTutorial()"
+              style="position:absolute; top:10px; right:10px; background:none; border:none; color:#ff6f00; font-size:1.6rem; cursor:pointer;">
+        <i class="fa-solid fa-circle-question"></i>
+      </button>
+      <form id="formNumero" class="modal-form"
+            action="/conectarwhatsapp/criar" method="POST"
+            onsubmit="return verifyNumber()">
+
+        <label for="server" class="switch-label">Servidor</label>
+        <select id="server" name="serverId" class="modal-form-input" style="margin-bottom:1rem;">
+          <% servidores.forEach(s => { %>
+            <option value="<%= s._id %>"><%= s.nome %></option>
+          <% }) %>
+        </select>
+
+        <label for="ddi" class="switch-label">Código do país</label>
+        <select id="ddi" class="modal-form-input" style="margin-bottom:1rem;"></select>
+
+        <label for="numeroLocal" class="switch-label">Número do WhatsApp</label>
+        <input id="numeroLocal" name="numeroLocal" type="tel"
+               placeholder="11987654321" pattern="[0-9]{6,11}"
+               inputmode="numeric" maxlength="11"
+               class="modal-form-input" required />
+
+        <input type="hidden" name="numero" id="numeroFull" />
+        <button type="submit" class="submit-btn" style="margin-top:1rem;">
+          Criar / Parear
+        </button>
+      </form>
+    </div>
+  <% } %>
+
+
+  <% if (mostrarTabela) { %>
+    <div class="card-list">
+      <% instancias.forEach(i => { %>
+        <div class="card" style="flex:1 1 320px; margin-bottom:1rem;">
+          <h3>📱 <%= i.instance %></h3>
+          <% 
+            let badge = 'badge-secondary';
+            if (i.sessionStatus === 'conectado')        badge = 'badge-success';
+            if (i.sessionStatus === 'desconectado')     badge = 'badge-danger';
+            if (['inicializando','aguardando_qr','aguardando_pareamento']
+                 .includes(i.sessionStatus))            badge = 'badge-warning';
+          %>
+          <p><strong>Status:</strong>
+            <span class="badge <%= badge %>"><%= i.sessionStatus %></span>
+          </p>
+          <p><strong>Último sinal:</strong>
+            <%= i.lastSeen ? new Date(i.lastSeen).toLocaleString('pt-BR') : '―' %>
+          </p>
+
+          <button class="bot-btn editar" onclick="openQR('<%= i.instance %>')">
+            🔗 Ver QR / Código
+          </button>
+
+          <div style="display:flex; gap:.5rem; flex-wrap:wrap; margin-top:1rem;">
+            <form action="/conectarwhatsapp/acao/logout/<%= i.instance %>" method="POST">
+              <button class="bot-btn desativar">⏏ Sair</button>
+            </form>
+            <form action="/conectarwhatsapp/acao/restart/<%= i.instance %>" method="POST">
+              <button class="bot-btn editar">♻️ Reiniciar</button>
+            </form>
+            <form id="delete-form-<%= i.instance %>"
+                  action="/conectarwhatsapp/acao/delete/<%= i.instance %>"
+                  method="POST">
+              <button type="button" class="bot-btn excluir"
+                      onclick="confirmarExclusao('<%= i.instance %>')">
+                🗑 Excluir
+              </button>
+            </form>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <div class="alert-box" style="margin-top:2rem;">
+      <svg class="alert-icon" viewBox="0 0 24 24">
+        <path d="M12 2L2 22h20L12 2zM12 9v4m0 4h.01"/>
+      </svg>
+      Nenhuma instância ativa vinculada.
+    </div>
+  <% } %>
+</div>
+
+<!-- Modais -->
+<div id="modalQR" class="modal">
+  <div class="modal-content" style="text-align:center;">
+    <span class="close-btn" onclick="closeQR()">&times;</span>
+    <div id="qrCodigo" class="qr-box">Aguardando…</div>
+  </div>
+</div>
+
+<div id="modalHelp" class="modal">
+  <div class="modal-content" style="max-width:480px; text-align:center;">
+    <h3>📖 Como parear</h3>
+    <ol style="text-align:left; margin-left:1rem; line-height:1.4;">
+      <li>WhatsApp ▸ <strong>Dispositivos conectados</strong></li>
+      <li><strong>Conectar dispositivo</strong></li>
+      <li><em>Conectar com número de telefone</em></li>
+      <li>Digite o código e informe o PIN</li>
+    </ol>
+    <button class="submit-btn" onclick="closeTutorial()">OK</button>
+  </div>
+</div>
+
+<div id="modalInvalid" class="modal">
+  <div class="modal-content" style="max-width:420px; text-align:center;">
+    <h3>⚠️ Número inválido</h3>
+    <p>Insira apenas dígitos. Formato: DDI+DDD+Número (Ex:5511987654321)</p>
+    <button class="submit-btn" onclick="closeInvalid()">OK</button>
+  </div>
+</div>
+
+<div id="modalConfirmarDelete" class="modal">
+  <div class="modal-content" style="max-width:460px;">
+    <h3>🗑 Confirmar Exclusão</h3>
+    <p>Tem certeza que deseja excluir a instância <strong id="nome-instancia"></strong>?</p>
+    <div style="margin-top:1rem; text-align:right;">
+      <button class="bot-btn desativar" onclick="fecharConfirmacao()">Cancelar</button>
+      <button class="bot-btn excluir" onclick="executarDelete()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/ddi.js"></script>
+<script>
+  // estado global
+  var instanciaParaExcluir = null;
+
+  // elementos
+  const ddi                = document.getElementById('ddi');
+  const numeroLocal        = document.getElementById('numeroLocal');
+  const numeroFull         = document.getElementById('numeroFull');
+  const modalInvalid       = document.getElementById('modalInvalid');
+  const modalQR            = document.getElementById('modalQR');
+  const qrCodigo           = document.getElementById('qrCodigo');
+  const modalHelp          = document.getElementById('modalHelp');
+  const modalConfirmDelete = document.getElementById('modalConfirmarDelete');
+
+  // 1) Popula o select de DDI após carregar DOM
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!ddi || !Array.isArray(listaDDI)) return;
+    listaDDI.forEach(({ codigo, bandeira, nome }) => {
+      const op = document.createElement('option');
+      op.value       = codigo.replace('+','');
+      op.textContent = `${bandeira} ${codigo} (${nome})`;
+      ddi.appendChild(op);
+    });
+  });
+
+  // 2) Validação e montagem do número completo
+  function verifyNumber() {
+    if (!numeroLocal) return true;
+    const loc = numeroLocal.value.trim();
+    if (!/^[0-9]{6,11}$/.test(loc)) {
+      modalInvalid.classList.add('active');
+      return false;
+    }
+    numeroFull.value = ddi.value + loc;
+    return true;
+  }
+
+  // 3) Helpers de modal
+  function openTutorial()  { modalHelp.classList.add('active'); }
+  function closeTutorial() { modalHelp.classList.remove('active'); }
+  function closeInvalid()  { modalInvalid.classList.remove('active'); }
+  function closeQR() {
+    modalQR.classList.remove('active');
+    qrCodigo.innerHTML = 'Aguardando…';
+  }
+
+  // 4) Pareamento via rota local
+  async function openQR(inst) {
+    qrCodigo.textContent = '⌛ Gerando código…';
+    modalQR.classList.add('active');
+    try {
+      const res  = await fetch(`/conectarwhatsapp/pair/${inst}`, { method: 'POST' });
+      const json = await res.json();
+      if (!json.success) {
+        qrCodigo.textContent = '❌ ' + json.message;
+        return;
+      }
+      const data = json.data;
+      if (data.status === 'conectado') {
+        qrCodigo.textContent = '✅ Conectado!';
+        setTimeout(() => { closeQR(); location.reload(); }, 600);
+      } else if (data.code) {
+        qrCodigo.innerHTML = `
+          <pre id="pairCode" class="codigo">${data.code}</pre>
+          <button class="copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('pairCode').textContent)">Copiar</button>
+          <small class="tip">Digite este código no WhatsApp</small>
+        `;
+      } else if (data.qr) {
+        qrCodigo.innerHTML = `<img src="${data.qr}" class="qr-img" onerror="qrCodigo.textContent='❌ Falha ao carregar QR';" />`;
+      }
+    } catch (err) {
+      qrCodigo.textContent = '❌ ' + err.message;
+    }
+  }
+
+  // 5) Exclusão de instância
+  function confirmarExclusao(nome) {
+    instanciaParaExcluir = nome;
+    document.getElementById('nome-instancia').textContent = nome;
+    modalConfirmDelete.classList.add('active');
+  }
+  function fecharConfirmacao() {
+    instanciaParaExcluir = null;
+    modalConfirmDelete.classList.remove('active');
+  }
+  function executarDelete() {
+    if (instanciaParaExcluir) {
+      document.getElementById(`delete-form-${instanciaParaExcluir}`).submit();
+    }
+  }
+</script>
+
+<style>
+  .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1000; }
+  .modal.active { display:flex; }
+  .modal-content { background:#fff; padding:1.5rem; border-radius:8px; }
+  .qr-box {
+    font-size:1.6rem; font-weight:bold; text-align:center; color:#fff;
+    background:linear-gradient(135deg,#f7971e 0%,#ffd200 100%);
+    padding:1.4rem; border-radius:12px; box-shadow:0 0 15px rgba(0,0,0,.45);
+  }
+  .codigo {
+    white-space:pre-wrap; background:#ffca28; color:#000; padding:1rem;
+    border-radius:8px; font-size:1.25rem; word-break:break-word;
+  }
+  .tip     { display:block; margin-top:.5rem; font-size:.9rem; color:#fff; }
+  .qr-img  {
+    width:240px; height:240px; border:4px solid #fff; border-radius:10px;
+    box-shadow:0 0 12px rgba(0,0,0,.3);
+  }
+  .copy-btn {
+    margin-top:.6rem; padding:.4rem .8rem; border:none; border-radius:6px;
+    background:#3a4164; color:#fff; cursor:pointer;
+  }
+</style>

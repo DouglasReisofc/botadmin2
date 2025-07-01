@@ -1,0 +1,82 @@
+<!-- views/admin/dashboard.ejs -->
+<div class="cards dashboard-cards">
+  <div class="card video-card">
+    <% if (typeof banner !== 'undefined' && banner && banner.type === 'video') { %>
+      <video autoplay muted loop playsinline preload="auto" class="video-banner">
+        <source src="/img/<%= banner.fileName %>" type="video/webm" />
+        Seu navegador não suporta vídeos .webm.
+      </video>
+      <button class="mute-btn" onclick="toggleMute(this)"><i class="fa-solid fa-volume-xmark"></i></button>
+    <% } else if (typeof banner !== 'undefined' && banner) { %>
+      <img src="/img/<%= banner.fileName %>" class="video-banner" alt="Banner" />
+    <% } %>
+    <div class="video-message">
+      <h2 class="video-title">
+        Teste gratuitamente o melhor bot para seu grupo no WhatsApp
+      </h2>
+      <a href="/admin/usuarios" class="video-btn">
+        <i class="fa-solid fa-plus-circle"></i> Gerenciar Usuários
+      </a>
+    </div>
+  </div>
+
+  <% const stats = [
+       { title:'Total Users', icon:'fa-users', value:registrados },
+       { title:'API Limite', icon:'fa-code', value:limit },
+       { title:'Servidores', icon:'fa-server', value:servidoresQtd },
+       { title:'APIs', icon:'fa-plug', value:apisQtd },
+       { title:'Grupos', icon:'fa-users-gear', value:gruposQtd },
+       { title:'Planos Vencidos', icon:'fa-clock', value:planosVencidosQtd },
+     ];
+  %>
+  <% stats.forEach(s => { %>
+    <div class="card">
+      <div class="card-header">
+        <h3><%= s.title %></h3>
+        <div class="card-icon">
+          <i class="fa-solid <%= s.icon %>"></i>
+        </div>
+      </div>
+      <p class="value"><%= s.value %></p>
+      <div class="progress-bar">
+        <div class="progress-fill"></div>
+      </div>
+    </div>
+  <% }) %>
+</div>
+
+<!-- Modal genérico (sem botão de disparo nesta view) -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal('modal')">&times;</button>
+    <h2>Create New Project</h2>
+    <form class="modal-form">
+      <div class="form-group">
+        <label>Project Name</label>
+        <input type="text" class="input" placeholder="Nome do projeto" />
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea class="input" rows="4" placeholder="Descrição"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="submit-btn" onclick="closeModal('modal')">
+          Cancelar
+        </button>
+        <button type="submit" class="submit-btn">
+          Create Project
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/js/admin.js"></script>
+<script>
+  function toggleMute(btn) {
+    const video = btn.parentElement.querySelector('video');
+    if (!video) return;
+    video.muted = !video.muted;
+    btn.innerHTML = video.muted ? '<i class="fa-solid fa-volume-xmark"></i>' : '<i class="fa-solid fa-volume-high"></i>';
+  }
+</script>

@@ -1,0 +1,143 @@
+
+ <div class="card">
+  <h3><i class="fa-solid fa-filter"></i> Selecione o Grupo</h3>
+  
+  <form action="/grupos/ads" method="GET" class="grupo-filtro-form">
+    <label class="switch-label">Grupo:</label>
+    
+    <select name="grupo" id="grupoSelect" onchange="this.form.submit()" class="grupo-select">
+      <% bots.forEach(bot => { %>
+        <option value="<%= bot.groupId %>" <%= grupoSelecionado && bot.groupId === grupoSelecionado.groupId ? 'selected' : '' %>>
+          <%= bot.nomeGrupo || bot.groupId %>
+        </option>
+      <% }) %>
+    </select>
+
+    <button type="button" onclick="abrirModalNovoAd()" class="submit-btn novo-anuncio-btn">
+      <i class="fa-solid fa-plus"></i> Novo Anúncio
+    </button>
+  </form>
+</div>
+
+
+<% if (grupoSelecionado) { %>
+  <h3>Anúncios Existentes</h3>
+  <% if (grupoSelecionado.adsMensagem && grupoSelecionado.adsMensagem.length) { %>
+    <div class="card-grid">
+      <% grupoSelecionado.adsMensagem.forEach(anuncio => { %>
+        <div class="card">
+          <div class="card-header">
+            <strong>Legenda:</strong>
+          
+            <%= anuncio.caption.length > 100 ? anuncio.caption.substring(0, 100) + '...' : anuncio.caption %>
+          </div>
+          <div class="card-body">
+            <p><strong>Frequência:</strong> <%= anuncio.frequencia %></p>
+            <% if (anuncio.hasMedia && anuncio.mimetype.startsWith('image/')) { %>
+              <img src="/<%= anuncio.filePath %>" class="anuncio-avatar" alt="Imagem do anúncio">
+            <% } %>
+          
+            <p><strong>Mencionar Todos:</strong> <%= anuncio.mentionAll ? 'Ativado' : 'Desativado' %></p>
+          </div>
+          <div class="bot-actions">
+            <button class="bot-btn editar" type="button" onclick="abrirModalEditarAd('<%= grupoSelecionado.groupId %>', '<%= anuncio._id %>', `<%= anuncio.caption %>`, '<%= anuncio.frequencia %>', '<%= anuncio.hasMedia ? anuncio.filePath : '' %>', <%= anuncio.mentionAll %>)">
+              <i class="fa-solid fa-pen-to-square"></i> Editar
+            </button>
+            
+            <form action="/usuario/apagarads" method="POST" class="inline-form">
+              <input type="hidden" name="grupo" value="<%= grupoSelecionado.groupId %>">
+              <input type="hidden" name="anuncioId" value="<%= anuncio._id %>">
+              <button type="submit" class="bot-btn desativar" onclick="return confirm('Excluir este anúncio?')">
+                <i class="fas fa-trash-alt"></i> Excluir
+              </button>
+            </form>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <p>📭 Nenhum anúncio cadastrado.</p>
+  <% } %>
+<% } %>
+    </main>
+  </div>
+<div id="modalNovoAd" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="fecharModalNovoAd()">&times;</span>
+    <h2 class="modal-title"><i class="fa-solid fa-plus"></i> Novo Anúncio</h2>
+    <form action="/usuario/salvarads" method="POST" enctype="multipart/form-data" class="modal-form">
+      <input type="hidden" name="grupo" value="<%= grupoSelecionado ? grupoSelecionado.groupId : '' %>">
+
+      <label>Legenda:</label>
+      <textarea name="legenda" rows="3" placeholder="Texto opcional"></textarea>
+
+      <label>Frequência:</label>
+      <div class="frequencia-group" style="display:flex;gap:1rem;align-items:center">
+        <input type="number" name="frequenciaNumero" min="1" value="5" required>
+        <select name="frequenciaUnidade" required>
+          <option value="m">minuto(s)</option>
+          <option value="h">hora(s)</option>
+          <option value="d">dia(s)</option>
+        </select>
+      </div>
+
+      <label>Mídia (opcional):</label>
+      <input type="file" name="arquivo" onchange="validarTamanhoArquivo(this)">
+     <label class="switch">
+    <input type="checkbox" name="mentionAll" value="true">
+    <span class="slider round"></span>
+</label>
+<span>Mencionar todos os membros do grupo</span>
+
+      <input type="hidden" name="mentionAll" value="false">
+
+      <button type="submit" class="submit-btn"><i class="fa-solid fa-save"></i> Salvar</button>
+    </form>
+  </div>
+</div>
+
+<div id="modalEditarAd" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="fecharModalEditarAd()">&times;</span>
+    <h2 class="modal-title"><i class="fa-solid fa-pen-to-square"></i> Editar Anúncio</h2>
+
+    <img id="editarMiniatura" class="avatar-thumb" src="#" alt="Imagem atual" style="display: none;">
+
+    <form id="formEditarAd" action="/usuario/editarads" method="POST" enctype="multipart/form-data" class="modal-form">
+      <input type="hidden" name="grupo" id="editarGrupoId">
+      <input type="hidden" name="anuncioId" id="editarAnuncioId">
+
+      <label>Legenda:</label>
+      <textarea name="legenda" id="editarLegenda" rows="3"></textarea>
+
+      <label>Frequência:</label>
+      <div class="frequencia-group" style="display:flex;gap:1rem;align-items:center">
+        <input type="number" name="frequenciaNumero" id="editarFrequenciaNumero" min="1" required>
+        <select name="frequenciaUnidade" id="editarFrequenciaUnidade" required>
+          <option value="m">minuto(s)</option>
+          <option value="h">hora(s)</option>
+          <option value="d">dia(s)</option>
+        </select>
+      </div>
+
+      <label>Mídia (opcional):</label>
+      <input type="file" name="arquivo" onchange="validarTamanhoArquivo(this)">
+      <label class="switch">
+        <input type="checkbox" name="mentionAll" id="editarMentionAll">
+        <span class="slider round"></span>
+      </label>
+      <span>Mencionar todos os membros do grupo</span>
+
+      <button type="submit" class="submit-btn"><i class="fa-solid fa-save"></i> Atualizar</button>
+    </form>
+  </div>
+</div>
+
+
+
+
+  <footer class="footer">© 2024 Bot Admin</footer>
+
+ <script src="/js/grupos/ads.js"></script>
+</body>
+</html>

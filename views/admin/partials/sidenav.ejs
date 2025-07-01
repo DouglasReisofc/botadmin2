@@ -1,0 +1,59 @@
+<nav class="sidenav" aria-label="Menu lateral">
+  <a href="/admin" class="<%= path === '/admin' ? 'active' : '' %>">
+    <i class="fa-solid fa-gauge"></i> Dashboard
+  </a>
+  <a href="/admin/usuarios" class="<%= path.startsWith('/admin/usuarios') ? 'active' : '' %>">
+    <i class="fa-solid fa-user"></i> Usuários
+  </a>
+  <a href="/admin/planos" class="<%= path.startsWith('/admin/planos') ? 'active' : '' %>">
+    <i class="fa-solid fa-calendar-check"></i> Planos
+  </a>
+  <a href="/admin/extras" class="<%= path.startsWith('/admin/extras') ? 'active' : '' %>">
+    <i class="fa-solid fa-plus"></i> Planos Extras
+  </a>
+  <a href="/admin/premium" class="<%= path.startsWith('/admin/premium') ? 'active' : '' %>">
+    <i class="fa-solid fa-star"></i> Premium
+  </a>
+  <a href="/admin/grupos" class="<%= path.startsWith('/admin/grupos') ? 'active' : '' %>">
+    <i class="fa-solid fa-cogs"></i> Grupos
+  </a>
+  <a href="/admin/api" class="<%= path.startsWith('/admin/api') ? 'active' : '' %>">
+    <i class="fa-solid fa-plug"></i> APIs
+  </a>
+  <a href="/admin/servidores" class="<%= path.startsWith('/admin/servidores') ? 'active' : '' %>">
+    <i class="fa-solid fa-code"></i> Servidores
+  </a>
+  <a href="/admin/pagamentos" class="<%= path.startsWith('/admin/pagamentos') ? 'active' : '' %>">
+    <i class="fa-brands fa-pix"></i> Pagamentos
+  </a>
+  <a href="/admin/banner" class="<%= path.startsWith('/admin/banner') ? 'active' : '' %>">
+    <i class="fa-solid fa-image"></i> Banner
+  </a>
+  <a href="/admin/anuncios" class="<%= path.startsWith('/admin/anuncios') ? 'active' : '' %>">
+    <i class="fa-solid fa-bullhorn"></i> Anúncios
+  </a>
+  <a href="/admin/comandos" class="<%= path.startsWith('/admin/comandos') ? 'active' : '' %>">
+    <i class="fa-solid fa-terminal"></i> Comandos
+  </a>
+  <a href="/admin/posts" class="<%= path.startsWith('/admin/posts') ? 'active' : '' %>">
+    <i class="fa-solid fa-file-lines"></i> Posts
+  </a>
+  <a href="/admin/configuracoes" class="<%= path.startsWith('/admin/configuracoes') ? 'active' : '' %>">
+    <i class="fa-solid fa-sliders"></i> Configurações
+  </a>
+  <a href="/admin/seo" class="<%= path.startsWith('/admin/seo') ? 'active' : '' %>">
+    <i class="fa-solid fa-globe"></i> SEO
+  </a>
+  <a href="/admin/idiomas" class="<%= path.startsWith('/admin/idiomas') ? 'active' : '' %>">
+    <i class="fa-solid fa-language"></i> Idiomas
+  </a>
+  <a href="/admin/logo" class="<%= path.startsWith('/admin/logo') ? 'active' : '' %>">
+    <i class="fa-solid fa-image-portrait"></i> Logo
+  </a>
+  <a href="/admin/popup" class="<%= path.startsWith('/admin/popup') ? 'active' : '' %>">
+    <i class="fa-brands fa-whatsapp"></i> Popup WhatsApp
+  </a>
+  <a href="/admin/telegram" class="<%= path.startsWith('/admin/telegram') ? 'active' : '' %>">
+    <i class="fa-brands fa-telegram"></i> Telegram
+  </a>
+</nav>

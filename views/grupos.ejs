@@ -1,0 +1,137 @@
+<main class="content" role="main">
+  <div class="cards">
+    <section class="card">
+      <h3><i class="fa-solid fa-layer-group"></i> Meus Grupos</h3>
+
+      <div class="plano-info" style="display:flex;gap:1.5rem;margin-bottom:1rem;font-size:.95rem;color:#666">
+        <span><i class="fa-solid fa-clock"></i> Vencimento:
+          <strong>
+            <% if (vencimentoPlano) { %>
+              <%= new Date(vencimentoPlano).toLocaleDateString('pt-BR') %>
+            <% } else { %> — <% } %>
+          </strong>
+        </span>
+        <span><i class="fa-solid fa-layer-group"></i> Total permitido: <strong><%= limiteGrupos %></strong></span>
+        <span><i class="fa-solid fa-cubes"></i> Restante: <strong><%= restante %></strong></span>
+      </div>
+
+      <button id="novo-bot-btn" class="novo-bot-btn">
+        <i class="fa-solid fa-plus"></i> Novo Grupo
+      </button>
+
+      <% if (bots.length > 0) { %>
+        <ul class="bot-list">
+          <% bots.forEach(bot => { %>
+            <li class="bot-item">
+              <div class="bot-info">
+                <img src="<%= bot.imagemGrupo %>" alt="Grupo" class="bot-avatar" />
+                <div class="bot-details">
+                  <h4 class="bot-nome"><%= bot.nomeGrupo || 'Grupo Desconhecido' %></h4>
+                  <p><i class="fa-solid fa-hashtag"></i> ID: <%= bot.groupId %></p>
+                  <p><i class="fa-solid fa-toggle-on"></i> Status: <%= bot.status ? 'Ativo' : 'Inativo' %></p>
+                  <p><i class="fa-solid fa-user-shield"></i> Dono: <%= bot.ownerGrupo || 'Indefinido' %></p>
+
+                  <div class="bot-actions">
+                    <button class="bot-btn editar" onclick="abrirModalEditar('<%= bot._id %>')">
+                      <i class="fa-solid fa-pen-to-square"></i> Editar
+                    </button>
+                    <form action="/usuario/excluirbot" method="POST" style="display:inline">
+                      <input type="hidden" name="botId" value="<%= bot._id %>" />
+                      <button class="bot-btn excluir" onclick="return confirm('Tem certeza que deseja excluir este grupo?')">
+                        <i class="fa-solid fa-trash"></i> Excluir
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </li>
+          <% }) %>
+        </ul>
+      <% } else { %>
+        <p>Você não tem bots cadastrados.</p>
+      <% } %>
+    </section>
+  </div>
+</main>
+
+<!-- Modal Novo -->
+<div id="modalNovoBot" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" aria-label="Fechar modal">&times;</span>
+    <h2 class="modal-title"><i class="fa-solid fa-plus-circle"></i> Cadastrar novo Grupo</h2>
+
+    <form action="/usuario/criarbot" method="POST" class="modal-form">
+      <label for="bot-api">Selecione o Bot:</label>
+      <select id="bot-api" name="botApi" required>
+        <% botApis.forEach(api => { %>
+          <option value="<%= api._id %>"><%= api.nome %></option>
+        <% }); %>
+      </select>
+
+      <label for="link-grupo">Link do Grupo:</label>
+      <input type="text" id="link-grupo" name="linkGrupo" placeholder="https://chat.whatsapp.com/..." required />
+
+      <button type="submit" class="submit-btn">
+        <i class="fa-solid fa-floppy-disk"></i> Cadastrar Grupo
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Editar -->
+<div id="modalEditarBot" class="modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="fecharModalEditar()">&times;</span>
+    <h2 class="modal-title"><i class="fa-solid fa-pen-to-square"></i> Editar Grupo do Bot</h2>
+    <form id="form-editar-bot" method="POST" class="modal-form">
+      <input type="hidden" name="botId" id="editar-bot-id" />
+      <label for="editar-link-grupo">Novo Link do Grupo</label>
+      <input type="text" id="editar-link-grupo" name="linkGrupo" placeholder="https://chat.whatsapp.com/..." required />
+      <button type="submit" class="submit-btn">Atualizar Grupo</button>
+    </form>
+  </div>
+</div>
+
+<% if (commandGuideMsg) { %>
+  <div class="modal" id="cmd-guide-modal">
+    <div class="modal-content" style="max-width:480px; text-align:center;">
+      <% if (commandGuideType === 'video') { %>
+        <video src="<%= commandGuideFile %>" controls style="width:100%; max-height:240px; margin-bottom:1rem;"></video>
+      <% } else if (commandGuideType === 'image') { %>
+        <img src="<%= commandGuideFile %>" style="width:100%; max-height:240px; margin-bottom:1rem;" alt="Tutorial" />
+      <% } %>
+      <p><%= commandGuideMsg %></p>
+      <button class="submit-btn" style="margin-top:2rem;" onclick="closeModal('cmd-guide-modal')">OK</button>
+    </div>
+  </div>
+<% } %>
+
+<script src="/js/grupos/grupos.js"></script>
+<script>
+  function openModal(id) {
+    const modal = document.getElementById(id);
+    if (!modal) return;
+    modal.classList.add('active');
+    document.body.classList.add('no-scroll');
+    const handler = evt => { if (evt.target === modal) closeModal(id); };
+    modal.addEventListener('click', handler);
+    modal._closer = handler;
+  }
+
+  function closeModal(id) {
+    const modal = document.getElementById(id);
+    if (!modal) return;
+    modal.classList.remove('active');
+    document.body.classList.remove('no-scroll');
+    if (modal._closer) {
+      modal.removeEventListener('click', modal._closer);
+      modal._closer = null;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (<%= showCmdGuide ? 'true' : 'false' %>) {
+      openModal('cmd-guide-modal');
+    }
+  });
+</script>

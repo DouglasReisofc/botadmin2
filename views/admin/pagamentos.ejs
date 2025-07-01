@@ -1,0 +1,252 @@
+<!-- views/admin/pagamentos.ejs -->
+<div class="cards">
+  <% if (success_msg?.length) { %>
+    <div class="alert success">
+      <i class="fa-solid fa-circle-check"></i> <%= success_msg %>
+    </div>
+  <% } %>
+  <% if (error_msg?.length) { %>
+    <div class="alert error">
+      <i class="fa-solid fa-circle-exclamation"></i> <%= error_msg %>
+    </div>
+  <% } %>
+  <% if (error?.length) { %>
+    <div class="alert error">
+      <i class="fa-solid fa-circle-xmark"></i> <%= error %>
+    </div>
+  <% } %>
+
+  <div class="card">
+    <div class="card-header">
+      <h3>Credenciais de Pagamento</h3>
+    </div>
+
+    <div class="scroll-container">
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Gateway</th>
+            <th>Tipo</th>
+            <th>Access Token</th>
+            <th>Public Key</th>
+            <th>Taxa (%)</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% metodos.forEach(m => { %>
+            <tr>
+              <td><%= m.nome %></td>
+              <td><%= m.gateway %></td>
+              <td><%= m.tipo || 'pix' %></td>
+              <td><%= m.accessToken %></td>
+              <td><%= m.publicKey || 'N/A' %></td>
+              <td><%= m.taxaPercentual %></td>
+              <td><%= m.status ? 'Ativo' : 'Inativo' %></td>
+              <td class="bot-actions">
+                <button
+                  class="bot-btn editar"
+                  onclick='abrirModalEditar(
+                    <%- JSON.stringify(m._id) %>,
+                    <%- JSON.stringify(m.nome) %>,
+                    <%- JSON.stringify(m.gateway) %>,
+                    <%- JSON.stringify(m.accessToken) %>,
+                    <%- JSON.stringify(m.publicKey||"") %>,
+                    <%- JSON.stringify(m.tipo||"pix") %>,
+                    <%= m.taxaPercentual %>,
+                    <%- JSON.stringify(m.status) %>
+                  )'
+                >Editar</button>
+                <button
+                  class="bot-btn excluir"
+                  onclick="abrirModalExcluir('<%= m._id %>')"
+                >Deletar</button>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <button onclick="abrirModalCriar()" class="submit-btn">
+      Nova Credencial
+    </button>
+  </div>
+</div>
+
+<!-- Modal Criar -->
+<div class="modal" id="modalCriar">
+  <div class="modal-content">
+    <button class="close-btn" onclick="fecharModal('modalCriar')">&times;</button>
+    <h2>Criar Credencial de Pagamento</h2>
+    <form id="formCriar" action="/admin/pagamentos/criar" method="POST" class="modal-form">
+      <div class="form-group">
+        <label>Nome:</label>
+        <input name="nome" required>
+      </div>
+      <div class="form-group">
+        <label>Gateway:</label>
+        <select name="gateway" id="criarGateway" onchange="toggleTipoCriar()" required>
+          <option value="mercadopago">Mercado Pago</option>
+          <option value="asaas">Asaas</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Access Token:</label>
+        <input name="accessToken" required>
+      </div>
+      <div class="form-group">
+        <label>Public Key:</label>
+        <input name="publicKey">
+      </div>
+      <div class="form-group" id="criarTipoGroup">
+        <label>Tipo:</label>
+        <select name="tipo" id="criarTipo" required>
+          <option value="pix">PIX</option>
+          <option value="cartao">Cartão</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Taxa (%):</label>
+        <input name="taxaPercentual" type="number" step="0.01" required>
+      </div>
+      <div class="form-group">
+        <label>Ativo:</label>
+        <input type="checkbox" name="status" id="criarStatus" checked>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="submit-btn" onclick="fecharModal('modalCriar')">Cancelar</button>
+        <button type="submit" class="submit-btn">Criar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Editar -->
+<div class="modal" id="modalEditar">
+  <div class="modal-content">
+    <button class="close-btn" onclick="fecharModal('modalEditar')">&times;</button>
+    <h2>Editar Credencial</h2>
+    <form id="formEditar" method="POST" class="modal-form">
+      <input type="hidden" name="id" id="editId">
+      <div class="form-group">
+        <label>Nome:</label>
+        <input name="nome" id="editNome" required>
+      </div>
+      <div class="form-group">
+        <label>Gateway:</label>
+        <select name="gateway" id="editGateway" onchange="toggleTipoEditar()" required>
+          <option value="mercadopago">Mercado Pago</option>
+          <option value="asaas">Asaas</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Access Token:</label>
+        <input name="accessToken" id="editAccessToken" required>
+      </div>
+      <div class="form-group">
+        <label>Public Key:</label>
+        <input name="publicKey" id="editPublicKey">
+      </div>
+      <div class="form-group" id="editTipoGroup">
+        <label>Tipo:</label>
+        <select name="tipo" id="editTipo" required>
+          <option value="pix">PIX</option>
+          <option value="cartao">Cartão</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Taxa (%):</label>
+        <input name="taxaPercentual" id="editTaxa" type="number" step="0.01" required>
+      </div>
+      <div class="form-group">
+        <label>Ativo:</label>
+        <input type="checkbox" name="status" id="editStatus">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="submit-btn" onclick="fecharModal('modalEditar')">Cancelar</button>
+        <button type="submit" class="submit-btn">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Excluir -->
+<div class="modal" id="modalExcluir">
+  <div class="modal-content">
+    <button class="close-btn" onclick="fecharModal('modalExcluir')">&times;</button>
+    <h2>Confirmar Exclusão</h2>
+    <p>Tem certeza que deseja excluir esta credencial?</p>
+    <form id="formExcluir" method="POST" class="modal-form">
+      <div class="modal-footer">
+        <button type="button" class="submit-btn" onclick="confirmarExcluir()">Sim, excluir</button>
+        <button type="button" class="submit-btn" onclick="fecharModal('modalExcluir')">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- scripts -->
+<script src="/js/admin.js"></script>
+<script>
+  // inline pagamentos.js
+
+  function abrirModalCriar() {
+    document.getElementById('criarGateway').value = 'mercadopago';
+    document.getElementById('criarTipo').value = 'pix';
+    document.getElementById('criarStatus').checked = true;
+    toggleTipoCriar();
+    openModalById('modalCriar');
+  }
+
+  function toggleTipoCriar() {
+    const gateway = document.getElementById('criarGateway').value;
+    const group = document.getElementById('criarTipoGroup');
+    if (gateway === 'mercadopago') {
+      group.style.display = 'block';
+    } else {
+      document.getElementById('criarTipo').value = 'pix';
+      group.style.display = 'none';
+    }
+  }
+
+  function abrirModalEditar(id,nome,gateway,token,key,tipo,taxaPercentual,status) {
+    document.getElementById('editId').value         = id;
+    document.getElementById('editNome').value       = nome;
+    document.getElementById('editGateway').value    = gateway;
+    document.getElementById('editAccessToken').value= token;
+    document.getElementById('editPublicKey').value  = key;
+    document.getElementById('editTipo').value       = tipo;
+    document.getElementById('editTaxa').value       = taxaPercentual;
+    document.getElementById('editStatus').checked   = status === true || status === 'true' || status === 'on' || status === 1;
+    toggleTipoEditar();
+    document.getElementById('formEditar').action    = `/admin/pagamentos/editar/${id}`;
+    openModalById('modalEditar');
+  }
+
+  function toggleTipoEditar() {
+    const gateway = document.getElementById('editGateway').value;
+    const group = document.getElementById('editTipoGroup');
+    if (gateway === 'mercadopago') {
+      group.style.display = 'block';
+    } else {
+      document.getElementById('editTipo').value = 'pix';
+      group.style.display = 'none';
+    }
+  }
+
+  let excluirId = '';
+  function abrirModalExcluir(id) {
+    excluirId = id;
+    openModalById('modalExcluir');
+  }
+  function confirmarExcluir() {
+    window.location.href = `/admin/pagamentos/deletar/${excluirId}`;
+  }
+
+  function fecharModal(id) {
+    closeModal(id);
+  }
+</script>

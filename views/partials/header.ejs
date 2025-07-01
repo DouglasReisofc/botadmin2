@@ -1,0 +1,50 @@
+<header class="header">
+  <div class="header-left">
+    <button class="menu-btn nav-btn" aria-label="Menu">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+  </div>
+
+  <div class="header-center">
+    <div class="branding">
+      <img src="<%= siteConfig?.logo || '/img/logo.webp' %>" alt="Bot Admin" class="logo-img" style="<%= siteConfig?.logoStyle || '' %>">
+      <h1 class="logo-title">Bot Admin</h1>
+      <span class="sr-only">Bot Admin</span>
+      <a href="/saldo" class="saldo-header">
+        <i class="fa-solid fa-coins"></i>
+        <%= t('saldo') %> R$ <%= user?.saldo?.toFixed(2) || '0.00' %>
+      </a>
+    </div>
+  </div>
+
+  <div class="header-right">
+    <button id="theme-toggle" class="theme-toggle-btn" aria-label="Alternar tema">
+      <i class="fa-solid fa-moon"></i>
+    </button>
+
+    <select id="lang-select" aria-label="Idioma">
+      <option value="ptbr" <%= lang === 'ptbr' ? 'selected' : '' %>>PT</option>
+      <option value="enus" <%= lang === 'enus' ? 'selected' : '' %>>EN</option>
+      <option value="es" <%= lang === 'es' ? 'selected' : '' %>>ES</option>
+    </select>
+
+    <form action="/usuario/sair" method="GET">
+      <button class="logout-btn" aria-label="<%= t('logout') %>">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        <span class="logout-text"><%= t('logout') %></span>
+      </button>
+    </form>
+
+    <% if (adminReturn) { %>
+      <a href="/admin/retornar" class="admin-return-btn" aria-label="Voltar ao Admin">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span class="return-text"><%= t('admin') %></span>
+      </a>
+    <% } %>
+  </div>
+</header>
+<script>
+  document.getElementById('lang-select').addEventListener('change', e => {
+    fetch('/lang?lang=' + e.target.value).then(() => location.reload());
+  });
+</script>

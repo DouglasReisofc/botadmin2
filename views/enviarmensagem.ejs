@@ -1,0 +1,33 @@
+<form action="/usuario/enviarmensagem" method="POST" enctype="multipart/form-data">
+  <div class="card">
+    <h3><i class="fa-solid fa-filter"></i> Selecione o Grupo</h3>
+    <label class="switch-label" for="grupo">Grupo:</label>
+    <select name="grupo" id="grupo" required class="grupo-select">
+      <% bots.forEach(bot => { %>
+        <option value="<%= bot.groupId %>"><%= bot.nomeGrupo || bot.groupId %></option>
+      <% }) %>
+    </select>
+  </div>
+
+  <div class="card">
+    <h3><i class="fa-solid fa-paper-plane"></i> Enviar Mensagem</h3>
+
+    <label for="mensagem">Mensagem:</label>
+    <textarea name="mensagem" id="mensagem" rows="6" placeholder="Digite sua mensagem..." required></textarea>
+
+    <label for="arquivo">Anexo (opcional):</label>
+    <input type="file" name="arquivo" id="arquivo" onchange="validarTamanhoArquivo(this)">
+    <small style="color: #888;">Máximo: 60MB</small>
+
+    <div class="toggle-row">
+      <label for="mencionarTodos">Mencionar todos:</label>
+      <label class="switch">
+        <input type="checkbox" name="mencionarTodos" id="mencionarTodos">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <button type="submit" class="submit-btn"><i class="fa-solid fa-paper-plane"></i> Enviar</button>
+  </div>
+</form>
+<script src="/js/grupos/enviarmensagem.js"></script>

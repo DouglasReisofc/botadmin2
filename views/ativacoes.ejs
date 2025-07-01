@@ -1,0 +1,411 @@
+<main class="content">
+  <% if (bots && bots.length) { %>
+    <!-- Filtro de Grupos -->
+    <div class="card" id="cardFiltro">
+      <h3><i class="fa-solid fa-filter"></i> Selecione o Grupo</h3>
+      <form class="grupo-filtro-form">
+        <label class="switch-label">Grupo:</label>
+        <select id="grupoSelect" class="grupo-select">
+          <% bots.forEach(b => { %>
+            <option
+              value="grupo-<%= b._id %>"
+              data-gid="<%= b.groupId %>"
+              data-venc="<%= b.vencimento
+                ? new Date(b.vencimento).toLocaleDateString('pt-BR',{ timeZone:'America/Sao_Paulo' })
+                : '-' %>">
+              <%= b.nomeGrupo || b.groupId %>
+            </option>
+          <% }) %>
+        </select>
+        <div id="grupoDetalhes" class="grupo-info"
+             style="margin-top:.8rem;color:var(--texto-cinza);font-size:.9rem;"></div>
+      </form>
+    </div>
+
+    <!-- Cards de Configuração -->
+    <% bots.forEach(bot => { %>
+      <div class="card grupo-card" id="grupo-<%= bot._id %>" style="display:none">
+        <h3 class="grupo-nome">
+          <i class="fa-solid fa-users"></i>
+          <%= bot.nomeGrupo || 'Grupo' %>
+        </h3>
+
+        <!-- Bot Ativo -->
+        <div class="switch-group">
+          <span class="switch-label">Bot Ativo</span>
+          <label class="toggle-switch">
+            <input
+              type="checkbox"
+              class="toggle-input"
+              data-bot-id="<%= bot._id %>"
+              data-field="status"
+              <%= bot.status ? 'checked' : '' %> />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- Comandos Dinâmicos -->
+        <% Object.keys(bot.comandos || {}).filter(c => c !== 'autoresposta').forEach(cmd => { 
+             const allow = allowedCommands && allowedCommands[cmd]; %>
+          <div class="switch-group">
+            <span class="switch-label"><%= cmd %></span>
+            <label class="toggle-switch <%= allow ? '' : 'disabled-command' %>">
+              <input
+                type="checkbox"
+                class="toggle-input"
+                data-bot-id="<%= bot._id %>"
+                data-field="comando"
+                data-command="<%= cmd %>"
+                <%= ['botinterage','moderacaocomia','lerimagem'].includes(cmd) ? `data-groq-key="${bot.groqKey||''}"` : '' %>
+                <%= bot.comandos[cmd] ? 'checked' : '' %>
+                <%= allow ? '' : 'disabled' %> />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <!-- Botão Links Permitidos após toggle de antilink -->
+          <% if (cmd === 'antilink') { %>
+            <div class="switch-group" style="margin-top:0.5rem;">
+              <button
+                type="button"
+                class="bot-btn editar"
+                onclick="abrirModalLinks('<%= bot._id %>', <%= JSON.stringify(bot.linksPermitidos||[]) %>)">
+                <i class="fa-solid fa-link"></i> Links Permitidos
+              </button>
+            </div>
+          <% } %>
+
+          <!-- Bem-Vindo -->
+          <% if (cmd === 'bemvindo') { %>
+            <button type="button" class="bot-btn editar"
+                    onclick="abrirModalBemvindo('<%= bot._id %>')">
+              <i class="fa-solid fa-pen"></i> Editar Bem-Vindo
+            </button>
+            <div id="bemvindo_template_<%= bot._id %>" style="display:none">
+              <div class="bemvindo-extra">
+                <% if (bot.bemvindo && bot.bemvindo.hasMedia) { %>
+                  <div class="image-preview">
+                    <img src="/<%= bot.bemvindo.filePath %>" class="avatar-thumb" />
+                    <span class="remove-img">&times;</span>
+                  </div>
+                <% } %>
+                <input type="hidden" name="removerImagem" value="0" />
+                <label>Legenda</label>
+                <textarea name="bemvindoLegenda" rows="2"><%= bot.bemvindo.caption %></textarea>
+                <label>Nova imagem</label>
+                <input type="file" name="bemvindoArquivo" accept="image/*" />
+                <label>Link de imagem externa</label>
+                <input type="url" name="bemvindoLink" value="<%= bot.bemvindo.externalUrl || '' %>" placeholder="https://exemplo.com/imagem.jpg" />
+                <div class="switch-group">
+                  <span class="switch-label">Enviar como sticker</span>
+                  <label class="toggle-switch">
+                    <input type="checkbox" name="bemvindoSticker" <%= bot.bemvindo.asSticker ? 'checked' : '' %> />
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                </div>
+              </div>
+          <% } %>
+
+          <!-- Prompt -->
+          <% if (cmd === 'botinterage') { %>
+            <button type="button" class="bot-btn editar"
+                    onclick="abrirModalPrompt('<%= bot._id %>')">
+              <i class="fa-solid fa-pen"></i> Editar Prompt
+            </button>
+            <div id="prompt_template_<%= bot._id %>" style="display:none">
+              <div class="prompt-extra">
+                <label>Prompt do Bot</label>
+                <textarea name="botinteragePrompt" rows="4"><%= bot.botinteragePrompt %></textarea>
+              </div>
+            </div>
+            <button type="button" class="bot-btn editar" style="margin-top:.5rem;"
+                    onclick="abrirModalIaKey('<%= bot._id %>', '<%= bot.groqKey || '' %>')">
+              <i class="fa-solid fa-key"></i> API Key IA
+            </button>
+            <div id="iakey_template_<%= bot._id %>" style="display:none">
+              <div class="iakey-extra">
+                <label>API Key da IA</label>
+                <textarea name="groqKey" rows="3" style="width:100%;"><%= bot.groqKey || '' %></textarea>
+                <button type="button" class="bot-btn editar" onclick="abrirModalInfo()" style="margin-top:.5rem;">
+                  <i class="fa-solid fa-circle-question"></i> Onde obter?
+                </button>
+              </div>
+            </div>
+          <% } %>
+
+          <!-- DDI Permitidos -->
+          <% if (cmd === 'bangringos') { %>
+            <button type="button" class="bot-btn editar"
+                    onclick="abrirModalDdi('<%= bot._id %>', <%= JSON.stringify(bot.ddiPermitidos||[]) %>)">
+              <i class="fa-solid fa-phone"></i> DDI Permitidos
+            </button>
+          <div id="ddi_template_<%= bot._id %>" style="display:none">
+            <label>DDIs permitidos (um por linha):</label>
+            <textarea name="ddiPermitidos" rows="4"><%= (bot.ddiPermitidos||[]).join('\n') %></textarea>
+          </div>
+          <% } %>
+
+
+        <% }) %>
+
+
+        <!-- Prefixo -->
+        <button type="button" class="bot-btn editar"
+                onclick="abrirModalPrefixo('<%= bot._id %>', '<%= bot.prefixo %>')">
+          <i class="fa-solid fa-code"></i> Editar Prefixo
+        </button>
+      </div>
+    <% }) %>
+  <% } else { %>
+    <p>Você ainda não possui grupos configurados.</p>
+  <% } %>
+</main>
+
+<!-- Modais -->
+<!-- Bem-Vindo -->
+<div id="modalBemvindo" class="modal">
+  <div class="modal-content">
+    <span class="close-btn">&times;</span>
+    <form id="formModalBemvindo" class="modal-form"
+          method="POST" enctype="multipart/form-data"
+          action="/usuario/grupos/ativacoes">
+      <input type="hidden" name="botId" id="modalBemvindoBotId" />
+      <button type="button" class="bot-btn editar" onclick="mostrarVariaveis()">
+        Variáveis Disponíveis
+      </button>
+      <div id="conteudoBemvindo"></div>
+      <button class="submit-btn" type="submit">
+        <i class="fa-solid fa-save"></i> Salvar Bem-Vindo
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Prompt -->
+<div id="modalPrompt" class="modal">
+  <div class="modal-content">
+    <span class="close-btn">&times;</span>
+    <form id="formModalPrompt" class="modal-form"
+          method="POST" action="/usuario/grupos/ativacoes">
+      <input type="hidden" name="botId" id="modalPromptBotId" />
+      <div id="conteudoPrompt"></div>
+      <button class="submit-btn" type="submit">
+        <i class="fa-solid fa-save"></i> Salvar Prompt
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Links Permitidos -->
+<div id="modalLinks" class="modal">
+  <div class="modal-content">
+    <span class="close-btn">&times;</span>
+    <form id="formModalLinks" class="modal-form"
+          method="POST" action="/usuario/grupos/links-permitidos">
+      <input type="hidden" name="botId" id="modalLinksBotId" />
+      <label>Links permitidos (um por linha):</label>
+      <textarea id="linksPermitidosTextarea" name="linksPermitidos"
+                rows="6" style="width:100%;"></textarea>
+      <button class="submit-btn" type="submit">
+        <i class="fa-solid fa-save"></i> Salvar Links
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- DDI Permitidos -->
+<div id="modalDdi" class="modal">
+  <div class="modal-content">
+    <span class="close-btn">&times;</span>
+    <form id="formModalDdi" class="modal-form"
+          method="POST" action="/usuario/grupos/ddi-permitidos">
+      <input type="hidden" name="botId" id="modalDdiBotId" />
+      <label>DDIs permitidos (um por linha):</label>
+      <textarea id="ddiTextarea" name="ddiPermitidos"
+                rows="4" style="width:100%;"></textarea>
+      <button class="submit-btn" type="submit">
+        <i class="fa-solid fa-save"></i> Salvar DDIs
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Prefixo -->
+<div id="modalPrefixo" class="modal">
+  <div class="modal-content">
+    <span class="close-btn">&times;</span>
+    <form id="formModalPrefixo" class="modal-form"
+          method="POST" action="/usuario/grupos/ativacoes">
+      <input type="hidden" name="botId" id="modalPrefixoBotId" />
+      <label>Novo Prefixo</label>
+      <textarea id="prefixoInput" name="prefixo" rows="2" style="width:100%;" placeholder="!,#,.,-,/" required></textarea>
+      <small class="hint">Separe os prefixos por vírgula ou linha</small>
+      <button class="submit-btn" type="submit">
+        <i class="fa-solid fa-save"></i> Salvar Prefixo
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- IA Key -->
+<div id="modalIaKey" class="modal">
+  <div class="modal-content">
+    <span class="close-btn">&times;</span>
+    <form id="formModalIaKey" class="modal-form" method="POST" action="/usuario/grupos/apikey">
+      <input type="hidden" name="botId" id="modalIaKeyBotId" />
+      <div id="conteudoIaKey"></div>
+      <button class="submit-btn" type="submit">
+        <i class="fa-solid fa-save"></i> Salvar API Key
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- IA Info -->
+<div id="modalIaInfo" class="modal">
+  <div class="modal-content">
+    <span class="close-btn">&times;</span>
+    <p>Para usar a IA, gere uma chave gratuita em
+      <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a>
+      e informe no campo da API Key.
+    </p>
+  </div>
+</div>
+
+<script>
+const allowedCommands = <%- JSON.stringify(allowedCommands || {}) %>;
+document.addEventListener('DOMContentLoaded', () => {
+  const grupoSelect   = document.getElementById('grupoSelect');
+  const grupoDetalhes = document.getElementById('grupoDetalhes');
+  const cards         = document.querySelectorAll('.grupo-card');
+  const modals        = ['modalBemvindo','modalPrompt','modalLinks','modalDdi','modalPrefixo','modalIaKey','modalIaInfo']
+                        .map(id => document.getElementById(id));
+  const textareaLinks = document.getElementById('linksPermitidosTextarea');
+  const ddiTextarea   = document.getElementById('ddiTextarea');
+
+  // atualizar detalhes e filtrar cards
+  function atualizarDetalhes() {
+    const opt = grupoSelect.options[grupoSelect.selectedIndex];
+    grupoDetalhes.innerHTML = `ID: ${opt.dataset.gid}<br>Venc.: ${opt.dataset.venc}`;
+  }
+  function filtrarGrupo() {
+    const sel = grupoSelect.value;
+    localStorage.setItem('grupoSelecionado', sel);
+    cards.forEach(c => c.style.display = c.id===sel?'block':'none');
+  }
+  // inicializa seleção
+  const salvo = localStorage.getItem('grupoSelecionado');
+  if ([...grupoSelect.options].some(o=>o.value===salvo)) grupoSelect.value = salvo;
+  filtrarGrupo(); atualizarDetalhes();
+  grupoSelect.addEventListener('change', ()=>{ filtrarGrupo(); atualizarDetalhes(); });
+
+  // toggle AJAX
+  document.querySelectorAll('.toggle-input').forEach(input=>{
+    input.addEventListener('change', async e=>{
+      const botId   = e.target.dataset.botId;
+      const field   = e.target.dataset.field;
+      const command = e.target.dataset.command;
+      const value   = e.target.checked;
+      const key     = e.target.dataset.groqKey || '';
+      if (value && ['moderacaocomia','lerimagem'].includes(command) && !key) {
+        e.target.checked = false;
+        abrirModalIaKey(botId, '');
+        return;
+      }
+      try {
+        const res = await fetch('/usuario/grupos/ativacoes/toggle',{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({ botId, field, value, command })
+        });
+        const j = await res.json();
+        if (!j.ok) throw new Error(j.error||'Erro');
+      } catch(err){
+        console.error('Toggle error:',err);
+        e.target.checked = !value;
+        alert('Falha ao atualizar');
+      }
+    });
+  });
+
+  document.querySelectorAll('.disabled-command').forEach(label=>{
+    label.addEventListener('click', ()=>{
+      alert('Função não disponível no seu plano');
+    });
+  });
+
+  // setup cada modal para fechar ao clicar no X ou fundo
+  function setupModal(modal) {
+    if (!modal) return;
+    modal.querySelector('.close-btn').onclick = ()=>modal.classList.remove('active');
+    modal.onclick = e=>{ if(e.target===modal) modal.classList.remove('active') };
+  }
+  modals.forEach(setupModal);
+
+  // Funções para abrir cada modal
+  window.abrirModalBemvindo = id => {
+    const tpl  = document.getElementById(`bemvindo_template_${id}`);
+    const area = document.getElementById('conteudoBemvindo');
+    document.getElementById('modalBemvindoBotId').value = id;
+    area.innerHTML = '';
+    area.appendChild(tpl.firstElementChild.cloneNode(true));
+    document.querySelector('#formModalBemvindo input[name="removerImagem"]').value = '0';
+    document.getElementById('modalBemvindo').classList.add('active');
+  };
+  window.abrirModalPrompt = id => {
+    const tpl  = document.getElementById(`prompt_template_${id}`);
+    const area = document.getElementById('conteudoPrompt');
+    document.getElementById('modalPromptBotId').value = id;
+    area.innerHTML = '';
+    area.appendChild(tpl.firstElementChild.cloneNode(true));
+    document.getElementById('modalPrompt').classList.add('active');
+  };
+  window.abrirModalLinks = (botId, links) => {
+    document.getElementById('modalLinksBotId').value = botId;
+    textareaLinks.value = Array.isArray(links)? links.join('\n') : '';
+    document.getElementById('modalLinks').classList.add('active');
+  };
+  window.abrirModalDdi = (botId, ddis) => {
+    document.getElementById('modalDdiBotId').value = botId;
+    ddiTextarea.value = Array.isArray(ddis)? ddis.join('\n') : '';
+    document.getElementById('modalDdi').classList.add('active');
+  };
+  window.abrirModalPrefixo = (botId, prefixo) => {
+    document.getElementById('modalPrefixoBotId').value = botId;
+    document.getElementById('prefixoInput').value = prefixo;
+    document.getElementById('modalPrefixo').classList.add('active');
+  };
+  window.abrirModalIaKey = (botId, key) => {
+    const tpl = document.getElementById(`iakey_template_${botId}`);
+    const area = document.getElementById('conteudoIaKey');
+    document.getElementById('modalIaKeyBotId').value = botId;
+    area.innerHTML = '';
+    area.appendChild(tpl.firstElementChild.cloneNode(true));
+    if (key) {
+      const field = area.querySelector('textarea[name="groqKey"], input[name="groqKey"]');
+      if (field) field.value = key;
+    }
+    document.getElementById('modalIaKey').classList.add('active');
+  };
+  window.abrirModalInfo = () => {
+    document.getElementById('modalIaInfo').classList.add('active');
+  };
+
+  // Alert de variáveis disponíveis
+  window.mostrarVariaveis = () => {
+    alert(
+      'Variáveis disponíveis:\n' +
+      '{{pushName}}\n{{numero}}\n{{nomeGrupo}}\n{{data}}\n{{hora}}\n{{prefixo}}'
+    );
+  };
+
+  // remover preview de imagem no Bem-Vindo
+  document.getElementById('modalBemvindo').addEventListener('click', e=>{
+    if (e.target.classList.contains('remove-img')) {
+      const prev = e.target.closest('.image-preview');
+      prev?.remove();
+      document.querySelector('#formModalBemvindo input[name="removerImagem"]').value = '1';
+    }
+  });
+});
+</script>

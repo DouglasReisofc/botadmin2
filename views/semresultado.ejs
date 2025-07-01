@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Página Desmaterializada | 404</title>
+    <link rel="icon" type="image/png" href="/img/favicon.png" sizes="40x40">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a2e;
+            font-family: 'Arial', sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .container {
+            text-align: center;
+            z-index: 1;
+            position: relative;
+        }
+
+        .error-code {
+            font-size: 150px;
+            color: #00f3ff;
+            text-shadow: 0 0 20px rgba(0, 243, 255, 0.5);
+            animation: glitch 2s infinite;
+        }
+
+        .message {
+            color: #fff;
+            font-size: 24px;
+            margin: 20px 0;
+            animation: slideIn 1.5s ease-out;
+        }
+
+        .back-button {
+            background: linear-gradient(45deg, #ff00ff, #00f3ff);
+            border: none;
+            padding: 15px 40px;
+            color: white;
+            font-size: 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .back-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.5);
+        }
+
+        .back-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.4),
+                transparent
+            );
+            transition: 0.5s;
+        }
+
+        .back-button:hover::before {
+            left: 100%;
+        }
+
+        /* Animações */
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Efeitos futuristas */
+        .grid {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 243, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            from { background-position: 0 0; }
+            to { background-position: 20px 20px; }
+        }
+
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+
+        .ufo {
+            font-size: 50px;
+            position: absolute;
+            animation: fly 10s linear infinite;
+        }
+
+        @keyframes fly {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(200%); }
+        }
+    </style>
+<%- include("partials/analytics") %>
+</head>
+<body>
+    <div class="grid"></div>
+    <div class="stars"></div>
+    <div class="container">
+        <div class="error-code">404</div>
+        <p class="message">🚀 Ops! Esta página foi abduzida por alienígenas digitais!</p>
+        <p class="message">🛸 Não encontramos nada aqui... mas temos um botão mágico!</p>
+        <button class="back-button" onclick="history.back()">Teletransportar de Volta</button>
+    </div>
+
+    <script>
+        // Adiciona UFOs voadores aleatórios
+        function createUFO() {
+            const ufo = document.createElement('div');
+            ufo.className = 'ufo';
+            ufo.innerHTML = '🛸';
+            ufo.style.top = Math.random() * 80 + 10 + '%';
+            ufo.style.animationDuration = Math.random() * 5 + 5 + 's';
+            document.body.appendChild(ufo);
+            
+            setTimeout(() => {
+                ufo.remove();
+            }, 10000);
+        }
+
+        // Cria UFOs periodicamente
+        setInterval(createUFO, 3000);
+    </script>
+</body>
+</html>

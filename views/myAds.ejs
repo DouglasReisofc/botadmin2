@@ -1,0 +1,121 @@
+<div class="cards">
+  <div class="card">
+    <h3>Novo Anúncio</h3>
+    <p>Restantes: <span id="adsRestante" data-valor="<%= restante %>"><%= restante %></span></p>
+    <button class="submit-btn" onclick="handleNovoAd()">Novo Anúncio</button>
+  </div>
+
+  <div class="card info-card" style="margin-bottom:1rem;">
+    As divulgações aqui aparecerão na página inicial do site e serão enviadas diariamente para nossos grupos parceiros.
+  </div>
+
+  <% if (ads.length) { %>
+    <% ads.forEach(ad => { %>
+      <div class="card">
+        <% if (ad.type === 'video') { %>
+          <video class="banner-media" autoplay muted loop playsinline>
+            <source src="/img/<%= ad.fileName %>" type="video/webm" />
+          </video>
+        <% } else { %>
+          <img src="/img/<%= ad.fileName %>" class="banner-media" alt="ad" />
+        <% } %>
+        <p style="margin-top:0.5rem;"><%= ad.text %></p>
+        <p style="font-size:0.8rem;">Exibido <%= ad.displayCount %> vezes / Cliques <%= ad.clickCount || 0 %></p>
+        <% if (ad.expiresAt) { %>
+          <p style="font-size:0.8rem;">Expira em: <%= new Date(ad.expiresAt).toLocaleDateString('pt-BR') %></p>
+        <% } %>
+        <form action="/meus-anuncios/<%= ad._id %>/ativar" method="POST" style="margin-top:0.5rem;">
+          <input type="hidden" name="ativo" value="<%= !ad.active %>">
+          <button type="submit" class="submit-btn"><%= ad.active ? 'Desativar' : 'Ativar' %></button>
+        </form>
+        <button class="submit-btn" style="margin-top:0.5rem;background:#5555ff;" onclick="abrirEditarAd('<%= ad._id %>','<%= ad.text.replace(/'/g, '\\&#39;') %>','<%= ad.link %>')">Editar</button>
+        <button class="submit-btn renovar" style="margin-top:0.5rem;" onclick="abrirRenovarAd('<%= ad._id %>')">Renovar</button>
+      </div>
+    <% }) %>
+  <% } else { %>
+    <p>Nenhum anúncio cadastrado.</p>
+  <% } %>
+</div>
+
+<div class="modal" id="createAdModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="fecharModal('createAdModal')">&times;</button>
+    <h2>Novo Anúncio</h2>
+    <form id="createAdForm" class="modal-form" action="/meus-anuncios" method="POST" enctype="multipart/form-data">
+      <label for="createAdFile">Arquivo</label>
+      <input type="file" id="createAdFile" name="arquivo" accept="video/*,image/*" required>
+      <label for="createAdText">Texto</label>
+      <input type="text" id="createAdText" name="text" maxlength="80">
+      <label for="createAdLink">Link</label>
+      <input type="url" id="createAdLink" name="link">
+      <label for="createAdQuota">Usar extra</label>
+      <select id="createAdQuota" name="quotaIndex">
+        <% (quotas || []).forEach(q => { %>
+          <option value="<%= q.index %>"><%= q.dias %> dias - restantes: <%= q.limite %></option>
+        <% }) %>
+      </select>
+      <button type="submit" class="submit-btn">Salvar</button>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="editAdModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="fecharModal('editAdModal')">&times;</button>
+    <h2>Editar Anúncio</h2>
+    <form id="editAdForm" class="modal-form" method="POST" enctype="multipart/form-data">
+      <input type="hidden" id="editAdId" name="id">
+      <label for="editAdFile">Arquivo (opcional)</label>
+      <input type="file" id="editAdFile" name="arquivo" accept="video/*,image/*">
+      <label for="editAdText">Texto</label>
+      <input type="text" id="editAdText" name="text" maxlength="80">
+      <label for="editAdLink">Link</label>
+      <input type="url" id="editAdLink" name="link">
+      <button type="submit" class="submit-btn">Salvar</button>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="renewAdModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="fecharModal('renewAdModal')">&times;</button>
+    <h2>Renovar Anúncio</h2>
+    <form id="renewAdForm" class="modal-form" method="POST">
+      <label for="renewAdQuota">Usar extra</label>
+      <select id="renewAdQuota" name="quotaIndex">
+        <% (quotas || []).forEach(q => { %>
+          <option value="<%= q.index %>"><%= q.dias %> dias - restantes: <%= q.limite %></option>
+        <% }) %>
+      </select>
+      <button type="submit" class="submit-btn">Renovar</button>
+    </form>
+  </div>
+</div>
+<script src="/js/admin.js"></script>
+<script>
+  const restanteAds = <%= restante %>;
+  function handleNovoAd(){
+    if(restanteAds > 0){
+      document.getElementById('createAdForm').reset();
+      openModalById('createAdModal');
+    } else {
+      window.location.href = '/extras';
+    }
+  }
+  function abrirEditarAd(id, text, link) {
+    document.getElementById('editAdForm').action = `/meus-anuncios/editar/${id}`;
+    document.getElementById('editAdId').value = id;
+    document.getElementById('editAdText').value = text || '';
+    document.getElementById('editAdLink').value = link || '';
+    openModalById('editAdModal');
+  }
+
+  function abrirRenovarAd(id){
+    document.getElementById('renewAdForm').action = `/meus-anuncios/${id}/renovar`;
+    openModalById('renewAdModal');
+  }
+
+  function fecharModal(id) {
+    closeModal(id);
+  }
+</script>

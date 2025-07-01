@@ -1,0 +1,40 @@
+<section id="about">
+    <div class="row about-how">
+        <p> </p>
+        <center>
+            <%- include('../layouts/msg')  %> 
+            <%- include('../layouts/errors')  %> 
+        </center>
+        <h1 class="intro-header">PAINEL ADM API</h1>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-twelve"  style="font-size: 14px;">
+            <div class="plan-block" data-aos="fade-up"> 
+                <div class="row pricing-content">
+                    <center>
+                        <h4>Olá, proprietário. Você deseja excluir ou adicionar um usuário Premium?</h4>
+                        <a href="/moderador/add" class="button button-primary cta">Adicionar Premium</a>                  
+                        <a href="/moderador/delete" class="button button-primary cta">Deletar Premium</a>
+                        <a href="/moderador/limit" class="button button-primary cta">Redefinir um limite</a>
+                    </center>
+                </div>
+            </div>
+                </div>
+        </div> 
+    </div> 
+                <p></p>
+            <div class="plan-block" data-aos="fade-up"> 
+                <div class="row pricing-content">
+                    <center>
+                        <h4>Você deseja redefinir todos os limites e solicitações de hoje?</h4>
+                        <form method="POST" action="/moderador/resetall">
+                            <div>
+                                <input style="font-family:Arial, FontAwesome" name="token" type="text" class="form-control" placeholder="&#xf084;   Token" required>
+                            </div>
+                            <button type="submit" class="button button-primary">Resetar todos os Limites!</button>
+                        </form>
+                    </center>
+                </div>
+        </div> 
+    </div> 
+</section> 

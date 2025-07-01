@@ -1,0 +1,28 @@
+# Dependências e builds
+node_modules/
+npm-debug.log*
+dist/
+build/
+
+# Variáveis de ambiente e credenciais
+.env
+instacookies.txt
+ytcookies.txt
+sessions.json
+videos.json
+
+# Logs e bancos locais
+*.log
+*.sqlite
+
+# Arquivos de sistema e temporários
+.DS_Store
+tmp/
+
+# Outros arquivos gerados
+coverage/
+.cache/
+
+# Preserve local media
+arquivos/
+

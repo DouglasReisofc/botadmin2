@@ -1,0 +1,45 @@
+<main class="content">
+  <div class="cards">
+    <section class="card">
+      <h3><i class="fa-solid fa-filter"></i> Selecione o Grupo</h3>
+      <form class="grupo-filtro-form">
+        <label class="switch-label">Grupo:</label>
+        <select id="grupoSelect" class="grupo-select" onchange="atualizarTabelaTexto()">
+          <% bots.forEach(b => { %>
+            <option
+              value="<%= b.groupId %>"
+              data-gid="<%= b.groupId %>"
+              data-venc="<%= b.vencimento
+                           ? new Date(b.vencimento).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+                           : '-' %>"
+            >
+              <%= b.nomeGrupo || b.groupId %>
+            </option>
+          <% }) %>
+        </select>
+        <div id="grupoDetalhes" class="grupo-info"
+             style="margin-top:.8rem;color:var(--texto-cinza);font-size:.9rem;">
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <div class="card">
+    <form action="/usuario/grupos/tabela/editar" method="POST" class="modal-form">
+      <input type="hidden" name="grupo" id="grupoHidden" />
+      <label for="tabela">Texto da Tabela:</label>
+      <textarea name="tabela" id="tabela" placeholder="Digite o conteúdo da tabela..." required></textarea>
+      <button type="submit" class="submit-btn">
+        <i class="fa-solid fa-save"></i> Salvar Tabela
+      </button>
+    </form>
+  </div>
+</main>
+
+<script>
+    const bots = <%- JSON.stringify(bots) %>;
+</script>
+
+<script src="/js/grupos/tabela.js"></script>
+</body>
+</html>

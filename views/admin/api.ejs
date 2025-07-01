@@ -1,0 +1,252 @@
+<!-- views/admin/api.ejs -->
+<div class="cards">
+  <div class="card">
+    <div class="card-header">
+      <h3>Configurações da API</h3>
+    </div>
+
+    <!-- Scroll interno para responsividade -->
+    <div class="scroll-container">
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>Servidor</th>
+            <th>Limite Grupos</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% apis.forEach(api => { %>
+            <tr>
+              <td><%= api.server ? api.server.nome : 'N/A' %></td>
+              <td><%= api.gruposlimite === 0 ? 'ilimitado' : api.gruposlimite %></td>
+              <td><%= api.status ? 'Ativo' : 'Inativo' %></td>
+              <td class="bot-actions">
+                <button
+                  class="bot-btn editar"
+                  onclick="openEditApiModal(
+                    '<%= api._id %>',
+                    '<%= api.server ? api.server._id : '' %>',
+                    '<%= api.instance %>',
+                    <%= api.gruposlimite %>,
+                    <%= api.status %>,
+                    '<%= api.user ? api.user._id : '' %>'
+                  )"
+                >
+                  Editar
+                </button>
+                <button
+                  class="bot-btn acao"
+                  onclick="apiAction('<%= api._id %>', 'connect')"
+                >
+                  Conectar
+                </button>
+                <button
+                  class="bot-btn acao"
+                  onclick="showQR('<%= api._id %>')"
+                >
+                  QR / Código
+                </button>
+                <button
+                  class="bot-btn acao"
+                  onclick="apiAction('<%= api._id %>', 'logout')"
+                >
+                  Logout
+                </button>
+                <button
+                  class="bot-btn acao"
+                  onclick="apiAction('<%= api._id %>', 'restart')"
+                >
+                  Relogar
+                </button>
+                <button
+                  class="bot-btn acao"
+                  onclick="apiAction('<%= api._id %>', 'deleteSession')"
+                >
+                  Apagar Sessão
+                </button>
+                <button
+                  class="bot-btn excluir"
+                  onclick="openDeleteApiModal('<%= api._id %>')"
+                >
+                  Deletar
+                </button>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+
+    <button
+      onclick="openCreateApiModal()"
+      class="submit-btn"
+    >
+      Criar Nova API
+    </button>
+  </div>
+</div>
+
+<!-- Modal de Criação de API -->
+<div class="modal" id="createApiModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal('createApiModal')">&times;</button>
+    <h2>Criar Nova API</h2>
+    <form
+      id="createApiForm"
+      action="/admin/api/criar"
+      method="POST"
+      class="modal-form"
+    >
+      <div class="form-group">
+        <label for="nome">Nome da API:</label>
+        <input type="text" id="nome" name="nome" required>
+      </div>
+      <div class="form-group">
+        <label for="serverId">Servidor:</label>
+        <select id="serverId" name="serverId" required>
+          <% servidores.forEach(s => { %>
+            <option value="<%= s._id %>"><%= s.nome %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="instance">Instance:</label>
+        <input type="text" id="instance" name="instance" required>
+      </div>
+      <div class="form-group">
+        <label for="gruposlimite">Limite Grupos (0 = ilimitado):</label>
+        <input type="number" id="gruposlimite" name="gruposlimite" min="0" value="0">
+      </div>
+      <div class="form-group">
+        <label for="newUser">Usuário Vinculado:</label>
+        <select id="newUser" name="user">
+          <option value="">— Sessão Global —</option>
+          <% usuarios.forEach(u => { %>
+            <option value="<%= u._id %>"><%= u.nome %> – <%= u.whatsapp %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="status">Status:</label>
+        <select id="status" name="status">
+          <option value="true">Ativo</option>
+          <option value="false">Inativo</option>
+        </select>
+      </div>
+    </form>
+    <div class="modal-footer">
+      <button
+        type="button"
+        class="submit-btn"
+        onclick="closeModal('createApiModal')"
+      >
+        Cancelar
+      </button>
+      <button
+        type="submit"
+        class="submit-btn"
+        form="createApiForm"
+      >
+        Criar API
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Edição de API -->
+<div class="modal" id="editApiModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal('editApiModal')">&times;</button>
+    <h2>Editar API</h2>
+    <form
+      id="editApiForm"
+      method="POST"
+      class="modal-form"
+      action=""
+    >
+      <div class="form-group">
+        <label for="editServer">Servidor:</label>
+        <select id="editServer" name="serverId">
+          <% servidores.forEach(s => { %>
+            <option value="<%= s._id %>"><%= s.nome %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="editInstance">Instance:</label>
+        <input type="text" id="editInstance" name="instance" required>
+      </div>
+      <div class="form-group">
+        <label for="editGruposLimite">Limite Grupos (0 = ilimitado):</label>
+        <input type="number" id="editGruposLimite" name="gruposlimite" min="0" value="0">
+      </div>
+      <div class="form-group">
+        <label for="editUser">Usuário Vinculado:</label>
+        <select id="editUser" name="user">
+          <option value="">— Sessão Global —</option>
+          <% usuarios.forEach(u => { %>
+            <option value="<%= u._id %>"><%= u.nome %> – <%= u.whatsapp %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="editStatus">Status:</label>
+        <select id="editStatus" name="status">
+          <option value="true">Ativo</option>
+          <option value="false">Inativo</option>
+        </select>
+      </div>
+    </form>
+    <div class="modal-footer">
+      <button
+        type="button"
+        class="submit-btn"
+        onclick="closeModal('editApiModal')"
+      >
+        Cancelar
+      </button>
+      <button
+        type="submit"
+        class="submit-btn"
+        form="editApiForm"
+      >
+        Atualizar API
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Deleção de API -->
+<div class="modal" id="deleteApiModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal('deleteApiModal')">&times;</button>
+    <h2>Tem certeza que deseja excluir esta API?</h2>
+    <div class="modal-footer">
+      <button
+        id="confirmDelete"
+        class="submit-btn"
+      >
+        Sim, Deletar
+      </button>
+      <button
+        class="submit-btn"
+        onclick="closeModal('deleteApiModal')"
+      >
+        Cancelar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de QR / Pareamento -->
+<div class="modal" id="qrModal">
+  <div class="modal-content" style="max-width: 400px; text-align: center;">
+    <button class="close-btn" onclick="closeModal('qrModal')">&times;</button>
+    <h2>QR / Código</h2>
+    <div id="qrCodigo" class="qr-box">Aguardando…</div>
+  </div>
+</div>
+
+<script src="/js/api.js"></script>

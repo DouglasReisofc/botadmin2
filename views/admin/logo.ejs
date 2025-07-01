@@ -1,0 +1,19 @@
+<% /* Logo configuration page */ %>
+<div class="config-wrapper">
+  <h3>Alterar Logo do Site</h3>
+  <form action="/admin/logo" method="POST" enctype="multipart/form-data" class="seo-form">
+    <label>Arquivo da Logo
+      <input type="file" name="logo" accept="image/*">
+    </label>
+    <label>CSS da Logo
+      <textarea name="logoStyle" rows="2" placeholder="ex: max-height:80px;" ><%= config.logoStyle || '' %></textarea>
+    </label>
+    <% if (config.logo) { %>
+      <div class="seo-preview">
+        <img src="<%= config.logo %>" style="<%= config.logoStyle || '' %>;max-width:200px;max-height:120px;" alt="Logo atual">
+      </div>
+    <% } %>
+    <button type="submit" class="submit-btn">Salvar Logo</button>
+  </form>
+</div>
+

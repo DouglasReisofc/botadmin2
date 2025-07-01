@@ -1,0 +1,79 @@
+<!-- views/admin/grupos.ejs -->
+<div class="cards">
+  <div class="card">
+    <div class="card-header">
+      <h3>Gerenciar Grupos</h3>
+    </div>
+
+    <!-- Filtro de usuário -->
+    <form id="selUser" method="get" action="/admin/grupos" class="form-inline">
+      <div class="form-group">
+        <label for="selectUser">Usuário:</label>
+        <select id="selectUser" name="user" class="input" onchange="this.form.submit()">
+          <option value="">Selecione um usuário</option>
+          <% usuarios.forEach(u => { %>
+            <option
+              value="<%= u._id %>"
+              <%= selectedUser == u._id ? 'selected' : '' %>
+            ><%= u.nome %></option>
+          <% }) %>
+        </select>
+      </div>
+    </form>
+
+    <% if (selectedUser) { %>
+      <!-- Scroll da tabela -->
+      <div class="scroll-container">
+        <table class="user-table">
+          <thead>
+            <tr>
+              <th>Grupo</th>
+              <th>API</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% grupos.forEach(g => { %>
+              <tr>
+                <td><%= g.nomeGrupo || g.groupId %></td>
+                <td><%= g.botApi ? g.botApi.nome : 'N/A' %></td>
+                <td class="bot-actions">
+                  <form
+                    method="post"
+                    action="/admin/grupos/editar/<%= g._id %>?user=<%= selectedUser %>"
+                    class="form-inline"
+                  >
+                    <select name="apiId" class="input">
+                      <% apis.forEach(a => { %>
+                        <option
+                          value="<%= a._id %>"
+                          <%= g.botApi && g.botApi._id.toString() === a._id.toString()
+                              ? 'selected'
+                              : '' %>
+                        ><%= a.nome %></option>
+                      <% }) %>
+                    </select>
+                    <button type="submit" class="bot-btn editar">
+                      Migrar
+                    </button>
+                  </form>
+                  <form
+                    method="post"
+                    action="/admin/grupos/deletar/<%= g._id %>?user=<%= selectedUser %>"
+                    style="display:inline"
+                  >
+                    <button type="submit" class="bot-btn excluir">
+                      Excluir
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<script src="/js/admin.js"></script>

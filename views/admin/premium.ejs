@@ -1,0 +1,47 @@
+<!-- views/admin/premium.ejs -->
+<div class="cards">
+  <div class="card">
+    <div class="card-header">
+      <h3>Usuários Premium</h3>
+    </div>
+
+    <!-- Scroll interno para responsividade -->
+    <div class="scroll-container">
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Vencimento</th>
+            <th>Limite</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% usuarios.forEach(u => { %>
+            <tr>
+              <td><%= u.nome %></td>
+              <td><%= u.premium ? new Date(u.premium).toLocaleDateString('pt-BR') : 'Sem premium' %></td>
+              <td><%= u.limit %></td>
+              <td class="bot-actions">
+                <form action="/admin/premium/reset/<%= u._id %>" method="POST">
+                  <button type="submit" class="bot-btn editar">
+                    Reset Limite
+                  </button>
+                </form>
+                <% if (u.premium) { %>
+                  <form action="/admin/premium/remover/<%= u._id %>" method="POST">
+                    <button type="submit" class="bot-btn excluir">
+                      Remover
+                    </button>
+                  </form>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="/js/admin.js"></script>

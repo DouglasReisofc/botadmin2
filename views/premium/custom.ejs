@@ -1,0 +1,29 @@
+<section id="pricing">
+    <div class="row pricing-content">
+        <center>
+            <%- include('../layouts/msg')  %> 
+            <%- include('../layouts/errors')  %> 
+        </center>
+    </div>
+    <div class="row pricing-content">
+        <center>
+            <h2>CUSTOMIZAR UMA APIKEY</h2>
+            <form method="POST" action="/moderador/custom">
+                <div class="form-group">
+                <label for="nameInput">Usuário</label>
+                <input name="username" type="text" class="form-control" id="nameInput" placeholder="Usuário" required>
+            </div>
+            <div class="form-group">
+                <label for="customKey">Apikey customizada</label>
+                <input name="customKey" type="text" class="form-control" id="customKey" placeholder="Insira a nova apikey" required>
+            </div>
+            <button type="submit" class="btn btn-dark">Personalizar</button>
+            </form>
+            <div>
+                <p> </p>
+                <p>Voltar ao início!</p>
+                <a class="button button-primary" href="/moderador">Voltar</a>
+            </div>
+        </center>      
+    </div>
+</section>

@@ -1,0 +1,275 @@
+<!-- views/admin/planos.ejs -->
+<% const allCommands = [
+  'antilink','banextremo','antilinkgp','bangringos','proibirnsfw','soadm',
+  'autoresposta','autosticker','autodownloader','brincadeiras','vozbotinterage',
+  'moderacaocomia','botinterage','lerimagem','bemvindo'
+]; %>
+<div class="cards">
+  <div class="card">
+    <div class="card-header">
+      <h3>Planos Cadastrados</h3>
+    </div>
+
+    <!-- Scroll interno para responsividade -->
+    <div class="scroll-container">
+      <% if (planosVazios) { %>
+        <p>Não há planos cadastrados.</p>
+      <% } else { %>
+        <table class="user-table">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Preço</th>
+              <th>Duração</th>
+              <th>Limite Grupos</th>
+              <th>Limite Instâncias</th>
+              <th>Anúncios Inclusos</th>
+              <th>Links Inclusos</th>
+              <th>Teste Grátis?</th>
+              <th>Dias Teste</th>
+              <th>Ativo?</th>
+              <th>Descrição</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% planos.forEach(plano => { %>
+              <tr>
+                <td><%= plano.nome %></td>
+                <td>R$ <%= plano.preco.toFixed(2) %></td>
+                <td><%= plano.duracao %> dias</td>
+                <td><%= plano.limiteGrupos %></td>
+                <td><%= plano.limiteInstancias === 0 ? 'Sem inst. dedicada' : plano.limiteInstancias %></td>
+                <td><%= plano.includedAds %></td>
+                <td><%= plano.includedShortLinks %></td>
+                <td><%= plano.testeGratis ? 'Sim' : 'Não' %></td>
+                <td><%= plano.testeGratis ? plano.diasTeste : '—' %></td>
+                <td><%= plano.active ? 'Sim' : 'Não' %></td>
+                <td><%= plano.descricao || 'Sem descrição' %></td>
+                <td class="bot-actions">
+                  <button
+                    class="bot-btn editar"
+                    onclick="openEditModal(
+                      '<%= plano._id %>',
+                      '<%- encodeURIComponent(plano.nome) %>',
+                      <%= plano.preco %>,
+                      <%= plano.duracao %>,
+                      <%= plano.limiteGrupos %>,
+                      <%= plano.limiteInstancias %>,
+                      <%= plano.includedAds %>,
+                      <%= plano.includedShortLinks %>,
+                      <%= plano.testeGratis %>,
+                      <%= plano.diasTeste %>,
+                      decodeURIComponent('<%- encodeURIComponent(plano.descricao || '') %>'),
+                      '<%- encodeURIComponent(JSON.stringify(plano.allowedCommands || {})) %>',
+                      <%= plano.active %>,
+                      <%= plano.dailyAdLimit || 0 %>,
+                      '<%= (plano.adTimes || []).join(',') %>'
+                    )"
+                  >
+                    Editar
+                  </button>
+                  <% if (!plano.isFree) { %>
+                  <button
+                    class="bot-btn excluir"
+                    onclick="openDeleteModal('<%= plano._id %>')"
+                  >
+                    Deletar
+                  </button>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      <% } %>
+    </div>
+
+    <button onclick="openCreateModal()" class="submit-btn">
+      Criar Novo Plano
+    </button>
+  </div>
+</div>
+
+<!-- Modal Criar Plano -->
+<div class="modal" id="createModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal('createModal')">&times;</button>
+    <h2>Criar Novo Plano</h2>
+    <form id="createForm" action="/admin/planos/criar" method="POST" class="modal-form">
+      <div class="form-group">
+        <label for="nome">Nome:</label>
+        <input type="text" id="nome" name="nome" required>
+      </div>
+      <div class="form-group">
+        <label for="preco">Preço:</label>
+        <input type="number" id="preco" name="preco" step="0.01" required>
+      </div>
+      <div class="form-group">
+        <label for="duracao">Duração (dias):</label>
+        <input type="number" id="duracao" name="duracao" required>
+      </div>
+      <div class="form-group">
+        <label for="limiteGrupos">Limite Grupos:</label>
+        <input type="number" id="limiteGrupos" name="limiteGrupos" min="1" required>
+      </div>
+      <div class="form-group">
+        <label for="limiteInstancias">Limite Instâncias (0 = sem dedicada):</label>
+        <input type="number" id="limiteInstancias" name="limiteInstancias" min="0" required>
+      </div>
+      <div class="form-group">
+        <label for="includedAds">Anúncios Inclusos:</label>
+        <input type="number" id="includedAds" name="includedAds" min="0" value="0" required>
+      </div>
+      <div class="form-group">
+        <label for="includedShortLinks">Links Inclusos:</label>
+        <input type="number" id="includedShortLinks" name="includedShortLinks" min="0" value="0" required>
+      </div>
+      <div class="form-group">
+        <label>
+          <input type="checkbox" id="testeGratis" name="testeGratis" onchange="toggleDiasTeste('create')">
+          Teste Grátis?
+        </label>
+      </div>
+      <div class="form-group" id="diasTesteGroupCreate" style="display:none">
+        <label for="diasTesteCreate">Dias de Teste:</label>
+        <input type="number" id="diasTesteCreate" name="diasTeste" min="1">
+      </div>
+      <div class="form-group">
+        <label for="descricao">Descrição:</label>
+        <textarea id="descricao" name="descricao"></textarea>
+      </div>
+      <div class="form-group">
+        <label>
+          <input type="checkbox" name="active" checked>
+          Plano ativo?
+        </label>
+      </div>
+      <div class="form-group">
+        <label for="dailyAdLimit">Ads por dia (Free):</label>
+        <input type="number" id="dailyAdLimit" name="dailyAdLimit" min="0" value="0">
+      </div>
+      <div class="form-group">
+        <label for="adTimes">Horários dos Ads (HH:mm, separados por vírgula)</label>
+        <input type="text" id="adTimes" name="adTimes">
+      </div>
+      <div class="form-group">
+        <label>Comandos Permitidos:</label>
+        <div class="command-list">
+          <% allCommands.forEach(cmd => { %>
+            <div class="switch-group">
+              <span class="switch-label"><%= cmd %></span>
+              <label class="toggle-switch">
+                <input type="checkbox" name="allowedCommands[<%= cmd %>]">
+                <span class="slider"></span>
+              </label>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    </form>
+    <div class="modal-footer">
+      <button type="button" class="submit-btn" onclick="closeModal('createModal')">Cancelar</button>
+      <button id="btnSubmitCreate" class="submit-btn" type="button" onclick="document.getElementById('createForm').submit()">Criar Plano</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Editar Plano -->
+<div class="modal" id="editModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal('editModal')">&times;</button>
+    <h2>Editar Plano</h2>
+    <form id="editForm" method="POST" action="/admin/planos/editar" class="modal-form">
+      <input type="hidden" name="_id" id="editId">
+      <div class="form-group">
+        <label for="editNome">Nome:</label>
+        <input type="text" id="editNome" name="nome" required>
+      </div>
+      <div class="form-group">
+        <label for="editPreco">Preço:</label>
+        <input type="number" id="editPreco" name="preco" step="0.01" required>
+      </div>
+      <div class="form-group">
+        <label for="editDuracao">Duração (dias):</label>
+        <input type="number" id="editDuracao" name="duracao" required>
+      </div>
+      <div class="form-group">
+        <label for="editLimiteGrupos">Limite Grupos:</label>
+        <input type="number" id="editLimiteGrupos" name="limiteGrupos" min="1" required>
+      </div>
+      <div class="form-group">
+        <label for="editLimiteInstancias">Limite Instâncias (0 = sem dedicada):</label>
+        <input type="number" id="editLimiteInstancias" name="limiteInstancias" min="0" required>
+      </div>
+      <div class="form-group">
+        <label for="editIncludedAds">Anúncios Inclusos:</label>
+        <input type="number" id="editIncludedAds" name="includedAds" min="0" required>
+      </div>
+      <div class="form-group">
+        <label for="editIncludedLinks">Links Inclusos:</label>
+        <input type="number" id="editIncludedLinks" name="includedShortLinks" min="0" required>
+      </div>
+      <div class="form-group">
+        <label>
+          <input type="checkbox" id="editTesteGratis" name="testeGratis" onchange="toggleDiasTeste('edit')">
+          Teste Grátis?
+        </label>
+      </div>
+      <div class="form-group" id="diasTesteGroupEdit" style="display:none">
+        <label for="diasTesteEdit">Dias de Teste:</label>
+        <input type="number" id="diasTesteEdit" name="diasTeste" min="1">
+      </div>
+      <div class="form-group">
+        <label for="editDescricao">Descrição:</label>
+        <textarea id="editDescricao" name="descricao"></textarea>
+      </div>
+      <div class="form-group">
+        <label>
+          <input type="checkbox" id="editAtivo" name="active">
+          Plano ativo?
+        </label>
+      </div>
+      <div class="form-group">
+        <label for="editDailyAdLimit">Ads por dia (Free):</label>
+        <input type="number" id="editDailyAdLimit" name="dailyAdLimit" min="0">
+      </div>
+      <div class="form-group">
+        <label for="editAdTimes">Horários dos Ads (HH:mm, separados por vírgula)</label>
+        <input type="text" id="editAdTimes" name="adTimes">
+      </div>
+      <div class="form-group">
+        <label>Comandos Permitidos:</label>
+        <div class="command-list">
+          <% allCommands.forEach(cmd => { %>
+            <div class="switch-group">
+              <span class="switch-label"><%= cmd %></span>
+              <label class="toggle-switch">
+                <input type="checkbox" name="allowedCommands[<%= cmd %>]" class="edit-cmd" data-cmd="<%= cmd %>">
+                <span class="slider"></span>
+              </label>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    </form>
+    <div class="modal-footer">
+      <button type="button" class="submit-btn" onclick="closeModal('editModal')">Cancelar</button>
+      <button id="btnSubmitEdit" class="submit-btn" type="button" onclick="document.getElementById('editForm').submit()">Atualizar Plano</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Excluir Plano -->
+<div class="modal" id="deleteModal">
+  <div class="modal-content">
+    <button class="close-btn" onclick="closeModal('deleteModal')">&times;</button>
+    <h2>Tem certeza que deseja excluir este plano?</h2>
+    <div class="modal-footer">
+      <button id="confirmDelete" class="submit-btn">Sim, Deletar</button>
+      <button class="submit-btn" onclick="closeModal('deleteModal')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/planos.js"></script>
