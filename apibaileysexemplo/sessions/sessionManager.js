@@ -158,9 +158,10 @@ function getInstanceQR(name) {
 }
 
 async function restartInstance(name) {
-  await deleteInstance(name);
   const rec = records.get(name);
-  if (rec) await createInstance(rec.name, rec.webhook, rec.apiKey);
+  if (!rec) throw new Error('instance not found');
+  await deleteInstance(name, true);
+  await createInstance(rec.name, rec.webhook, rec.apiKey);
 }
 
 function updateInstance(name, data) {
@@ -171,7 +172,7 @@ function updateInstance(name, data) {
   return sessions.get(name)?.sock || null;
 }
 
-async function deleteInstance(name) {
+async function deleteInstance(name, preserveRecord = false) {
   const session = sessions.get(name);
   if (session) {
     session.sock.end();
@@ -183,8 +184,10 @@ async function deleteInstance(name) {
       console.error(`[${name}] failed to delete store:`, err.message);
     }
   }
-  records.delete(name);
-  saveRecords();
+  if (!preserveRecord) {
+    records.delete(name);
+    saveRecords();
+  }
 }
 
 function listInstances() {
