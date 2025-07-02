@@ -170,7 +170,9 @@ async function startSocket(name, record) {
 }
 
 async function createInstance(name, webhook, apiKey) {
-  if (sessions.has(name)) throw new Error('instance already exists');
+  if (sessions.has(name) || records.has(name)) {
+    throw new Error('instance already exists');
+  }
   const record = { name, webhook, apiKey };
   records.set(name, record);
   await saveRecord(record);
