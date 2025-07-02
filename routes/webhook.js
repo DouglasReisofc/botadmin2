@@ -41,6 +41,7 @@ router.post('/event', checkKey, async (req, res) => {
         data?.id?.remoteJid ||
         data?.id?.remote
     });
+    console.log('[webhook/event] raw JSON:', JSON.stringify(req.body, null, 2));
     const bot = instance ? await BotApi.findOne({ instance }).lean() : null;
     if (!bot && instance) {
       console.warn('⚠️ Webhook event for unknown instance:', instance);
