@@ -7,15 +7,47 @@ const {
   default: makeWASocket,
   useMultiFileAuthState,
   fetchLatestBaileysVersion,
-  makeInMemoryStore,
   getAggregateVotesInPollMessage,
   downloadMediaMessage
 } = require('@whiskeysockets/baileys');
+const { getStoreCollection } = require('../db');
 
 const sessions = new Map(); // name -> { sock, store, webhook, apiKey }
 const records = new Map(); // name -> { name, webhook, apiKey }
 const qrCodes = new Map();
 const recordsFile = path.join(__dirname, 'records.json');
+
+async function loadStoreMap(name) {
+  const coll = await getStoreCollection();
+  const doc = await coll.findOne({ name });
+  const map = new Map(doc?.messages || []);
+  async function save() {
+    try {
+      await coll.updateOne(
+        { name },
+        { $set: { messages: Array.from(map.entries()) } },
+        { upsert: true }
+      );
+    } catch (err) {
+      console.error(`[${name}] store save failed:`, err.message);
+    }
+  }
+  return { map, save };
+}
+
+function insertMessages(store, messages) {
+  for (const msg of messages) {
+    const key = msg?.key;
+    if (key?.remoteJid && key?.id) {
+      store.map.set(`${key.remoteJid}-${key.id}`, msg);
+    }
+  }
+  store.save();
+}
+
+function fetchMessage(store, jid, id) {
+  return store.map.get(`${jid}-${id}`);
+}
 
 function cloneRaw(obj) {
   return JSON.parse(
@@ -53,14 +85,13 @@ async function dispatch(name, event, data) {
 async function startSocket(name, record) {
   const { state, saveCreds } = await useMultiFileAuthState(path.join(__dirname, `session-${name}`));
   const { version } = await fetchLatestBaileysVersion();
-  const store = makeInMemoryStore({ logger: P({ level: 'silent' }) });
+  const store = await loadStoreMap(name);
   const sock = makeWASocket({
     version,
     logger: P({ level: 'silent' }),
     printQRInTerminal: false,
     auth: state
   });
-  store.bind(sock.ev);
   sock.ev.on('creds.update', saveCreds);
   sock.ev.on('connection.update', data => {
     if (data.qr) {
@@ -75,7 +106,7 @@ async function startSocket(name, record) {
     }
   });
   sock.ev.on('messages.upsert', async ({ messages }) => {
-    store.insert(messages);
+    insertMessages(store, messages);
     for (const m of messages) await dispatch(name, 'message.upsert', m);
   });
   sock.ev.on('groups.upsert', data => dispatch(name, 'groups.upsert', data));
@@ -84,15 +115,18 @@ async function startSocket(name, record) {
   sock.ev.on('group-admin.update', data => dispatch(name, 'group.admin.changed', data));
   sock.ev.on('poll.update', async data => {
     try {
-      const stored = await store.loadMessage(
+      const stored = fetchMessage(
+        store,
         data.pollUpdates[0].pollMessageKey.remoteJid,
         data.pollUpdates[0].pollMessageKey.id
       );
-      const aggregate = getAggregateVotesInPollMessage({ key: stored.key, pollUpdates: data.pollUpdates });
-      dispatch(name, 'poll.update', { pollUpdates: data.pollUpdates, aggregate });
-    } catch {
-      dispatch(name, 'poll.update', data);
-    }
+      if (stored) {
+        const aggregate = getAggregateVotesInPollMessage({ key: stored.key, pollUpdates: data.pollUpdates });
+        dispatch(name, 'poll.update', { pollUpdates: data.pollUpdates, aggregate });
+        return;
+      }
+    } catch {}
+    dispatch(name, 'poll.update', data);
   });
 
   sessions.set(name, { sock, store, webhook: record.webhook, apiKey: record.apiKey });
@@ -141,6 +175,12 @@ async function deleteInstance(name) {
   if (session) {
     session.sock.end();
     sessions.delete(name);
+    try {
+      const coll = await getStoreCollection();
+      await coll.deleteOne({ name });
+    } catch (err) {
+      console.error(`[${name}] failed to delete store:`, err.message);
+    }
   }
   records.delete(name);
   saveRecords();
