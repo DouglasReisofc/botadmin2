@@ -815,6 +815,8 @@ async function deleteApi(req, res) {
             await callInstance(api, 'delete');
         } catch (e) {
             console.warn('Falha ao remover instância remota:', e.message);
+            req.flash('error_msg', 'Falha ao remover a instância no servidor');
+            return res.redirect('/admin/api');
         }
 
         await BotApi.deleteOne({ _id: id });
@@ -928,7 +930,11 @@ router.post('/api/:id/deleteSession', isAuthenticated, isAdmin, async (req, res)
     try {
         const api = await BotApi.findById(req.params.id);
         if (!api) return res.json({ success: false, message: 'API não encontrada' });
-        await callInstance(api, 'delete');
+        try {
+            await callInstance(api, 'delete');
+        } catch (err) {
+            return res.json({ success: false, message: err.message });
+        }
         res.json({ success: true });
     } catch (err) {
         res.json({ success: false, message: err.message });
