@@ -35,6 +35,7 @@ const {
   createInstance,
   getInstanceStatus,
   getInstanceQR,
+  getPairCode,
   restartInstance,
   updateInstance,
   deleteInstance,
@@ -119,7 +120,10 @@ router.post('/instance/:id/pair', checkInstance, async (req, res) => {
     const start = Date.now();
     while (Date.now() - start < 15000) {
       const qr = getInstanceQR(id);
-      if (qr) return res.json({ qr });
+      const code = getPairCode(id);
+      if (qr || code) {
+        return res.json({ qr: qr || null, code: code || null });
+      }
       await new Promise(r => setTimeout(r, 1000));
     }
     res.status(404).json({ error: 'QR not available' });

@@ -1439,10 +1439,10 @@ app.post('/conectarwhatsapp/pair/:instance', isAuthenticated, async (req, res) =
 
   if (resp.data?.qr) {
     const qrUrl = await QRCode.toDataURL(resp.data.qr);
-    return res.json({ success: true, data: { modo: 'qr_code', qr: qrUrl } });
+    return res.json({ success: true, data: { qr: qrUrl } });
   }
   if (resp.data?.code) {
-    return res.json({ success: true, data: { modo: 'pair_code', code: resp.data.code } });
+    return res.json({ success: true, data: { code: resp.data.code } });
   }
   return res.json({ success: false, message: 'QR indisponível' });
   } catch (err) {

@@ -843,10 +843,10 @@ async function pairCode(req, res) {
 
         const qrRes = await callInstance(api, 'post', '/pair');
         if (qrRes.data?.qr) {
-            return res.json({ success: true, data: { modo: 'qr_code', qr: qrRes.data.qr } });
+            return res.json({ success: true, data: { qr: qrRes.data.qr } });
         }
         if (qrRes.data?.code) {
-            return res.json({ success: true, data: { modo: 'pair_code', code: qrRes.data.code } });
+            return res.json({ success: true, data: { code: qrRes.data.code } });
         }
         res.json({ success: false, message: 'QR indisponível' });
     } catch (err) {

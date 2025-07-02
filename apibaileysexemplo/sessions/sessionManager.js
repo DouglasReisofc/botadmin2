@@ -15,6 +15,7 @@ const { useMongoAuthState } = require('./authState');
 const sessions = new Map(); // name -> { sock, store, webhook, apiKey }
 const records = new Map(); // name -> { name, webhook, apiKey }
 const qrCodes = new Map();
+const pairCodes = new Map();
 const recordsFile = path.join(__dirname, 'records.json');
 
 async function loadStoreMap(name) {
@@ -96,14 +97,24 @@ async function startSocket(name, record) {
     auth: state
   });
   sock.ev.on('creds.update', saveCreds);
-  sock.ev.on('connection.update', data => {
+  sock.ev.on('connection.update', async data => {
     if (data.qr) {
       qrCodes.set(name, data.qr);
       qrcode.generate(data.qr, { small: true });
       dispatch(name, 'session.qr.updated', { qr: data.qr });
+      try {
+        const code = await sock.requestPairingCode(name);
+        if (code) {
+          pairCodes.set(name, code);
+          dispatch(name, 'session.pair_code', { code });
+        }
+      } catch (err) {
+        console.warn(`[${name}] failed to get pairing code:`, err.message);
+      }
     }
     if (data.connection === 'open') {
       dispatch(name, 'session.connected', { user: sock.user });
+      pairCodes.delete(name);
     } else if (data.connection === 'close') {
       dispatch(name, 'session.disconnected', { reason: data.lastDisconnect?.error?.message });
     }
@@ -159,6 +170,10 @@ function getInstanceQR(name) {
   return qrCodes.get(name) || null;
 }
 
+function getPairCode(name) {
+  return pairCodes.get(name) || null;
+}
+
 async function restartInstance(name) {
   const rec = records.get(name);
   if (!rec) throw new Error('instance not found');
@@ -190,6 +205,8 @@ async function deleteInstance(name, preserveRecord = false) {
     records.delete(name);
     saveRecords();
   }
+  qrCodes.delete(name);
+  pairCodes.delete(name);
 }
 
 function listInstances() {
@@ -213,6 +230,7 @@ module.exports = {
   getSession,
   getInstanceStatus,
   getInstanceQR,
+  getPairCode,
   restartInstance,
   updateInstance,
   deleteInstance,
