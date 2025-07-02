@@ -38,7 +38,7 @@ async function showQR(id) {
     openModal('qrModal');
 
     try {
-        const res = await fetch(`/admin/api/${id}/pair`, { method: 'POST' });
+        const res = await fetch(`/admin/api/${id}/qrdata`);
         const data = await res.json();
         if (!data.success) {
             box.textContent = 'Erro: ' + (data.message || 'falha');

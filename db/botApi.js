@@ -60,6 +60,11 @@ const botApiSchema = new mongoose.Schema({
         default: null
     },  // Código atual de pareamento (se houver)
 
+    qrCode: {
+        type: String,
+        default: null
+    }, // Último QR code gerado (base64 ou texto)
+
     lastSeen: {
         type: Date,
         default: Date.now

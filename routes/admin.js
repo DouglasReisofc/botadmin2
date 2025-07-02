@@ -890,7 +890,29 @@ async function pairCode(req, res) {
     }
 }
 
+// Obtém QR ou código salvo diretamente do banco
+async function qrData(req, res) {
+    try {
+        const api = await BotApi.findById(req.params.id).lean();
+        if (!api) return res.json({ success: false, message: 'API não encontrada' });
+
+        const { getRecordCollection } = require('../apibaileysexemplo/db');
+        const coll = await getRecordCollection();
+        const rec = await coll.findOne({ name: api.instance });
+        if (!rec || (!rec.qr && !rec.pairCode)) {
+            return res.json({ success: false, message: 'QR indisponível' });
+        }
+        const data = {};
+        if (rec.pairCode) data.code = rec.pairCode;
+        if (rec.qr) data.qr = await QRCode.toDataURL(rec.qr);
+        res.json({ success: true, data });
+    } catch (err) {
+        res.json({ success: false, message: err.message });
+    }
+}
+
 router.post('/api/:id/pair', isAuthenticated, isAdmin, pairCode);
+router.get('/api/:id/qrdata', isAuthenticated, isAdmin, qrData);
 
 router.post('/api/:id/logout', isAuthenticated, isAdmin, async (req, res) => {
     try {
