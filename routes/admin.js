@@ -841,10 +841,12 @@ async function pairCode(req, res) {
         const api = await BotApi.findById(req.params.id);
         if (!api) return res.json({ success: false, message: 'API não encontrada' });
 
-        await callInstance(api, 'post', '/reconnect');
-        const qrRes = await callInstance(api, 'get', '/qr');
-        if (qrRes.data && qrRes.data.qr) {
+        const qrRes = await callInstance(api, 'post', '/pair');
+        if (qrRes.data?.qr) {
             return res.json({ success: true, data: { modo: 'qr_code', qr: qrRes.data.qr } });
+        }
+        if (qrRes.data?.code) {
+            return res.json({ success: true, data: { modo: 'pair_code', code: qrRes.data.code } });
         }
         res.json({ success: false, message: 'QR indisponível' });
     } catch (err) {

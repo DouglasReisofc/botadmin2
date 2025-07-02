@@ -100,6 +100,23 @@ router.get('/instance/:id/qr', checkInstance, (req, res) => {
   res.json({ qr });
 });
 
+// Trigger reconnect and wait for a QR code
+router.post('/instance/:id/pair', checkInstance, async (req, res) => {
+  const { id } = req.params;
+  try {
+    await restartInstance(id);
+    const start = Date.now();
+    while (Date.now() - start < 15000) {
+      const qr = getInstanceQR(id);
+      if (qr) return res.json({ qr });
+      await new Promise(r => setTimeout(r, 1000));
+    }
+    res.status(404).json({ error: 'QR not available' });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 router.post('/instance/:id/restart', checkInstance, async (req, res) => {
   const { id } = req.params;
   try {
