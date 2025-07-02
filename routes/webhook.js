@@ -51,7 +51,7 @@ router.post('/event', checkKey, async (req, res) => {
       data,
       instance,
       server_url: bot?.baseUrl,
-      apikey: bot?.apikey
+      apikey: bot?.globalapikey
     });
     res.json({ success: true });
   } catch (err) {

@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { log } = require('../utils/logger');
-const GLOBAL_KEY = process.env.GLOBAL_API_KEY || 'change-me';
+const GLOBAL_KEY =
+  process.env.GLOBAL_API_KEY || 'AIAO1897AHJAKACMC817ADOU';
 
 router.use((req, res, next) => {
   const key = req.headers['x-api-key'] || req.query.apiKey;
