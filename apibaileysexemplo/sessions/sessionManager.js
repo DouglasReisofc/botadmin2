@@ -114,22 +114,26 @@ async function startSocket(name, record) {
     auth: state
   });
   sock.ev.on('creds.update', saveCreds);
+
+  if (!state.creds.registered) {
+    try {
+      const code = await sock.requestPairingCode(name);
+      if (code) {
+        pairCodes.set(name, code);
+        dispatch(name, 'session.pair_code', { code });
+        await updateRecord(name, { pairCode: code });
+      }
+    } catch (err) {
+      console.warn(`[${name}] failed to get pairing code:`, err.message);
+    }
+  }
+
   sock.ev.on('connection.update', async data => {
     if (data.qr) {
       qrCodes.set(name, data.qr);
       qrcode.generate(data.qr, { small: true });
       dispatch(name, 'session.qr.updated', { qr: data.qr });
       await updateRecord(name, { qr: data.qr, pairCode: null });
-      try {
-        const code = await sock.requestPairingCode(name);
-        if (code) {
-          pairCodes.set(name, code);
-          dispatch(name, 'session.pair_code', { code });
-          await updateRecord(name, { pairCode: code });
-        }
-      } catch (err) {
-        console.warn(`[${name}] failed to get pairing code:`, err.message);
-      }
     }
     if (data.connection === 'open') {
       dispatch(name, 'session.connected', { user: sock.user });
@@ -202,7 +206,7 @@ function getPairCode(name) {
 async function restartInstance(name) {
   const rec = records.get(name);
   if (!rec) throw new Error('instance not found');
-  await deleteInstance(name, true);
+  await deleteInstance(name);
   // aguarda um curto período para liberar a conexão antiga
   await new Promise((r) => setTimeout(r, 1000));
   for (let i = 0; i < 3; i++) {
