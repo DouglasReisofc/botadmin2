@@ -1289,6 +1289,12 @@ app.post('/conectarwhatsapp/criar', isAuthenticated, async (req, res) => {
     return res.redirect('/conectarwhatsapp');
   }
 
+  const existente = await BotApi.findOne({ instance: numero });
+  if (existente) {
+    req.flash('error_msg', 'Instância já cadastrada.');
+    return res.redirect('/conectarwhatsapp');
+  }
+
   let nova = null;
   try {
     await verificarLimiteInstancias(req.user);

@@ -623,7 +623,9 @@ async function createApi(req, res) {
     try {
         const { nome, serverId, instance, webhook, gruposlimite = 0, status, user } = req.body;
 
-        if (!nome || !serverId || !instance) {
+        const instanceName = String(instance || '').trim();
+
+        if (!nome || !serverId || !instanceName) {
             return res.status(400).json({ success: false, message: 'Campos obrigatórios ausentes' });
         }
 
@@ -636,7 +638,7 @@ async function createApi(req, res) {
         }
 
         // evita duplicidade de instâncias
-        const existente = await BotApi.findOne({ instance });
+        const existente = await BotApi.findOne({ instance: instanceName });
         if (existente) {
             return res.json({ success: false, message: 'Instância já cadastrada' });
         }
@@ -646,7 +648,7 @@ async function createApi(req, res) {
         try {
             await axios.post(
                 `${base}/api/instance`,
-                { name: instance, webhook: webhook || `${basesiteUrl}/webhook/event`, apiKey: server.globalapikey },
+                { name: instanceName, webhook: webhook || `${basesiteUrl}/webhook/event`, apiKey: server.globalapikey },
                 { headers: { 'x-api-key': server.globalapikey } }
             );
 
@@ -656,7 +658,7 @@ async function createApi(req, res) {
                 globalapikey: server.globalapikey,
                 apikey: server.globalapikey,
                 webhook: webhook || `${basesiteUrl}/webhook/event`,
-                instance,
+                instance: instanceName,
                 server: server._id,
                 gruposlimite: parseInt(gruposlimite, 10) || 0,
                 status: !!status,
@@ -670,6 +672,9 @@ async function createApi(req, res) {
                 try { await BotApi.deleteOne({ _id: novaApi._id }); } catch {}
             }
             console.error('Erro ao criar API:', err.response?.data || err.message);
+            if (err.code === 11000) {
+                return res.json({ success: false, message: 'Instância já cadastrada' });
+            }
             return res.status(500).json({ success: false, message: err.response?.data?.error || err.message });
         }
     } catch (err) {
