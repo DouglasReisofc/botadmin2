@@ -59,6 +59,9 @@ function cloneRaw(obj) {
 async function loadRecords() {
   const coll = await getRecordCollection();
   const arr = await coll.find().toArray();
+  records.clear();
+  qrCodes.clear();
+  pairCodes.clear();
   for (const r of arr) {
     records.set(r.name, { name: r.name, webhook: r.webhook, apiKey: r.apiKey });
     if (r.qr) qrCodes.set(r.name, r.qr);
@@ -135,7 +138,8 @@ async function startSocket(name, record) {
       await updateRecord(name, { qr: null, pairCode: null });
     } else if (data.connection === 'close') {
       dispatch(name, 'session.disconnected', { reason: data.lastDisconnect?.error?.message });
-      await updateRecord(name, { qr: null });
+      pairCodes.delete(name);
+      await updateRecord(name, { qr: null, pairCode: null });
     }
   });
   sock.ev.on('messages.upsert', async ({ messages }) => {
