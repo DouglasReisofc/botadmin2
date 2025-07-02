@@ -714,6 +714,11 @@ async function editApi(req, res) {
     const { serverId, webhook, gruposlimite = 0, status, user } = req.body;
 
     try {
+        const apiAtual = await BotApi.findById(id);
+        if (!apiAtual) {
+            return res.json({ success: false, message: 'API não encontrada' });
+        }
+
         const updateFields = {
             status: status === 'true' || status === true,
             gruposlimite: parseInt(gruposlimite, 10) || 0,
@@ -735,6 +740,15 @@ async function editApi(req, res) {
             updateFields.user = user;
         } else {
             updateFields.user = null; // desvincula se vazio
+        }
+
+        if (!serverId) {
+            // tenta atualizar dados da instância apenas se o servidor não mudou
+            try {
+                await callInstance(apiAtual, 'put', '', { webhook: updateFields.webhook });
+            } catch (e) {
+                console.warn('Erro ao sincronizar instância:', e.message);
+            }
         }
 
         const updatedApi = await BotApi.findByIdAndUpdate(id, updateFields, { new: true });
@@ -783,7 +797,18 @@ async function deleteApi(req, res) {
     const { id } = req.params;
 
     try {
-        // Deletar a configuração de API usando o ID
+        const api = await BotApi.findById(id);
+        if (!api) {
+            req.flash('error_msg', 'API não encontrada');
+            return res.redirect('/admin/api');
+        }
+
+        try {
+            await callInstance(api, 'delete');
+        } catch (e) {
+            console.warn('Falha ao remover instância remota:', e.message);
+        }
+
         await BotApi.deleteOne({ _id: id });
 
         req.flash('success_msg', 'API deletada com sucesso!');
