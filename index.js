@@ -1291,8 +1291,19 @@ app.post('/conectarwhatsapp/criar', isAuthenticated, async (req, res) => {
 
   const existente = await BotApi.findOne({ instance: numero });
   if (existente) {
-    req.flash('error_msg', 'Instância já cadastrada.');
-    return res.redirect('/conectarwhatsapp');
+    try {
+      const baseOld = existente.baseUrl.replace(/\/+$/, '');
+      await axios.delete(`${baseOld}/api/instance/${numero}`, {
+        headers: { 'x-api-key': existente.globalapikey, 'x-instance-key': existente.apikey }
+      });
+    } catch (e) {
+      console.warn('Falha ao limpar instância existente:', e.message);
+    }
+    try {
+      await BotApi.deleteOne({ _id: existente._id });
+    } catch (e) {
+      console.warn('Falha ao remover registro existente:', e.message);
+    }
   }
 
   let nova = null;

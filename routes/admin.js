@@ -641,7 +641,16 @@ async function createApi(req, res) {
         // evita duplicidade de instâncias
         const existente = await BotApi.findOne({ instance: instanceName });
         if (existente) {
-            return res.json({ success: false, message: 'Instância já cadastrada' });
+            try {
+                await callInstance(existente, 'delete');
+            } catch (e) {
+                console.warn('Falha ao limpar instância existente:', e.message);
+            }
+            try {
+                await BotApi.deleteOne({ _id: existente._id });
+            } catch (e) {
+                console.warn('Falha ao remover registro existente:', e.message);
+            }
         }
 
         const base = sanitizeBase(server.baseUrl);
