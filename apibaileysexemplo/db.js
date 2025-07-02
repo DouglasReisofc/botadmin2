@@ -28,4 +28,14 @@ async function getStoreCollection() {
   return database.collection('stores');
 }
 
-module.exports = { initDb, getSessionCollection, getStoreCollection };
+async function getRecordCollection() {
+  const database = await initDb();
+  return database.collection('session_records');
+}
+
+module.exports = {
+  initDb,
+  getSessionCollection,
+  getStoreCollection,
+  getRecordCollection
+};

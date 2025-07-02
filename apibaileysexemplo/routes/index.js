@@ -91,9 +91,9 @@ router.post('/instance', async (req, res) => {
   }
 });
 
-router.put('/instance/:id', checkInstance, (req, res) => {
+router.put('/instance/:id', checkInstance, async (req, res) => {
   const { id } = req.params;
-  const session = updateInstance(id, req.body);
+  const session = await updateInstance(id, req.body);
   if (!session) return res.status(404).json({ error: 'Instance not found' });
   res.json({ status: 'updated', id });
 });

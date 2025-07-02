@@ -1,5 +1,3 @@
-const fs = require('fs');
-const path = require('path');
 const axios = require('axios');
 const P = require('pino');
 const qrcode = require('qrcode-terminal');
@@ -9,14 +7,16 @@ const {
   getAggregateVotesInPollMessage,
   downloadMediaMessage
 } = require('@whiskeysockets/baileys');
-const { getStoreCollection } = require('../db');
+const {
+  getStoreCollection,
+  getRecordCollection
+} = require('../db');
 const { useMongoAuthState } = require('./authState');
 
 const sessions = new Map(); // name -> { sock, store, webhook, apiKey }
 const records = new Map(); // name -> { name, webhook, apiKey }
 const qrCodes = new Map();
 const pairCodes = new Map();
-const recordsFile = path.join(__dirname, 'records.json');
 
 async function loadStoreMap(name) {
   const coll = await getStoreCollection();
@@ -56,15 +56,29 @@ function cloneRaw(obj) {
   );
 }
 
-function loadRecords() {
-  if (fs.existsSync(recordsFile)) {
-    const arr = JSON.parse(fs.readFileSync(recordsFile, 'utf8'));
-    for (const r of arr) records.set(r.name, r);
+async function loadRecords() {
+  const coll = await getRecordCollection();
+  const arr = await coll.find().toArray();
+  for (const r of arr) {
+    records.set(r.name, { name: r.name, webhook: r.webhook, apiKey: r.apiKey });
+    if (r.qr) qrCodes.set(r.name, r.qr);
+    if (r.pairCode) pairCodes.set(r.name, r.pairCode);
   }
 }
 
-function saveRecords() {
-  fs.writeFileSync(recordsFile, JSON.stringify(Array.from(records.values()), null, 2));
+async function saveRecord(record) {
+  const coll = await getRecordCollection();
+  await coll.updateOne({ name: record.name }, { $set: record }, { upsert: true });
+}
+
+async function deleteRecord(name) {
+  const coll = await getRecordCollection();
+  await coll.deleteOne({ name });
+}
+
+async function updateRecord(name, data) {
+  const coll = await getRecordCollection();
+  await coll.updateOne({ name }, { $set: data });
 }
 
 async function dispatch(name, event, data) {
@@ -102,11 +116,13 @@ async function startSocket(name, record) {
       qrCodes.set(name, data.qr);
       qrcode.generate(data.qr, { small: true });
       dispatch(name, 'session.qr.updated', { qr: data.qr });
+      await updateRecord(name, { qr: data.qr, pairCode: null });
       try {
         const code = await sock.requestPairingCode(name);
         if (code) {
           pairCodes.set(name, code);
           dispatch(name, 'session.pair_code', { code });
+          await updateRecord(name, { pairCode: code });
         }
       } catch (err) {
         console.warn(`[${name}] failed to get pairing code:`, err.message);
@@ -115,8 +131,11 @@ async function startSocket(name, record) {
     if (data.connection === 'open') {
       dispatch(name, 'session.connected', { user: sock.user });
       pairCodes.delete(name);
+      qrCodes.delete(name);
+      await updateRecord(name, { qr: null, pairCode: null });
     } else if (data.connection === 'close') {
       dispatch(name, 'session.disconnected', { reason: data.lastDisconnect?.error?.message });
+      await updateRecord(name, { qr: null });
     }
   });
   sock.ev.on('messages.upsert', async ({ messages }) => {
@@ -150,7 +169,7 @@ async function createInstance(name, webhook, apiKey) {
   if (sessions.has(name)) throw new Error('instance already exists');
   const record = { name, webhook, apiKey };
   records.set(name, record);
-  saveRecords();
+  await saveRecord(record);
   await startSocket(name, record);
 }
 
@@ -192,11 +211,11 @@ async function restartInstance(name) {
   }
 }
 
-function updateInstance(name, data) {
+async function updateInstance(name, data) {
   const rec = records.get(name);
   if (!rec) return null;
   Object.assign(rec, data);
-  saveRecords();
+  await saveRecord(rec);
   return sessions.get(name)?.sock || null;
 }
 
@@ -214,14 +233,17 @@ async function deleteInstance(name, preserveRecord = false) {
   }
   if (!preserveRecord) {
     records.delete(name);
-    saveRecords();
+    await deleteRecord(name);
   }
+  await updateRecord(name, { qr: null, pairCode: null });
   qrCodes.delete(name);
   pairCodes.delete(name);
 }
 
-function listInstances() {
-  return Array.from(records.values()).map(r => ({
+async function listInstances() {
+  const coll = await getRecordCollection();
+  const docs = await coll.find().toArray();
+  return docs.map(r => ({
     name: r.name,
     webhook: r.webhook,
     connected: sessions.has(r.name)
@@ -229,7 +251,7 @@ function listInstances() {
 }
 
 async function restoreInstances() {
-  loadRecords();
+  await loadRecords();
   for (const rec of records.values()) {
     await startSocket(rec.name, rec).catch(err => console.error('restore failed', err.message));
   }
