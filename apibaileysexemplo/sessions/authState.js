@@ -1,9 +1,11 @@
 const { getSessionCollection } = require('../db');
+const { initAuthCreds } = require('@whiskeysockets/baileys');
 
 async function useMongoAuthState(name) {
   const coll = await getSessionCollection();
   const doc = (await coll.findOne({ name })) || { name, creds: {}, keys: {} };
-  const { creds = {}, keys = {} } = doc;
+  const creds = Object.keys(doc.creds || {}).length ? doc.creds : initAuthCreds();
+  const keys = doc.keys || {};
 
   const save = async () => {
     await coll.updateOne({ name }, { $set: { creds, keys } }, { upsert: true });
