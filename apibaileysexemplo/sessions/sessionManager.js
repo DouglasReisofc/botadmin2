@@ -5,12 +5,12 @@ const P = require('pino');
 const qrcode = require('qrcode-terminal');
 const {
   default: makeWASocket,
-  useMultiFileAuthState,
   fetchLatestBaileysVersion,
   getAggregateVotesInPollMessage,
   downloadMediaMessage
 } = require('@whiskeysockets/baileys');
 const { getStoreCollection } = require('../db');
+const { useMongoAuthState } = require('./authState');
 
 const sessions = new Map(); // name -> { sock, store, webhook, apiKey }
 const records = new Map(); // name -> { name, webhook, apiKey }
@@ -67,6 +67,8 @@ function saveRecords() {
 }
 
 async function dispatch(name, event, data) {
+  console.log(`[${name}] ${event}`);
+  if (data) console.dir(data, { depth: null });
   const rec = records.get(name);
   if (!rec?.webhook) return;
   const headers = {
@@ -84,7 +86,7 @@ async function dispatch(name, event, data) {
 }
 
 async function startSocket(name, record) {
-  const { state, saveCreds } = await useMultiFileAuthState(path.join(__dirname, `session-${name}`));
+  const { state, saveCreds } = await useMongoAuthState(name);
   const { version } = await fetchLatestBaileysVersion();
   const store = await loadStoreMap(name);
   const sock = makeWASocket({

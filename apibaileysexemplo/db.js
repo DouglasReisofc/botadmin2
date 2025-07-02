@@ -1,7 +1,10 @@
 const { MongoClient } = require('mongodb');
 const { log } = require('./utils/logger');
 
-const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/baileys';
+// Default connection string points to the shared Mongo server
+const mongoUri =
+  process.env.MONGO_URI ||
+  'mongodb://admin:Shinobi7766@150.230.85.70:27017/?authSource=admin';
 const client = new MongoClient(mongoUri);
 let db;
 
