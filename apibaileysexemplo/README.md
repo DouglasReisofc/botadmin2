@@ -10,7 +10,7 @@ TypeScript (opcional, mas recomendado)
 Yarn ou NPM
 
 Defina `GLOBAL_API_KEY` para proteger as rotas da API.
-Crie um arquivo `.env` definindo `GLOBAL_API_KEY`, `PORT` e `MONGO_URI`.
+Crie um arquivo `.env` (existe um modelo em `.env.example`) definindo `GLOBAL_API_KEY`, `PORT` e `MONGO_URI`.
 
 MongoDB em `mongodb://admin:Shinobi7766@150.230.85.70:27017/?authSource=admin` (para armazenar sessões e o store de mensagens; altere usando a variável `MONGO_URI`)
 

@@ -31,7 +31,7 @@ module.exports = async function handleMessageUpsert({ event, data, server_url, a
     }
 
     if (typeof handler === 'function') {
-        await handler({ data, server_url, apikey, instance, event });
+        await handler({ data, msgOriginal: data, server_url, apikey, instance, event });
     } else {
         console.warn('[message_upsert] nenhum handler encontrado para idioma:', lang);
     }
