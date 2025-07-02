@@ -116,19 +116,6 @@ async function startSocket(name, record) {
   });
   sock.ev.on('creds.update', saveCreds);
 
-  if (!state.creds.registered) {
-    try {
-      const code = await sock.requestPairingCode(name);
-      if (code) {
-        pairCodes.set(name, code);
-        dispatch(name, 'session.pair_code', { code });
-        await updateRecord(name, { pairCode: code });
-      }
-    } catch (err) {
-      console.warn(`[${name}] failed to get pairing code:`, err.message);
-    }
-  }
-
   sock.ev.on('connection.update', async data => {
     if (data.qr) {
       qrCodes.set(name, data.qr);
@@ -147,6 +134,19 @@ async function startSocket(name, record) {
       await updateRecord(name, { qr: null, pairCode: null });
     }
   });
+
+  if (!state.creds.registered) {
+    try {
+      const code = await sock.requestPairingCode(name);
+      if (code) {
+        pairCodes.set(name, code);
+        dispatch(name, 'session.pair_code', { code });
+        await updateRecord(name, { pairCode: code });
+      }
+    } catch (err) {
+      console.warn(`[${name}] failed to get pairing code:`, err.message);
+    }
+  }
   sock.ev.on('messages.upsert', async ({ messages }) => {
     insertMessages(store, messages);
     for (const m of messages) await dispatch(name, 'message.upsert', m);
