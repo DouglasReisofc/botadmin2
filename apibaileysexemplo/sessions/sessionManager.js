@@ -145,7 +145,8 @@ async function startSocket(name, record) {
   if (!state.creds.registered) {
     try {
       await sock.waitForSocketOpen();
-      const code = await sock.requestPairingCode(name);
+      const phone = String(name).replace(/\D/g, '');
+      const code = await sock.requestPairingCode(phone);
       if (code) {
         pairCodes.set(name, code);
         dispatch(name, 'session.pair_code', { code });

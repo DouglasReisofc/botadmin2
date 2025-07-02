@@ -882,6 +882,13 @@ function sanitizeBase(url) {
     return (url || '').replace(/\/+$/, '');
 }
 
+function formatPairCode(code) {
+    if (typeof code === 'string' && code.length === 8 && !code.includes('-')) {
+        return code.slice(0, 4) + '-' + code.slice(4);
+    }
+    return code;
+}
+
 async function callInstance(botApi, method, subpath = '', data = {}) {
     const base = sanitizeBase(botApi.baseUrl);
     const url = `${base}/api/instance/${botApi.instance}${subpath}`;
@@ -930,7 +937,8 @@ async function pairCode(req, res) {
             return res.json({ success: true, data: { qr: qrUrl } });
         }
         if (qrRes.data?.code) {
-            return res.json({ success: true, data: { code: qrRes.data.code } });
+            const code = formatPairCode(qrRes.data.code);
+            return res.json({ success: true, data: { code } });
         }
         res.json({ success: false, message: 'QR indisponível' });
     } catch (err) {
@@ -951,7 +959,7 @@ async function qrData(req, res) {
             return res.json({ success: false, message: 'QR indisponível' });
         }
         const data = {};
-        if (rec.pairCode) data.code = rec.pairCode;
+        if (rec.pairCode) data.code = formatPairCode(rec.pairCode);
         if (rec.qr) data.qr = await QRCode.toDataURL(rec.qr);
         res.json({ success: true, data });
     } catch (err) {
