@@ -18,6 +18,7 @@ const sessions = new Map(); // name -> { sock, store, webhook, apiKey }
 const records = new Map(); // name -> { name, webhook, apiKey }
 const qrCodes = new Map();
 const pairCodes = new Map();
+const restarting = new Set();
 
 async function loadStoreMap(name) {
   const coll = await getStoreCollection();
@@ -132,6 +133,12 @@ async function startSocket(name, record) {
       dispatch(name, 'session.disconnected', { reason: data.lastDisconnect?.error?.message });
       pairCodes.delete(name);
       await updateRecord(name, { qr: null, pairCode: null });
+      if (!restarting.has(name)) {
+        console.log(`[${name}] automatic reconnection attempt`);
+        restartInstance(name).catch(err =>
+          console.error(`[${name}] auto restart failed:`, err.message)
+        );
+      }
     }
   });
 
@@ -207,18 +214,24 @@ function getPairCode(name) {
 async function restartInstance(name) {
   const rec = records.get(name);
   if (!rec) throw new Error('instance not found');
-  await deleteInstance(name);
-  // aguarda um curto período para liberar a conexão antiga
-  await new Promise((r) => setTimeout(r, 1000));
-  for (let i = 0; i < 3; i++) {
-    try {
-      await createInstance(rec.name, rec.webhook, rec.apiKey);
-      return;
-    } catch (err) {
-      console.warn(`[${name}] restart attempt ${i + 1} failed:`, err.message);
-      if (i === 2) throw err;
-      await new Promise((r) => setTimeout(r, 1000));
+  if (restarting.has(name)) return;
+  restarting.add(name);
+  try {
+    await deleteInstance(name);
+    // aguarda um curto período para liberar a conexão antiga
+    await new Promise((r) => setTimeout(r, 1000));
+    for (let i = 0; i < 3; i++) {
+      try {
+        await createInstance(rec.name, rec.webhook, rec.apiKey);
+        return;
+      } catch (err) {
+        console.warn(`[${name}] restart attempt ${i + 1} failed:`, err.message);
+        if (i === 2) throw err;
+        await new Promise((r) => setTimeout(r, 1000));
+      }
     }
+  } finally {
+    restarting.delete(name);
   }
 }
 
