@@ -50,6 +50,7 @@ const pairingCodes = {};    // { instance: pairingCode atual }
 const qrTexts = {};         // { instance: último texto de QR recebido }
 const instances = {};       // { instance: { status, lastChange } }
 const savedQrCodes = {};    // { instance: qr salvo em DB }
+const webhooks = {};        // { instance: webhook URL }
 
 async function auth(req, res, next) {
     const sessionId = req.params.instance || req.body.instance || req.query.instance;
@@ -87,12 +88,13 @@ function setStatus(instance, status) {
 
 
 async function dispatchWebhook(inst, event, data) {
+    const url = webhooks[inst] || `${SITE_URL}/webhook/event`;
     try {
-        await axios.post(`${SITE_URL}/webhook/event`, {
-            event,
-            data,
-            instance: inst
-        }, { headers: { apikey: MASTER_APIKEY } });
+        await axios.post(
+            url,
+            { event, data, instance: inst },
+            { headers: { apikey: MASTER_APIKEY } }
+        );
     } catch (err) {
         console.error(`[${inst}] Webhook erro (${event}):`, err.message);
     }
@@ -107,6 +109,9 @@ async function startClient(instance) {
             headers: { apikey: MASTER_APIKEY }
         });
         session = res.data;
+        if (session?.webhook) {
+            webhooks[instance] = session.webhook;
+        }
     } catch {
         throw new Error(`Instância ${instance} não encontrada no servidor`);
     }
@@ -398,6 +403,20 @@ router.get('/painel', (req, res) => {
     });
 });
 
+// Atualiza configurações da instância (ex.: webhook)
+router.put('/api/instance/:instance', async (req, res) => {
+    const key = req.headers['x-api-key'] || req.query.apiKey;
+    if (key !== MASTER_APIKEY) {
+        return res.status(401).json({ error: 'Invalid api key' });
+    }
+    const inst = req.params.instance;
+    if (!inst) return res.status(400).json({ error: 'instance required' });
+    if (typeof req.body.webhook === 'string') {
+        webhooks[inst] = req.body.webhook;
+    }
+    res.json({ status: true, instance: inst });
+});
+
 
 
 router.get('/instance/qrcode/:instance', async (req, res) => {
@@ -605,6 +624,7 @@ router.post('/instance/delete/:instance', auth, async (req, res) => {
         delete instances[inst];
         pairingCodes[inst] = null;
         qrTexts[inst] = null;
+        delete webhooks[inst];
         console.log(`🧹 Dados em memória para ${inst} limpos.`);
 
         // 3. Remove pasta de sessão local
