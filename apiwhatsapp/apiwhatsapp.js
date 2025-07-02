@@ -6,7 +6,7 @@ const axios = require('axios');
 const Crypto = require('crypto');
 const { tmpdir } = require('os');
 const ff = require('fluent-ffmpeg');
-const SITE_URL = process.env.SITE_URL || 'https://botadmin.shop';
+const SITE_URL = process.env.SITE_URL || 'http://localhost:7766';
 const WA_PORT = process.env.WA_API_PORT || 4477;
 
 // Diretório onde as sessões serão salvas

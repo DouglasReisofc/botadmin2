@@ -31,6 +31,16 @@ router.post('/event', checkKey, async (req, res) => {
   const { event, data, instance } = req.body;
   if (!event) return res.status(400).json({ error: 'missing event' });
   try {
+    console.log('[webhook/event] recebido', {
+      event,
+      instance,
+      chatId:
+        data?.key?.remoteJid ||
+        data?.chatId ||
+        data?.groupId ||
+        data?.id?.remoteJid ||
+        data?.id?.remote
+    });
     const bot = instance ? await BotApi.findOne({ instance }).lean() : null;
     if (!bot && instance) {
       console.warn('⚠️ Webhook event for unknown instance:', instance);

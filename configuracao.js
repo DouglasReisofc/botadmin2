@@ -1,6 +1,6 @@
 module.exports = {
     port: '7766',
-    basesiteUrl: 'https://botadmin.shop',
+    basesiteUrl: 'http://localhost:7766',
     apikeypremium: 'equipevipadm',
     limitCount: 50,
     dinheiroCount: 0,
