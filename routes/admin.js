@@ -11,6 +11,7 @@ const { BotApi } = require('../db/botApi');
 const { Server } = require('../db/server');
 const { excluirBot, verificarLimiteInstancias, verificarCapacidadeServidor } = require('../db/bot');
 const axios = require('axios');
+const QRCode = require('qrcode');
 const { randomText, enviarTelegramChannel } = require('../funcoes/function');
 const { verificar_nome, add_usuario } = require('../db/db');
 const { limitCount, dinheiroCount, premiumdays, limitPremium } = require('../configuracao');
@@ -875,7 +876,8 @@ async function pairCode(req, res) {
 
         const qrRes = await callInstance(api, 'post', '/pair');
         if (qrRes.data?.qr) {
-            return res.json({ success: true, data: { qr: qrRes.data.qr } });
+            const qrUrl = await QRCode.toDataURL(qrRes.data.qr);
+            return res.json({ success: true, data: { qr: qrUrl } });
         }
         if (qrRes.data?.code) {
             return res.json({ success: true, data: { code: qrRes.data.code } });
