@@ -646,12 +646,35 @@ async function createApi(req, res) {
 
         const base = sanitizeBase(server.baseUrl);
         let novaApi = null;
-        try {
+        const createRemote = async () => {
             await axios.post(
                 `${base}/api/instance`,
-                { name: instanceName, webhook: webhook || `${basesiteUrl}/webhook/event`, apiKey: server.globalapikey },
+                {
+                    name: instanceName,
+                    webhook: webhook || `${basesiteUrl}/webhook/event`,
+                    apiKey: server.globalapikey
+                },
                 { headers: { 'x-api-key': server.globalapikey } }
             );
+        };
+        try {
+            try {
+                await createRemote();
+            } catch (e) {
+                const msg = e.response?.data?.error || e.message;
+                if (/instance already exists/i.test(msg)) {
+                    try {
+                        await axios.delete(`${base}/api/instance/${instanceName}`, {
+                            headers: { 'x-api-key': server.globalapikey }
+                        });
+                        await createRemote();
+                    } catch (re) {
+                        throw new Error('Instância já cadastrada');
+                    }
+                } else {
+                    throw e;
+                }
+            }
 
             novaApi = new BotApi({
                 nome,
