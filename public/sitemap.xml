@@ -21,12 +21,141 @@
   </url>
   <url>
     <loc>https://botadmin.shop/tutorials</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/comandos/undefined</loc>
+
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/comandos/undefined</loc>
+
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/comandos/undefined</loc>
+
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/comandos/undefined</loc>
+
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/comandos/undefined</loc>
+
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/comandos/undefined</loc>
+
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/comandos/undefined</loc>
+
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/comandos/undefined</loc>
+
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/comandos/abrirgp</loc>
+
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/comandos/undefined</loc>
+
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/comandos/undefined</loc>
+
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/comandos/undefined</loc>
+
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/comandos/undefined</loc>
+
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/comandos/undefined</loc>
+
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/comandos/antilink</loc>
+
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/comandos/undefined</loc>
     <video:video>
       <video:content_loc>https://botadmin.shop/arquivos/admin/cmd_1750532816467.webm</video:content_loc>
       <video:title>!banextremo</video:title>
     </video:video>
     <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/comandos/undefined</loc>
+
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/comandos/undefined</loc>
+
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/comandos/undefined</loc>
+
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/comandos/undefined</loc>
+
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://botadmin.shop/tutorials/como-cadastrar-um-novo-grupo-no-bot-admin-no-whatsapp</loc>
+    <video:video>
+      <video:content_loc>https://botadmin.shop/arquivos/admin/tutorial_1750979980663.webm</video:content_loc>
+      <video:title>Como cadastrar um novo Grupo no Bot Admin no whatsapp</video:title>
+      <video:description>1 abra a aba de opções e selecione a opção MEUS GRUPOS</video:description>
+    </video:video>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://botadmin.shop/blog</loc>
