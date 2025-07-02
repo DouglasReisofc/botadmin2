@@ -9,7 +9,8 @@ const {
 } = require('@whiskeysockets/baileys');
 const {
   getStoreCollection,
-  getRecordCollection
+  getRecordCollection,
+  getSessionCollection
 } = require('../db');
 const { useMongoAuthState } = require('./authState');
 
@@ -234,12 +235,18 @@ async function deleteInstance(name, preserveRecord = false) {
   if (session) {
     session.sock.end();
     sessions.delete(name);
-    try {
-      const coll = await getStoreCollection();
-      await coll.deleteOne({ name });
-    } catch (err) {
-      console.error(`[${name}] failed to delete store:`, err.message);
-    }
+  }
+  try {
+    const coll = await getStoreCollection();
+    await coll.deleteOne({ name });
+  } catch (err) {
+    console.error(`[${name}] failed to delete store:`, err.message);
+  }
+  try {
+    const sessColl = await getSessionCollection();
+    await sessColl.deleteOne({ name });
+  } catch (err) {
+    console.error(`[${name}] failed to delete session:`, err.message);
   }
   if (!preserveRecord) {
     records.delete(name);
