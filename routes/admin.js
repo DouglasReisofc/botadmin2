@@ -908,7 +908,20 @@ async function pairCode(req, res) {
         const api = await BotApi.findById(req.params.id);
         if (!api) return res.json({ success: false, message: 'API não encontrada' });
 
-        const qrRes = await callInstance(api, 'post', '/pair');
+        let qrRes;
+        try {
+            qrRes = await callInstance(api, 'post', '/pair');
+        } catch (err) {
+            try {
+                const qrOnly = await callInstance(api, 'get', '/qr');
+                if (qrOnly.data?.qr) {
+                    const qrUrl = await QRCode.toDataURL(qrOnly.data.qr);
+                    return res.json({ success: true, data: { qr: qrUrl } });
+                }
+            } catch { /* ignore fallback error */ }
+            return res.json({ success: false, message: err.response?.data?.error || err.message });
+        }
+
         if (qrRes.data?.qr) {
             const qrUrl = await QRCode.toDataURL(qrRes.data.qr);
             return res.json({ success: true, data: { qr: qrUrl } });

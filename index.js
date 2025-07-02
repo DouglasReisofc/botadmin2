@@ -1442,11 +1442,26 @@ app.post('/conectarwhatsapp/pair/:instance', isAuthenticated, async (req, res) =
     if (!api) return res.json({ success: false, message: 'Instância não encontrada' });
 
   const base = (api.baseUrl || '').replace(/\/+$/, '');
-  const resp = await axios.post(
-    `${base}/api/instance/${api.instance}/pair`,
-    {},
-    { headers: { 'x-api-key': api.globalapikey, 'x-instance-key': api.apikey } }
-  );
+  let resp;
+  try {
+    resp = await axios.post(
+      `${base}/api/instance/${api.instance}/pair`,
+      {},
+      { headers: { 'x-api-key': api.globalapikey, 'x-instance-key': api.apikey } }
+    );
+  } catch (err) {
+    try {
+      const qrOnly = await axios.get(
+        `${base}/api/instance/${api.instance}/qr`,
+        { headers: { 'x-api-key': api.globalapikey, 'x-instance-key': api.apikey } }
+      );
+      if (qrOnly.data?.qr) {
+        const qrUrl = await QRCode.toDataURL(qrOnly.data.qr);
+        return res.json({ success: true, data: { qr: qrUrl } });
+      }
+    } catch {}
+    return res.json({ success: false, message: err.response?.data?.error || err.message });
+  }
 
   if (resp.data?.qr) {
     const qrUrl = await QRCode.toDataURL(resp.data.qr);
@@ -1457,7 +1472,7 @@ app.post('/conectarwhatsapp/pair/:instance', isAuthenticated, async (req, res) =
   }
   return res.json({ success: false, message: 'QR indisponível' });
   } catch (err) {
-    res.json({ success: false, message: err.message });
+    res.json({ success: false, message: err.response?.data?.error || err.message });
   }
 });
 
