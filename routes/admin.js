@@ -592,6 +592,7 @@ router.get('/api', isAuthenticated, isAdmin, async (req, res) => {
             apis,
             usuarios,
             servidores,
+            basesiteUrl,
             layout: 'admin/layout/main'
         });
     } catch (err) {
@@ -620,7 +621,7 @@ router.get('/servidores', isAuthenticated, isAdmin, async (req, res) => {
 // Rota de criação de nova API
 async function createApi(req, res) {
     try {
-        const { nome, serverId, instance, gruposlimite = 0, status, user } = req.body;
+        const { nome, serverId, instance, webhook, gruposlimite = 0, status, user } = req.body;
 
         if (!nome || !serverId || !instance) {
             return res.status(400).json({ success: false, message: 'Campos obrigatórios ausentes' });
@@ -645,7 +646,7 @@ async function createApi(req, res) {
         try {
             await axios.post(
                 `${base}/api/instance`,
-                { name: instance, webhook: `${basesiteUrl}/webhook/event`, apiKey: server.globalapikey },
+                { name: instance, webhook: webhook || `${basesiteUrl}/webhook/event`, apiKey: server.globalapikey },
                 { headers: { 'x-api-key': server.globalapikey } }
             );
 
@@ -654,6 +655,7 @@ async function createApi(req, res) {
                 baseUrl: server.baseUrl,
                 globalapikey: server.globalapikey,
                 apikey: server.globalapikey,
+                webhook: webhook || `${basesiteUrl}/webhook/event`,
                 instance,
                 server: server._id,
                 gruposlimite: parseInt(gruposlimite, 10) || 0,
@@ -704,7 +706,7 @@ router.post('/servidores/criar', isAuthenticated, isAdmin, async (req, res) => {
 
 async function editApi(req, res) {
     const { id } = req.params;
-    const { serverId, gruposlimite = 0, status, user } = req.body;
+    const { serverId, webhook, gruposlimite = 0, status, user } = req.body;
 
     try {
         const updateFields = {
@@ -712,6 +714,10 @@ async function editApi(req, res) {
             gruposlimite: parseInt(gruposlimite, 10) || 0,
             updatedAt: new Date()
         };
+
+        if (webhook) {
+            updateFields.webhook = webhook;
+        }
 
         if (serverId) {
             const server = await verificarCapacidadeServidor(serverId);

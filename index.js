@@ -1299,6 +1299,7 @@ app.post('/conectarwhatsapp/criar', isAuthenticated, async (req, res) => {
       baseUrl: server.baseUrl,
       globalapikey: server.globalapikey,
       apikey: server.globalapikey,
+      webhook: `${siteUrl}/webhook/event`,
       instance: numero,
       user: req.user._id,
       server: server._id

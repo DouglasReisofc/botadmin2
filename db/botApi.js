@@ -11,6 +11,11 @@ const botApiSchema = new mongoose.Schema({
         required: true
     },  // URL base da API
 
+    webhook: {
+        type: String,
+        default: ''
+    }, // Webhook para envio dos eventos da instância
+
     globalapikey: {
         type: String,
         required: true

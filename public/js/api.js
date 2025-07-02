@@ -65,7 +65,7 @@ function openCreateApiModal() {
     openModal('createApiModal');
 }
 
-function openEditApiModal(id, serverId, grupos, status, instance, userId) {
+function openEditApiModal(id, serverId, instance, grupos, status, webhook, userId) {
     const form = document.getElementById('editApiForm');
     if (!form) return;
 
@@ -76,6 +76,8 @@ function openEditApiModal(id, serverId, grupos, status, instance, userId) {
     if (gruposInput) gruposInput.value = grupos;
     const instanceInput = document.getElementById('editInstance');
     if (instanceInput) instanceInput.value = instance;
+    const webhookInput = document.getElementById('editWebhook');
+    if (webhookInput) webhookInput.value = webhook;
     const statusInput = document.getElementById('editStatus');
     if (statusInput) statusInput.value = status ? 'true' : 'false';
 
