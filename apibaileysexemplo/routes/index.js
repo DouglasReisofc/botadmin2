@@ -87,7 +87,8 @@ router.post('/instance', async (req, res) => {
     await createInstance(name, webhook, apiKey);
     res.json({ status: 'instance created', name });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    const status = /exists/i.test(e.message) ? 409 : 500;
+    res.status(status).json({ error: e.message });
   }
 });
 
