@@ -673,6 +673,13 @@ async function createApi(req, res) {
             }
             console.error('Erro ao criar API:', err.response?.data || err.message);
             if (err.code === 11000) {
+                try {
+                    await axios.delete(`${base}/api/instance/${instanceName}`, {
+                        headers: { 'x-api-key': server.globalapikey }
+                    });
+                } catch (e) {
+                    console.warn('Falha ao remover instância remota:', e.message);
+                }
                 return res.json({ success: false, message: 'Instância já cadastrada' });
             }
             return res.status(500).json({ success: false, message: err.response?.data?.error || err.message });
