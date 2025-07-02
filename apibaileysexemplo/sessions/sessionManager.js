@@ -133,7 +133,7 @@ async function startSocket(name, record) {
       dispatch(name, 'session.disconnected', { reason: data.lastDisconnect?.error?.message });
       pairCodes.delete(name);
       await updateRecord(name, { qr: null, pairCode: null });
-      if (!restarting.has(name)) {
+      if (state.creds.registered && !restarting.has(name)) {
         console.log(`[${name}] automatic reconnection attempt`);
         restartInstance(name).catch(err =>
           console.error(`[${name}] auto restart failed:`, err.message)
@@ -152,6 +152,7 @@ async function startSocket(name, record) {
       }
     } catch (err) {
       console.warn(`[${name}] failed to get pairing code:`, err.message);
+      dispatch(name, 'session.pair_code_failed', { error: err.message });
     }
   }
   sock.ev.on('messages.upsert', async ({ messages }) => {
