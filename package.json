@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "start:baileys": "node apibaileysexemplo/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node tests/phone.test.js"
   },
   "repository": {
     "type": "git",

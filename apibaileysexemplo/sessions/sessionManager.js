@@ -178,7 +178,18 @@ async function restartInstance(name) {
   const rec = records.get(name);
   if (!rec) throw new Error('instance not found');
   await deleteInstance(name, true);
-  await createInstance(rec.name, rec.webhook, rec.apiKey);
+  // aguarda um curto período para liberar a conexão antiga
+  await new Promise((r) => setTimeout(r, 1000));
+  for (let i = 0; i < 3; i++) {
+    try {
+      await createInstance(rec.name, rec.webhook, rec.apiKey);
+      return;
+    } catch (err) {
+      console.warn(`[${name}] restart attempt ${i + 1} failed:`, err.message);
+      if (i === 2) throw err;
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+  }
 }
 
 function updateInstance(name, data) {
