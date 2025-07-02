@@ -634,6 +634,12 @@ async function createApi(req, res) {
             try { await verificarLimiteInstancias(usr); } catch (e) { return res.json({ success: false, message: e.message }); }
         }
 
+        // evita duplicidade de instâncias
+        const existente = await BotApi.findOne({ instance });
+        if (existente) {
+            return res.json({ success: false, message: 'Instância já cadastrada' });
+        }
+
         const novaApi = new BotApi({
             nome,
             baseUrl: server.baseUrl,
