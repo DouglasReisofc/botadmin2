@@ -93,7 +93,26 @@ router.post('/instance', async (req, res) => {
   }
 });
 
+// Compatibilidade: rotas prefixadas com /api
+router.post('/api/instance', async (req, res) => {
+  const { name, webhook, apiKey } = req.body;
+  try {
+    await createInstance(name, webhook, apiKey);
+    res.json({ status: 'instance created', name });
+  } catch (e) {
+    const status = /exists/i.test(e.message) ? 409 : 500;
+    res.status(status).json({ error: e.message });
+  }
+});
+
 router.put('/instance/:id', checkInstance, async (req, res) => {
+  const { id } = req.params;
+  const session = await updateInstance(id, req.body);
+  if (!session) return res.status(404).json({ error: 'Instance not found' });
+  res.json({ status: 'updated', id });
+});
+
+router.put('/api/instance/:id', checkInstance, async (req, res) => {
   const { id } = req.params;
   const session = await updateInstance(id, req.body);
   if (!session) return res.status(404).json({ error: 'Instance not found' });
@@ -105,7 +124,21 @@ router.get('/instance/:id/status', checkInstance, (req, res) => {
   res.json({ status: getInstanceStatus(id) });
 });
 
+router.get('/api/instance/:id/status', checkInstance, (req, res) => {
+  const { id } = req.params;
+  res.json({ status: getInstanceStatus(id) });
+});
+
 router.get('/instance/:id/qr', checkInstance, (req, res) => {
+  const { id } = req.params;
+  const qr = getInstanceQR(id);
+  if (!qr) {
+    return res.status(404).json({ error: 'QR not available' });
+  }
+  res.json({ qr });
+});
+
+router.get('/api/instance/:id/qr', checkInstance, (req, res) => {
   const { id } = req.params;
   const qr = getInstanceQR(id);
   if (!qr) {
@@ -134,7 +167,36 @@ router.post('/instance/:id/pair', checkInstance, async (req, res) => {
   }
 });
 
+router.post('/api/instance/:id/pair', checkInstance, async (req, res) => {
+  const { id } = req.params;
+  try {
+    await restartInstance(id);
+    const start = Date.now();
+    while (Date.now() - start < 15000) {
+      const qr = getInstanceQR(id);
+      const code = getPairCode(id);
+      if (qr || code) {
+        return res.json({ qr: qr || null, code: code || null });
+      }
+      await new Promise(r => setTimeout(r, 1000));
+    }
+    res.status(404).json({ error: 'QR not available' });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 router.post('/instance/:id/restart', checkInstance, async (req, res) => {
+  const { id } = req.params;
+  try {
+    await restartInstance(id);
+    res.json({ status: 'restarted', id });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.post('/api/instance/:id/restart', checkInstance, async (req, res) => {
   const { id } = req.params;
   try {
     await restartInstance(id);
@@ -154,7 +216,27 @@ router.post('/instance/:id/reconnect', checkInstance, async (req, res) => {
   }
 });
 
+router.post('/api/instance/:id/reconnect', checkInstance, async (req, res) => {
+  const { id } = req.params;
+  try {
+    await restartInstance(id);
+    res.json({ status: 'reconnected', id });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 router.delete('/instance/:id', checkInstance, async (req, res) => {
+  const { id } = req.params;
+  try {
+    await deleteInstance(id);
+    res.json({ status: 'deleted', id });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.delete('/api/instance/:id', checkInstance, async (req, res) => {
   const { id } = req.params;
   try {
     await deleteInstance(id);
