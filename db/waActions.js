@@ -9,7 +9,7 @@ function sanitizeBase(url) {
 }
 
 function headers(apiKey) {
-  return { apikey: apiKey };
+  return { 'x-api-key': apiKey };
 }
 
 async function sendText(serverUrl, apiKey, instance, number, text, quoted = null, mentionAll = false, mentionIds = []) {
