@@ -674,7 +674,10 @@ async function createApi(req, res) {
                 if (/instance already exists/i.test(msg)) {
                     try {
                         await axios.delete(`${base}/api/instance/${instanceName}`, {
-                            headers: { 'x-api-key': server.globalapikey }
+                            headers: {
+                                'x-api-key': server.globalapikey,
+                                'x-instance-key': server.globalapikey
+                            }
                         });
                         await createRemote();
                     } catch (re) {
