@@ -403,6 +403,20 @@ router.get('/painel', (req, res) => {
     });
 });
 
+// Cria instância apenas registrando o webhook localmente
+router.post('/api/instance', async (req, res) => {
+    const key = req.headers['x-api-key'] || req.query.apiKey;
+    if (key !== MASTER_APIKEY) {
+        return res.status(401).json({ error: 'Invalid api key' });
+    }
+    const name = req.body.name;
+    if (!name) return res.status(400).json({ error: 'name required' });
+    if (typeof req.body.webhook === 'string') {
+        webhooks[name] = req.body.webhook;
+    }
+    res.json({ status: 'instance created', name });
+});
+
 // Atualiza configurações da instância (ex.: webhook)
 router.put('/api/instance/:instance', async (req, res) => {
     const key = req.headers['x-api-key'] || req.query.apiKey;
@@ -472,7 +486,7 @@ router.get('/instance/qrcode/:instance', async (req, res) => {
 
 
 // 1) tentativa com pairing-code
-router.post('/instance/pair/:instance', auth, async (req, res) => {
+async function handlePair(req, res) {
     const inst = req.params.instance;
 
     try {
@@ -509,7 +523,10 @@ router.post('/instance/pair/:instance', auth, async (req, res) => {
         console.error(`[${inst}] ❌ Nem QR foi gerado. Verifique o Chrome ou o número.`);
         return res.json({ modo: null });
     }
-});
+}
+
+router.post('/instance/pair/:instance', auth, handlePair);
+router.post('/api/instance/:instance/pair', auth, handlePair);
 
 
 
@@ -581,7 +598,7 @@ router.post('/instance/logout/:instance', auth, async (req, res) => {
 
 
 // 4) Reiniciar
-router.post('/instance/restart/:instance', auth, async (req, res) => {
+async function handleRestart(req, res) {
     const inst = req.params.instance;
     if (clients[inst]) {
         await clients[inst].destroy();
@@ -594,11 +611,14 @@ router.post('/instance/restart/:instance', auth, async (req, res) => {
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
-});
+}
+
+router.post('/instance/restart/:instance', auth, handleRestart);
+router.post('/api/instance/:instance/restart', auth, handleRestart);
 
 
 
-router.post('/instance/delete/:instance', auth, async (req, res) => {
+async function handleDelete(req, res) {
     const inst = req.params.instance;
     const apikeyRecebida = req.headers['apikey'] || req.body.apikey || req.query.apikey;
 
@@ -655,7 +675,10 @@ router.post('/instance/delete/:instance', auth, async (req, res) => {
         console.error(`❌ Erro geral na exclusão da instância ${inst}:`, e.message);
         return res.status(500).json({ status: false, error: e.message });
     }
-});
+}
+
+router.post('/instance/delete/:instance', auth, handleDelete);
+router.delete('/api/instance/:instance', auth, handleDelete);
 
 
 /* ==== Lista de instâncias ==== */
