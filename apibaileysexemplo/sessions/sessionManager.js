@@ -244,8 +244,9 @@ async function deleteInstance(name, preserveRecord = false) {
   if (!preserveRecord) {
     records.delete(name);
     await deleteRecord(name);
+  } else {
+    await updateRecord(name, { qr: null, pairCode: null });
   }
-  await updateRecord(name, { qr: null, pairCode: null });
   qrCodes.delete(name);
   pairCodes.delete(name);
 }
