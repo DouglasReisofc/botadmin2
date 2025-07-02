@@ -69,8 +69,9 @@ function saveRecords() {
 async function dispatch(name, event, data) {
   const rec = records.get(name);
   if (!rec?.webhook) return;
-  const headers = {};
-  if (rec.apiKey) headers.apikey = rec.apiKey;
+  const headers = {
+    apikey: process.env.MASTER_APIKEY || 'AIAO1897AHJAKACMC817ADOU'
+  };
   try {
     await axios.post(
       rec.webhook,
