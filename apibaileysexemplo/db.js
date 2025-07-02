@@ -13,6 +13,10 @@ async function initDb() {
     log(`[db] connecting to ${mongoUri}`);
     await client.connect();
     db = client.db();
+    await db.collection('session_records').createIndex(
+      { name: 1 },
+      { unique: true }
+    );
     log('[db] connected');
   }
   return db;
