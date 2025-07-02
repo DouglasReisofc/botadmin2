@@ -155,7 +155,7 @@ async function convertQuotedToSticker(req, res) {
     const id = quotedId || messageId;
     const msg = await session.store.loadMessage(remoteJid, id);
     if (!msg) return res.status(404).json({ error: 'Message not found' });
-    const buffer = await downloadMediaMessage(msg, 'buffer', {}, { logger: P({ level: 'silent' }), reuploadRequest: session.sock.updateMediaMessage });
+    const buffer = await downloadMediaMessage(msg, 'buffer', {}, { logger: P({ level: 'error' }), reuploadRequest: session.sock.updateMediaMessage });
     await session.sock.sendMessage(remoteJid, { sticker: buffer }, { quoted: msg });
     res.json({ status: 'sticker sent' });
   } catch (e) {
@@ -171,7 +171,7 @@ async function downloadMedia(req, res) {
   try {
     const msg = await session.store.loadMessage(remoteJid, messageId);
     if (!msg) return res.status(404).json({ error: 'Message not found' });
-    const buffer = await downloadMediaMessage(msg, 'buffer', {}, { logger: P({ level: 'silent' }), reuploadRequest: session.sock.updateMediaMessage });
+    const buffer = await downloadMediaMessage(msg, 'buffer', {}, { logger: P({ level: 'error' }), reuploadRequest: session.sock.updateMediaMessage });
     res.json({ data: buffer.toString('base64') });
   } catch (e) {
     log(`[downloadMedia] error: ${e.message}`);

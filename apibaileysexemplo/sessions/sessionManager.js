@@ -111,7 +111,7 @@ async function startSocket(name, record) {
   const store = await loadStoreMap(name);
   const sock = makeWASocket({
     version,
-    logger: P({ level: 'silent' }),
+    logger: P({ level: 'info' }),
     printQRInTerminal: false,
     auth: state
   });
@@ -144,6 +144,7 @@ async function startSocket(name, record) {
 
   if (!state.creds.registered) {
     try {
+      await sock.waitForSocketOpen();
       const code = await sock.requestPairingCode(name);
       if (code) {
         pairCodes.set(name, code);
