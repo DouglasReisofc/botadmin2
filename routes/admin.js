@@ -640,20 +640,36 @@ async function createApi(req, res) {
             return res.json({ success: false, message: 'Instância já cadastrada' });
         }
 
-        const novaApi = new BotApi({
-            nome,
-            baseUrl: server.baseUrl,
-            globalapikey: server.globalapikey,
-            apikey: server.globalapikey,
-            instance,
-            server: server._id,
-            gruposlimite: parseInt(gruposlimite, 10) || 0,
-            status: !!status,
-            user: user || null
-        });
+        const base = sanitizeBase(server.baseUrl);
+        let novaApi = null;
+        try {
+            await axios.post(
+                `${base}/api/instance`,
+                { name: instance, webhook: `${basesiteUrl}/webhook/event`, apiKey: server.globalapikey },
+                { headers: { 'x-api-key': server.globalapikey } }
+            );
 
-        await novaApi.save();
-        return res.json({ success: true, message: 'API criada com sucesso!' });
+            novaApi = new BotApi({
+                nome,
+                baseUrl: server.baseUrl,
+                globalapikey: server.globalapikey,
+                apikey: server.globalapikey,
+                instance,
+                server: server._id,
+                gruposlimite: parseInt(gruposlimite, 10) || 0,
+                status: !!status,
+                user: user || null
+            });
+
+            await novaApi.save();
+            return res.json({ success: true, message: 'API criada com sucesso!' });
+        } catch (err) {
+            if (novaApi?._id) {
+                try { await BotApi.deleteOne({ _id: novaApi._id }); } catch {}
+            }
+            console.error('Erro ao criar API:', err.response?.data || err.message);
+            return res.status(500).json({ success: false, message: err.response?.data?.error || err.message });
+        }
     } catch (err) {
         console.error('Erro ao criar API:', err);
         return res.status(500).json({ success: false, message: err.message });
