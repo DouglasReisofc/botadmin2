@@ -29,11 +29,19 @@ router.post('/update/:instance', checkKey, async (req, res) => {
 
 router.post('/event', checkKey, async (req, res) => {
   const { event, data, instance } = req.body;
-  if (!event || !instance) return res.status(400).json({ error: 'missing params' });
+  if (!event) return res.status(400).json({ error: 'missing event' });
   try {
-    const bot = await BotApi.findOne({ instance });
-    if (!bot) return res.status(404).json({ error: 'instance not found' });
-    await webhookHandler({ event, data, server_url: bot.baseUrl, apikey: bot.apikey, instance });
+    const bot = instance ? await BotApi.findOne({ instance }).lean() : null;
+    if (!bot && instance) {
+      console.warn('⚠️ Webhook event for unknown instance:', instance);
+    }
+    await webhookHandler({
+      event,
+      data,
+      instance,
+      server_url: bot?.baseUrl,
+      apikey: bot?.apikey
+    });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
