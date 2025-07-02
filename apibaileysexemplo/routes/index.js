@@ -11,7 +11,10 @@ router.use((req, res, next) => {
 });
 
 async function checkInstance(req, res, next) {
-  const name = req.params.id || req.body.instance || req.query.instance;
+  const name =
+    req.body.instance ||
+    req.query.instance ||
+    req.params.id;
   if (!name) return res.status(400).json({ error: 'Instance required' });
   const record = await getRecord(name);
   if (!record) return res.status(404).json({ error: 'Instance not found' });
