@@ -11,15 +11,23 @@ router.use((req, res, next) => {
 });
 
 async function checkInstance(req, res, next) {
+  const body = req.body || {};
   const name =
-    req.body.instance ||
-    req.query.instance ||
+    body.instance ||
+    (req.query ? req.query.instance : undefined) ||
     req.params.id;
-  if (!name) return res.status(400).json({ error: 'Instance required' });
+  if (!name || name === 'undefined') {
+    return res.status(400).json({ error: 'Instance required' });
+  }
   const record = await getRecord(name);
   if (!record) return res.status(404).json({ error: 'Instance not found' });
-  const key = req.headers['x-instance-key'] || req.body.instanceKey || req.query.instanceKey;
-  if (record.apiKey && record.apiKey !== key) return res.status(401).json({ error: 'Invalid instance key' });
+  const key =
+    req.headers['x-instance-key'] ||
+    body.instanceKey ||
+    (req.query ? req.query.instanceKey : undefined);
+  if (record.apiKey && record.apiKey !== key) {
+    return res.status(401).json({ error: 'Invalid instance key' });
+  }
   req.instanceName = name;
   next();
 }
