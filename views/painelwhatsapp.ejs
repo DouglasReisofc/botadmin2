@@ -74,10 +74,11 @@
 
   <script>
     const $ = s => document.querySelector(s);
-    const baseUrl = '<%= siteUrl %>/whatsapp';
+    const baseUrl = '<%= siteUrl %>/api';
 
     function getHeaders() {
-      return { apikey: $('#apikey').value.trim() };
+      const key = $('#apikey').value.trim();
+      return { 'x-api-key': key, 'x-instance-key': key };
     }
 
     async function refresh() {
@@ -85,16 +86,17 @@
       const data = await res.json();
       const tbl = $('#tbl');
       tbl.innerHTML = '';
-      Object.entries(data).forEach(([num, info]) => {
+      (data.instances || []).forEach(info => {
+        const status = info.connected ? 'conectado' : 'desconectado';
         tbl.insertAdjacentHTML('beforeend', `
           <tr>
-            <td><b>${num}</b></td>
-            <td><span class="badge ${info.status}">${info.status}</span></td>
-            <td><button class="btn" onclick="showQR('${num}')">🔗</button></td>
+            <td><b>${info.name}</b></td>
+            <td><span class="badge ${status}">${status}</span></td>
+            <td><button class="btn" onclick="showQR('${info.name}')">🔗</button></td>
             <td>
-              <button class="btn" style="background:#fd5360" onclick="call('${num}','logout')">⏏</button>
-              <button class="btn" style="background:#ffbd4d" onclick="call('${num}','restart')">♻️</button>
-              <button class="btn" style="background:#3a4164" onclick="call('${num}','delete')">🗑</button>
+              <button class="btn" style="background:#fd5360" onclick="call('${info.name}','logout')">⏏</button>
+              <button class="btn" style="background:#ffbd4d" onclick="call('${info.name}','restart')">♻️</button>
+              <button class="btn" style="background:#3a4164" onclick="call('${info.name}','delete')">🗑</button>
             </td>
           </tr>`);
       });
@@ -103,12 +105,13 @@
     $('#btnAdd').onclick = async () => {
       const num = $('#instanceInput').value.replace(/\D/g,'');
       if (!num) return alert('Número inválido');
-      const res = await fetch(`${baseUrl}/instance/pair/${num}`, {
+      const res = await fetch(`${baseUrl}/instance`, {
         method: 'POST',
-        headers: getHeaders()
+        headers: { ...getHeaders(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: num, webhook: '<%= siteUrl %>/webhook/event', apiKey: $('#apikey').value.trim() })
       });
       const j = await res.json();
-      if (!j.status) return alert(j.error||'Falha ao criar instância');
+      if (!j.status && !j.name) return alert(j.error||'Falha ao criar instância');
       await refresh();
       showQR(num);
     };
@@ -117,9 +120,11 @@
       if (action==='logout' && !confirm('Desconectar?')) return;
       if (action==='restart'&& !confirm('Reiniciar?'))  return;
       if (action==='delete' && !confirm('Remover?'))   return;
-      await fetch(`${baseUrl}/instance/${action}/${num}`, {
-        method:'POST', headers:getHeaders()
-      });
+      if(action==='delete' || action==='logout'){
+        await fetch(`${baseUrl}/instance/${num}`, { method:'DELETE', headers:getHeaders() });
+      }else if(action==='restart'){
+        await fetch(`${baseUrl}/instance/${num}/restart`, { method:'POST', headers:getHeaders() });
+      }
       refresh();
     }
 
@@ -132,48 +137,30 @@
       let modo = null;
 
       try {
-        const res = await fetch(`${baseUrl}/instance/pair/${num}`, {
-          method: 'POST',
-          headers: getHeaders()
-        });
+        await fetch(`${baseUrl}/instance/${num}/reconnect`, { method:'POST', headers:getHeaders() });
+        const res = await fetch(`${baseUrl}/instance/${num}/qr`, { headers:getHeaders() });
         const data = await res.json();
-        if (data.status === 'conectado') {
-          box.textContent = '✅ Conectado!';
-          setTimeout(() => { closeModal(); refresh(); }, 600);
-          return;
+        if (data.qr) {
+          box.innerHTML = `<img src="${data.qr}" alt="QR Code" class="qr-img" onerror="this.parentElement.textContent='❌ Falha ao carregar QR';" />`;
+          startWatch(num);
+        } else {
+          box.textContent = '❌ QR indisponível';
         }
-        modo = data.modo;
-        if (modo === 'pairing_code' && data.code) {
-          box.innerHTML = `<pre id="pairCode" class="codigo">${data.code}</pre>`+
-                         `<button class="copy-btn" onclick="copyPair()">Copiar</button>`+
-                         `<small class="tip">Digite este código no WhatsApp</small>`;
-          return startWatch(num, modo);
-        }
-      } catch (e) {
-        console.warn('[pair] erro, fallback para QR');
-      }
-
-      try {
-        const src = `${baseUrl}/instance/qrcode/${num}?apikey=${encodeURIComponent($('#apikey').value.trim())}`;
-        box.innerHTML = `<img src="${src}" alt="QR Code" class="qr-img" onerror="this.parentElement.textContent='❌ Falha ao carregar QR';" />`;
-        startWatch(num, 'qr_code');
       } catch (e) {
         console.error('[qrcode] erro', e);
         box.textContent = '❌ Erro ao obter QR';
       }
     }
 
-    function startWatch(num, modo){
+    function startWatch(num){
       clearInterval(qrInterval);
       qrInterval = setInterval(async ()=>{
-        const res = await fetch(`${baseUrl}/instance/pairing-code/${num}`, { headers:getHeaders() });
+        const res = await fetch(`${baseUrl}/instance/${num}/status`, { headers:getHeaders() });
         const j   = await res.json();
-        if(j.status === 'conectado'){
+        if(j.status === 'connected'){
           $('#m-qr').textContent = '✅ Conectado!';
           clearInterval(qrInterval);
           setTimeout(() => { closeModal(); refresh(); }, 600);
-        }else if(j.code && modo === 'pairing_code'){
-          $('#pairCode').textContent = j.code;
         }
       }, 1000);
     }

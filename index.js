@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const axios = require('axios');
+const QRCode = require('qrcode');
 const path = require('path');
 const multer = require('multer');
 const storage = multer.memoryStorage(); // ou diskStorage se quiser salvar o arquivo
@@ -1305,13 +1306,12 @@ app.post('/conectarwhatsapp/criar', isAuthenticated, async (req, res) => {
     await nova.save();
     await new Promise(r => setTimeout(r, 300));
 
-    await axios.post(`${server.baseUrl}/instance/pair/${numero}`, {}, {
-      headers: { apikey: server.globalapikey }
-    });
-
-    await axios.post(`${server.baseUrl}/instance/pair/${numero}`, {}, {
-      headers: { apikey: server.globalapikey }
-    });
+    const base = (server.baseUrl || '').replace(/\/+$/, '');
+    await axios.post(
+      `${base}/api/instance`,
+      { name: numero, webhook: `${siteUrl}/webhook/event`, apiKey: server.globalapikey },
+      { headers: { 'x-api-key': server.globalapikey } }
+    );
 
     req.flash('success_msg', 'Instância criada com sucesso!');
   } catch (err) {
@@ -1329,8 +1329,9 @@ app.post('/conectarwhatsapp/acao/logout/:instance', isAuthenticated, async (req,
   try {
     const apiCfg = await BotApi.findOne({ instance: req.params.instance });
     if (!apiCfg) throw new Error('Instância não encontrada.');
-    await axios.post(`${apiCfg.baseUrl}/instance/logout/${req.params.instance}`, {}, {
-      headers: { apikey: apiCfg.globalapikey }
+    const base = apiCfg.baseUrl.replace(/\/+$/, '');
+    await axios.delete(`${base}/api/instance/${req.params.instance}`, {
+      headers: { 'x-api-key': apiCfg.globalapikey, 'x-instance-key': apiCfg.apikey }
     });
     req.flash('success_msg', 'Logout realizado com sucesso.');
   } catch (err) {
@@ -1345,8 +1346,9 @@ app.post('/conectarwhatsapp/acao/restart/:instance', isAuthenticated, async (req
   try {
     const apiCfg = await BotApi.findOne({ instance: req.params.instance });
     if (!apiCfg) throw new Error('Instância não encontrada.');
-    await axios.post(`${apiCfg.baseUrl}/instance/restart/${req.params.instance}`, {}, {
-      headers: { apikey: apiCfg.globalapikey }
+    const base = apiCfg.baseUrl.replace(/\/+$/, '');
+    await axios.post(`${base}/api/instance/${req.params.instance}/restart`, {}, {
+      headers: { 'x-api-key': apiCfg.globalapikey, 'x-instance-key': apiCfg.apikey }
     });
     req.flash('success_msg', 'Instância reiniciada.');
   } catch (err) {
@@ -1392,11 +1394,10 @@ app.post('/conectarwhatsapp/acao/delete/:instance', isAuthenticated, async (req,
 
     // 2) Apaga sessão WhatsApp no servidor remoto ANTES de excluir do banco
     try {
-      await axios.post(
-        `${instancia.baseUrl.replace(/\/+$/, '')}/instance/delete/${instancia.instance}`,
-        {},
-        { headers: { apikey: instancia.globalapikey } }
-      );
+      const base = instancia.baseUrl.replace(/\/+$/, '');
+      await axios.delete(`${base}/api/instance/${instancia.instance}`, {
+        headers: { 'x-api-key': instancia.globalapikey, 'x-instance-key': instancia.apikey }
+      });
       console.log(`🧹 Sessão WhatsApp apagada via API para: ${instancia.instance}`);
     } catch (err) {
       console.warn(`⚠️ Falha ao apagar sessão remota:`, err.message);
@@ -1423,23 +1424,17 @@ app.post('/conectarwhatsapp/pair/:instance', isAuthenticated, async (req, res) =
     if (!api) return res.json({ success: false, message: 'Instância não encontrada' });
 
     const base = (api.baseUrl || '').replace(/\/+$/, '');
-    try {
-      const { data } = await axios.post(`${base}/instance/pair/${api.instance}`, {}, {
-        headers: { apikey: api.globalapikey }
-      });
-      return res.json({ success: true, data });
-    } catch (err) {
-      try {
-        const qrRes = await axios.get(`${base}/instance/qrcode/${api.instance}`, {
-          headers: { apikey: api.globalapikey },
-          responseType: 'arraybuffer'
-        });
-        const qr = `data:image/png;base64,${Buffer.from(qrRes.data, 'binary').toString('base64')}`;
-        return res.json({ success: true, data: { modo: 'qr_code', qr } });
-      } catch (e2) {
-        return res.json({ success: false, message: e2.response?.data || e2.message });
-      }
+    await axios.post(`${base}/api/instance/${api.instance}/reconnect`, {}, {
+      headers: { 'x-api-key': api.globalapikey, 'x-instance-key': api.apikey }
+    });
+    const qrRes = await axios.get(`${base}/api/instance/${api.instance}/qr`, {
+      headers: { 'x-api-key': api.globalapikey, 'x-instance-key': api.apikey }
+    });
+    if (qrRes.data && qrRes.data.qr) {
+      const qrUrl = await QRCode.toDataURL(qrRes.data.qr);
+      return res.json({ success: true, data: { modo: 'qr_code', qr: qrUrl } });
     }
+    return res.json({ success: false, message: 'QR indisponível' });
   } catch (err) {
     res.json({ success: false, message: err.message });
   }

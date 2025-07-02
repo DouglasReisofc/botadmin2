@@ -779,18 +779,21 @@ function sanitizeBase(url) {
     return (url || '').replace(/\/+$/, '');
 }
 
-async function callApi(botApi, endpoint) {
+async function callInstance(botApi, method, subpath = '', data = {}) {
     const base = sanitizeBase(botApi.baseUrl);
-    const url = `${base}${endpoint}/${botApi.instance}`;
-    const headers = { apikey: botApi.globalapikey };
-    return axios.post(url, {}, { headers });
+    const url = `${base}/api/instance/${botApi.instance}${subpath}`;
+    const headers = {
+        'x-api-key': botApi.globalapikey,
+        'x-instance-key': botApi.apikey
+    };
+    return axios({ method, url, data, headers });
 }
 
-async function apiAction(req, res, endpoint) {
+async function apiAction(req, res, method, subpath) {
     try {
         const api = await BotApi.findById(req.params.id);
         if (!api) return res.json({ success: false, message: 'API não encontrada' });
-        await callApi(api, endpoint);
+        await callInstance(api, method, subpath);
         res.json({ success: true });
     } catch (err) {
         res.json({ success: false, message: err.message });
@@ -799,32 +802,20 @@ async function apiAction(req, res, endpoint) {
 
 
 
-// Exibe o QR ou código de pareamento da instância
+// Exibe o QR Code da instância
 async function pairCode(req, res) {
     try {
         const api = await BotApi.findById(req.params.id);
         if (!api) return res.json({ success: false, message: 'API não encontrada' });
 
-        const base = sanitizeBase(api.baseUrl);
-        try {
-            const { data } = await axios.post(`${base}/instance/pair/${api.instance}`, {}, {
-                headers: { apikey: api.globalapikey }
-            });
-            return res.json({ success: true, data });
-        } catch (err) {
-            try {
-                const qrRes = await axios.get(`${base}/instance/qrcode/${api.instance}`, {
-                    headers: { apikey: api.globalapikey },
-                    responseType: 'arraybuffer'
-                });
-                const qr = `data:image/png;base64,${Buffer.from(qrRes.data, 'binary').toString('base64')}`;
-                return res.json({ success: true, data: { modo: 'qr_code', qr } });
-            } catch (e2) {
-                return res.json({ success: false, message: e2.response?.data || e2.message });
-            }
+        await callInstance(api, 'post', '/reconnect');
+        const qrRes = await callInstance(api, 'get', '/qr');
+        if (qrRes.data && qrRes.data.qr) {
+            return res.json({ success: true, data: { modo: 'qr_code', qr: qrRes.data.qr } });
         }
+        res.json({ success: false, message: 'QR indisponível' });
     } catch (err) {
-        res.json({ success: false, message: err.message });
+        res.json({ success: false, message: err.response?.data?.error || err.message });
     }
 }
 
@@ -834,7 +825,7 @@ router.post('/api/:id/logout', isAuthenticated, isAdmin, async (req, res) => {
     try {
         const api = await BotApi.findById(req.params.id);
         if (!api) return res.json({ success: false, message: 'API não encontrada' });
-        await callApi(api, '/instance/logout');
+        await callInstance(api, 'delete');
         res.json({ success: true });
     } catch (err) {
         res.json({ success: false, message: err.message });
@@ -846,7 +837,7 @@ router.post('/api/:id/connect', isAuthenticated, isAdmin, async (req, res) => {
     try {
         const api = await BotApi.findById(req.params.id);
         if (!api) return res.json({ success: false, message: 'API não encontrada' });
-        await callApi(api, '/instance/restart');
+        await callInstance(api, 'post', '/reconnect');
         res.json({ success: true });
     } catch (err) {
         res.json({ success: false, message: err.message });
@@ -857,7 +848,7 @@ router.post('/api/:id/restart', isAuthenticated, isAdmin, async (req, res) => {
     try {
         const api = await BotApi.findById(req.params.id);
         if (!api) return res.json({ success: false, message: 'API não encontrada' });
-        await callApi(api, '/instance/restart');
+        await callInstance(api, 'post', '/restart');
         res.json({ success: true });
     } catch (err) {
         res.json({ success: false, message: err.message });
@@ -868,7 +859,7 @@ router.post('/api/:id/deleteSession', isAuthenticated, isAdmin, async (req, res)
     try {
         const api = await BotApi.findById(req.params.id);
         if (!api) return res.json({ success: false, message: 'API não encontrada' });
-        await callApi(api, '/instance/delete');
+        await callInstance(api, 'delete');
         res.json({ success: true });
     } catch (err) {
         res.json({ success: false, message: err.message });
