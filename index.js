@@ -1430,18 +1430,21 @@ app.post('/conectarwhatsapp/pair/:instance', isAuthenticated, async (req, res) =
     const api = await BotApi.findOne({ instance: req.params.instance, user: req.user._id });
     if (!api) return res.json({ success: false, message: 'Instância não encontrada' });
 
-    const base = (api.baseUrl || '').replace(/\/+$/, '');
-    await axios.post(`${base}/api/instance/${api.instance}/reconnect`, {}, {
-      headers: { 'x-api-key': api.globalapikey, 'x-instance-key': api.apikey }
-    });
-    const qrRes = await axios.get(`${base}/api/instance/${api.instance}/qr`, {
-      headers: { 'x-api-key': api.globalapikey, 'x-instance-key': api.apikey }
-    });
-    if (qrRes.data && qrRes.data.qr) {
-      const qrUrl = await QRCode.toDataURL(qrRes.data.qr);
-      return res.json({ success: true, data: { modo: 'qr_code', qr: qrUrl } });
-    }
-    return res.json({ success: false, message: 'QR indisponível' });
+  const base = (api.baseUrl || '').replace(/\/+$/, '');
+  const resp = await axios.post(
+    `${base}/api/instance/${api.instance}/pair`,
+    {},
+    { headers: { 'x-api-key': api.globalapikey, 'x-instance-key': api.apikey } }
+  );
+
+  if (resp.data?.qr) {
+    const qrUrl = await QRCode.toDataURL(resp.data.qr);
+    return res.json({ success: true, data: { modo: 'qr_code', qr: qrUrl } });
+  }
+  if (resp.data?.code) {
+    return res.json({ success: true, data: { modo: 'pair_code', code: resp.data.code } });
+  }
+  return res.json({ success: false, message: 'QR indisponível' });
   } catch (err) {
     res.json({ success: false, message: err.message });
   }
