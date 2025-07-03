@@ -127,6 +127,33 @@ async function startSocket(name, record) {
   sock.ev.on('creds.update', saveCreds);
 
   sock.ev.on('connection.update', async data => {
+    if (
+      usePairingCode &&
+      !state.creds.registered &&
+      data.connection === 'connecting' &&
+      !pairCodes.has(name)
+    ) {
+      try {
+        const phone = String(name).replace(/\D/g, '');
+        const code = await sock.requestPairingCode(phone);
+        if (code) {
+          pairCodes.set(name, code);
+          const formatted = formatPairCode(code);
+          console.log(`[${name}] \uD83D\uDD10 Pairing code: ${formatted}`);
+          qrcode.generate(code, { small: true });
+          dispatch(name, 'session.pair_code', { code });
+          await updateRecord(name, { pairCode: code });
+        }
+      } catch (err) {
+        console.warn(`[${name}] \u274C Erro ao gerar pairing code:`, err.message);
+        dispatch(name, 'session.pair_code_failed', { error: err.message });
+
+        // fallback pro QR
+        console.log(`[${name}] \uD83D\uDD04 Tentando fallback para QR code...`);
+        await deleteInstance(name, true);
+        await startSocket(name, record);
+      }
+    }
     if (data.qr) {
       qrCodes.set(name, data.qr);
       qrcode.generate(data.qr, { small: true });
@@ -176,24 +203,6 @@ async function startSocket(name, record) {
     }
   });
 
-  if (!state.creds.registered && usePairingCode) {
-    try {
-      await sock.waitForSocketOpen();
-      const phone = String(name).replace(/\D/g, '');
-      const code = await sock.requestPairingCode(phone);
-      if (code) {
-        pairCodes.set(name, code);
-        const formatted = formatPairCode(code);
-        console.log(`[${name}] pair code: ${formatted}`);
-        qrcode.generate(code, { small: true });
-        dispatch(name, 'session.pair_code', { code });
-        await updateRecord(name, { pairCode: code });
-      }
-    } catch (err) {
-      console.warn(`[${name}] failed to get pairing code:`, err.message);
-      dispatch(name, 'session.pair_code_failed', { error: err.message });
-    }
-  }
   sock.ev.on('messages.upsert', async ({ messages }) => {
     insertMessages(store, messages);
     for (const m of messages) await dispatch(name, 'message.upsert', m);
