@@ -242,7 +242,9 @@ async function requestPairCode(name) {
   if (!session) throw new Error('instance not found');
   const sock = session.sock;
   try {
+    // ensure socket is fully connected before requesting the pairing code
     await sock.waitForSocketOpen();
+
     const phone = String(name).replace(/\D/g, '');
     const code = await sock.requestPairingCode(phone);
     if (code) {
