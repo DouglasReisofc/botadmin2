@@ -119,6 +119,17 @@
   </div>
 </div>
 
+<div id="modalChooseQR" class="modal">
+  <div class="modal-content" style="max-width:360px; text-align:center;">
+    <h3>Escolha o tipo de código</h3>
+    <p>Como deseja se conectar?</p>
+    <div style="margin-top:1rem; display:flex; gap:.5rem; justify-content:center;">
+      <button class="bot-btn editar" onclick="solicitarCodigo('qr')">QR Code</button>
+      <button class="bot-btn editar" onclick="solicitarCodigo('pair')">Pairing Code</button>
+    </div>
+  </div>
+</div>
+
 <div id="modalHelp" class="modal">
   <div class="modal-content" style="max-width:480px; text-align:center;">
     <h3>📖 Como parear</h3>
@@ -161,6 +172,7 @@
   const numeroLocal        = document.getElementById('numeroLocal');
   const numeroFull         = document.getElementById('numeroFull');
   const modalInvalid       = document.getElementById('modalInvalid');
+  const modalChoose        = document.getElementById('modalChooseQR');
   const modalQR            = document.getElementById('modalQR');
   const qrCodigo           = document.getElementById('qrCodigo');
   const modalHelp          = document.getElementById('modalHelp');
@@ -195,15 +207,25 @@
   function closeInvalid()  { modalInvalid.classList.remove('active'); }
   function closeQR() {
     modalQR.classList.remove('active');
+    modalChoose.classList.remove('active');
+    instanciaAtual = null;
     qrCodigo.innerHTML = 'Aguardando…';
   }
 
   // 4) Pareamento via rota local
-  async function openQR(inst) {
+  var instanciaAtual = null;
+
+  function openQR(inst) {
+    instanciaAtual = inst;
+    modalChoose.classList.add('active');
+  }
+
+  async function solicitarCodigo(tipo) {
+    modalChoose.classList.remove('active');
     qrCodigo.textContent = '⌛ Gerando código…';
     modalQR.classList.add('active');
     try {
-      const res  = await fetch(`/conectarwhatsapp/pair/${inst}`, { method: 'POST' });
+      const res  = await fetch(`/conectarwhatsapp/pair/${instanciaAtual}?mode=${tipo}`, { method: 'POST' });
       const json = await res.json();
       if (!json.success) {
         qrCodigo.textContent = '❌ ' + json.message;
@@ -213,7 +235,7 @@
       if (data.status === 'conectado') {
         qrCodigo.textContent = '✅ Conectado!';
         setTimeout(() => { closeQR(); location.reload(); }, 600);
-      } else if (data.code) {
+      } else if (data.code && tipo !== 'qr') {
         qrCodigo.innerHTML = `
           <pre id="pairCode" class="codigo">${data.code}</pre>
           <button class="copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('pairCode').textContent)">Copiar</button>
@@ -221,6 +243,8 @@
         `;
       } else if (data.qr) {
         qrCodigo.innerHTML = `<img src="${data.qr}" class="qr-img" onerror="qrCodigo.textContent='❌ Falha ao carregar QR';" />`;
+      } else if (data.code) {
+        qrCodigo.textContent = data.code;
       }
     } catch (err) {
       qrCodigo.textContent = '❌ ' + err.message;
