@@ -179,8 +179,8 @@ router.post('/instance/:id/pair', checkInstance, async (req, res) => {
   const { id } = req.params;
   const mode = req.query.mode;
   try {
-    await restartInstance(id);
     const usePair = mode === 'pair' || (!mode && usePairingCode);
+    await restartInstance(id, usePair);
     if (usePair) {
       await requestPairCode(id).catch(() => {});
     }
@@ -203,8 +203,8 @@ router.post('/api/instance/:id/pair', checkInstance, async (req, res) => {
   const { id } = req.params;
   const mode = req.query.mode;
   try {
-    await restartInstance(id);
     const usePair = mode === 'pair' || (!mode && usePairingCode);
+    await restartInstance(id, usePair);
     if (usePair) {
       await requestPairCode(id).catch(() => {});
     }

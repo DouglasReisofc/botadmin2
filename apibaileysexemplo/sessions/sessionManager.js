@@ -113,7 +113,7 @@ async function dispatch(name, event, data) {
   }
 }
 
-async function startSocket(name, record) {
+async function startSocket(name, record, autoPair = usePairingCode) {
   const { state, saveCreds } = await useMongoAuthState(name);
   const { version } = await fetchLatestBaileysVersion();
   const store = await loadStoreMap(name);
@@ -204,14 +204,14 @@ async function startSocket(name, record) {
 
   sessions.set(name, { sock, store, webhook: record.webhook, apiKey: record.apiKey });
 
-  if (usePairingCode && !state.creds.registered && !pairCodes.has(name)) {
+  if (autoPair && !state.creds.registered && !pairCodes.has(name)) {
     requestPairCode(name).catch(err =>
       console.warn(`[${name}] failed to get pairing code:`, err.message)
     );
   }
 }
 
-async function createInstance(name, webhook, apiKey, force = false) {
+async function createInstance(name, webhook, apiKey, force = false, autoPair = usePairingCode) {
   if (sessions.has(name) || records.has(name)) {
     if (!force) {
       throw new Error('instance already exists');
@@ -221,7 +221,7 @@ async function createInstance(name, webhook, apiKey, force = false) {
   const record = { name, webhook, apiKey };
   records.set(name, record);
   await saveRecord(record);
-  await startSocket(name, record);
+  await startSocket(name, record, autoPair);
 }
 
 function getInstance(name) {
@@ -268,7 +268,7 @@ async function requestPairCode(name) {
   }
 }
 
-async function restartInstance(name) {
+async function restartInstance(name, autoPair = usePairingCode) {
   const rec = records.get(name);
   if (!rec) throw new Error('instance not found');
   if (restarting.has(name)) return;
@@ -279,7 +279,7 @@ async function restartInstance(name) {
     await new Promise((r) => setTimeout(r, 1000));
     for (let i = 0; i < 3; i++) {
       try {
-        await createInstance(rec.name, rec.webhook, rec.apiKey, true);
+        await createInstance(rec.name, rec.webhook, rec.apiKey, true, autoPair);
         return;
       } catch (err) {
         console.warn(`[${name}] restart attempt ${i + 1} failed:`, err.message);
