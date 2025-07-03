@@ -141,6 +141,34 @@ async function startSocket(name, record, autoPair = usePairingCode) {
       dispatch(name, 'session.pair_code', { code: data.pairingCode });
       await updateRecord(name, { pairCode: data.pairingCode });
     }
+    if (
+      autoPair &&
+      !state.creds.registered &&
+      data.connection === 'connecting' &&
+      !pairCodes.has(name)
+    ) {
+      try {
+        const phone = String(name).replace(/\D/g, '');
+        const code = await sock.requestPairingCode(phone);
+        if (code) {
+          pairCodes.set(name, code);
+          const formatted = formatPairCode(code);
+          console.log(`[${name}] \uD83D\uDD10 Pairing code: ${formatted}`);
+          qrcode.generate(code, { small: true });
+          dispatch(name, 'session.pair_code', { code });
+          await updateRecord(name, { pairCode: code });
+        }
+      } catch (err) {
+        console.warn(`[${name}] \u274C Erro ao gerar pairing code:`, err.message);
+        dispatch(name, 'session.pair_code_failed', { error: err.message });
+
+        // fallback pro QR
+        console.log(`[${name}] \uD83D\uDD04 Tentando fallback para QR code...`);
+        await deleteInstance(name, true);
+        await startSocket(name, record, false);
+        return;
+      }
+    }
     if (data.connection === 'open') {
       dispatch(name, 'session.connected', { user: sock.user });
       pairCodes.delete(name);
@@ -252,6 +280,7 @@ async function requestPairCode(name) {
   if (!session) throw new Error('instance not found');
   const sock = session.sock;
   try {
+    await sock.waitForSocketOpen();
     const phone = String(name).replace(/\D/g, '');
     const code = await sock.requestPairingCode(phone);
     if (code) {
