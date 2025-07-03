@@ -250,6 +250,18 @@
 </div>
 
 <!-- Modal de QR / Pareamento -->
+<div class="modal" id="modalChooseQR">
+  <div class="modal-content" style="max-width:360px; text-align:center;">
+    <h3>Escolha o tipo de código</h3>
+    <p>Como deseja se conectar?</p>
+    <div style="margin-top:1rem; display:flex; gap:.5rem; justify-content:center;">
+      <button class="bot-btn editar" onclick="solicitarTipo('qr')">QR Code</button>
+      <button class="bot-btn editar" onclick="solicitarTipo('pair')">Pairing Code</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de QR / Pareamento -->
 <div class="modal" id="qrModal">
   <div class="modal-content" style="max-width: 400px; text-align: center;">
     <button class="close-btn" onclick="closeModal('qrModal')">&times;</button>

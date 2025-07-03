@@ -915,7 +915,8 @@ async function pairCode(req, res) {
 
         let qrRes;
         try {
-            qrRes = await callInstance(api, 'post', '/pair');
+            const mode = req.query.mode ? `?mode=${req.query.mode}` : '';
+            qrRes = await callInstance(api, 'post', `/pair${mode}`);
         } catch (err) {
             try {
                 const qrOnly = await callInstance(api, 'get', '/qr');

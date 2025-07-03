@@ -31,14 +31,22 @@ function closeModal(id) {
 
 // ================== QR / PAREAMENTO ==================
 
-async function showQR(id) {
+let currentApiId = null;
+
+function showQR(id) {
+    currentApiId = id;
+    openModal('modalChooseQR');
+}
+
+async function solicitarTipo(tipo) {
+    closeModal('modalChooseQR');
     const box = document.getElementById('qrCodigo');
     if (!box) return;
     box.textContent = '⌛ Gerando…';
     openModal('qrModal');
 
     try {
-        const resp = await fetch(`/admin/api/${id}/pair`, { method: 'POST' });
+        const resp = await fetch(`/admin/api/${currentApiId}/pair?mode=${tipo}`, { method: 'POST' });
         const result = await resp.json();
         if (!result.success) throw new Error(result.message || 'falha');
         const d = result.data || {};
@@ -56,7 +64,7 @@ async function showQR(id) {
         }
     } catch (err) {
         try {
-            const res = await fetch(`/admin/api/${id}/qrdata`);
+            const res = await fetch(`/admin/api/${currentApiId}/qrdata`);
             const data = await res.json();
             if (data.success && data.data) {
                 const d = data.data;
