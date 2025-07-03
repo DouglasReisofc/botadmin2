@@ -8,8 +8,10 @@ function sanitizeBase(url) {
   return (url || '').replace(/\/+$/, '');
 }
 
-function headers(apiKey) {
-  return { 'x-api-key': apiKey };
+function headers(apiKey, instanceKey = apiKey) {
+  const h = { 'x-api-key': apiKey };
+  if (instanceKey) h['x-instance-key'] = instanceKey;
+  return h;
 }
 
 async function sendText(serverUrl, apiKey, instance, number, text, quoted = null, mentionAll = false, mentionIds = []) {

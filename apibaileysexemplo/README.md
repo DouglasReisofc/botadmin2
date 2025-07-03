@@ -75,6 +75,7 @@ Todas as rotas exigem o cabeçalho `x-api-key` com a chave definida em `GLOBAL_A
 - `POST /api/message/media` – envia mídia base64 `{ instance, number, mimetype, media, caption?, ghost?, quotedId? }`.
 - `POST /api/message/poll` – envia enquetes `{ instance, number, question, options[], multiple? }`.
 - `POST /api/message/delete` – remove uma mensagem `{ instance, number, messageId }`.
+- `POST /api/chat/markMessageAsRead/:id` – marca mensagens como lidas passando `{ readMessages: [{ remoteJid, id }] }` no corpo.
 
 #### Ações de Grupos
 

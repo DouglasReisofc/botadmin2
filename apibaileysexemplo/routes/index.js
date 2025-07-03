@@ -102,6 +102,7 @@ const {
   openGroupWindow
 } = require('../controllers/groupController');
 const { fetchStatus, block, unblock } = require('../controllers/contactController');
+const { getInstance } = require('../sessions/sessionManager');
 
 router.get('/instances', async (req, res) => {
   res.json({ instances: await listInstances() });
@@ -299,6 +300,23 @@ router.post('/message/downloadMedia', checkInstance, downloadMedia);
 router.post('/message/sendStickerFromUrl', checkInstance, sendStickerFromUrl);
 router.post('/message/pinQuoted', checkInstance, pinQuoted);
 router.post('/message/unpin', checkInstance, unpin);
+
+// Mark messages as read
+router.post('/chat/markMessageAsRead/:id', checkInstance, async (req, res) => {
+  const { id } = req.params;
+  const { readMessages } = req.body || {};
+  const sock = getInstance(id);
+  if (!sock) return res.status(404).json({ error: 'Instance not found' });
+  if (!Array.isArray(readMessages) || !readMessages.length) {
+    return res.status(400).json({ error: 'readMessages array required' });
+  }
+  try {
+    await sock.readMessages(readMessages);
+    res.json({ status: 'ok' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // Group endpoints
 router.post('/group', checkInstance, createGroup);
