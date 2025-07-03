@@ -146,10 +146,17 @@ async function startSocket(name, record) {
       qrCodes.delete(name);
       await updateRecord(name, { qr: null, pairCode: null });
     } else if (data.connection === 'close') {
-      dispatch(name, 'session.disconnected', { reason: data.lastDisconnect?.error?.message });
+      const reason = data.lastDisconnect?.error?.message;
+      dispatch(name, 'session.disconnected', { reason });
       pairCodes.delete(name);
       await updateRecord(name, { qr: null, pairCode: null });
-      if (state.creds.registered && !restarting.has(name)) {
+
+      if (/Connection Terminated/i.test(reason || '') && !restarting.has(name)) {
+        console.log(`[${name}] connection terminated, restarting for re-pair`);
+        restartInstance(name).catch(err =>
+          console.error(`[${name}] auto restart failed:`, err.message)
+        );
+      } else if (state.creds.registered && !restarting.has(name)) {
         console.log(`[${name}] automatic reconnection attempt`);
         restartInstance(name).catch(err =>
           console.error(`[${name}] auto restart failed:`, err.message)
