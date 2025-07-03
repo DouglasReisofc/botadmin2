@@ -37,6 +37,7 @@ const {
   getInstanceStatus,
   getInstanceQR,
   getPairCode,
+  requestPairCode,
   restartInstance,
   updateInstance,
   deleteInstance,
@@ -156,6 +157,7 @@ router.post('/instance/:id/pair', checkInstance, async (req, res) => {
   const { id } = req.params;
   try {
     await restartInstance(id);
+    await requestPairCode(id).catch(() => {});
     const start = Date.now();
     while (Date.now() - start < 15000) {
       const qr = getInstanceQR(id);
@@ -175,6 +177,7 @@ router.post('/api/instance/:id/pair', checkInstance, async (req, res) => {
   const { id } = req.params;
   try {
     await restartInstance(id);
+    await requestPairCode(id).catch(() => {});
     const start = Date.now();
     while (Date.now() - start < 15000) {
       const qr = getInstanceQR(id);

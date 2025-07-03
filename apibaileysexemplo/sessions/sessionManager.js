@@ -219,6 +219,30 @@ function getPairCode(name) {
   return pairCodes.get(name) || null;
 }
 
+async function requestPairCode(name) {
+  const session = sessions.get(name);
+  if (!session) throw new Error('instance not found');
+  const sock = session.sock;
+  try {
+    await sock.waitForSocketOpen();
+    const phone = String(name).replace(/\D/g, '');
+    const code = await sock.requestPairingCode(phone);
+    if (code) {
+      pairCodes.set(name, code);
+      const formatted = formatPairCode(code);
+      console.log(`[${name}] pair code: ${formatted}`);
+      qrcode.generate(code, { small: true });
+      dispatch(name, 'session.pair_code', { code });
+      await updateRecord(name, { pairCode: code });
+    }
+    return code;
+  } catch (err) {
+    console.warn(`[${name}] failed to get pairing code:`, err.message);
+    dispatch(name, 'session.pair_code_failed', { error: err.message });
+    throw err;
+  }
+}
+
 async function restartInstance(name) {
   const rec = records.get(name);
   if (!rec) throw new Error('instance not found');
@@ -303,6 +327,7 @@ module.exports = {
   getInstanceStatus,
   getInstanceQR,
   getPairCode,
+  requestPairCode,
   restartInstance,
   updateInstance,
   deleteInstance,
