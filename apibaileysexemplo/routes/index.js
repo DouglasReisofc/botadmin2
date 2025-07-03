@@ -90,8 +90,7 @@ router.post('/instance', async (req, res) => {
   const { name, webhook, apiKey } = req.body;
   const force = req.query.force === '1' || req.query.force === 'true';
   try {
-    if (force) await deleteInstance(name);
-    await createInstance(name, webhook, apiKey);
+    await createInstance(name, webhook, apiKey, force);
     res.json({ status: 'instance created', name });
   } catch (e) {
     const status = /exists/i.test(e.message) ? 409 : 500;
@@ -104,8 +103,7 @@ router.post('/api/instance', async (req, res) => {
   const { name, webhook, apiKey } = req.body;
   const force = req.query.force === '1' || req.query.force === 'true';
   try {
-    if (force) await deleteInstance(name);
-    await createInstance(name, webhook, apiKey);
+    await createInstance(name, webhook, apiKey, force);
     res.json({ status: 'instance created', name });
   } catch (e) {
     const status = /exists/i.test(e.message) ? 409 : 500;

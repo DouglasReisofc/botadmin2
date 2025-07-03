@@ -203,9 +203,12 @@ async function startSocket(name, record) {
   sessions.set(name, { sock, store, webhook: record.webhook, apiKey: record.apiKey });
 }
 
-async function createInstance(name, webhook, apiKey) {
+async function createInstance(name, webhook, apiKey, force = false) {
   if (sessions.has(name) || records.has(name)) {
-    throw new Error('instance already exists');
+    if (!force) {
+      throw new Error('instance already exists');
+    }
+    await deleteInstance(name);
   }
   const record = { name, webhook, apiKey };
   records.set(name, record);
