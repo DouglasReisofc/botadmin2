@@ -16,6 +16,7 @@ const FileStore = require('./utils/fileStore');
 const compression = require('compression');
 const cron = require('node-cron')
 const { normalizeJid } = require('./utils/phone');
+const { formatPairCode } = require('./utils/pairCode');
 
 const mainrouter = require('./apis')
 const userRouters = require('./routes/users');
@@ -1468,7 +1469,8 @@ app.post('/conectarwhatsapp/pair/:instance', isAuthenticated, async (req, res) =
     return res.json({ success: true, data: { qr: qrUrl } });
   }
   if (resp.data?.code) {
-    return res.json({ success: true, data: { code: resp.data.code } });
+    const code = formatPairCode(resp.data.code);
+    return res.json({ success: true, data: { code } });
   }
   return res.json({ success: false, message: 'QR indisponível' });
   } catch (err) {

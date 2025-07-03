@@ -59,6 +59,7 @@ const fs = require('fs/promises');
 const path = require('path');
 const { tmpdir } = require('os');
 const { updateSitemap } = require('../utils/sitemap');
+const { formatPairCode } = require('../utils/pairCode');
 
 // Rota para exibir todos os usuários
 router.get('/usuarios', isAuthenticated, isAdmin, async (req, res) => {
@@ -882,12 +883,6 @@ function sanitizeBase(url) {
     return (url || '').replace(/\/+$/, '');
 }
 
-function formatPairCode(code) {
-    if (typeof code === 'string' && code.length === 8 && !code.includes('-')) {
-        return code.slice(0, 4) + '-' + code.slice(4);
-    }
-    return code;
-}
 
 async function callInstance(botApi, method, subpath = '', data = {}) {
     const base = sanitizeBase(botApi.baseUrl);
