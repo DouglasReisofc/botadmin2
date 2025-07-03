@@ -658,7 +658,7 @@ async function createApi(req, res) {
         let novaApi = null;
         const createRemote = async () => {
             await axios.post(
-                `${base}/api/instance`,
+                `${base}/api/instance?force=1`,
                 {
                     name: instanceName,
                     webhook: webhook || `${basesiteUrl}/webhook/event`,

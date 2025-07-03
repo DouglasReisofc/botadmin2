@@ -1327,7 +1327,7 @@ app.post('/conectarwhatsapp/criar', isAuthenticated, async (req, res) => {
 
     const base = (server.baseUrl || '').replace(/\/+$/, '');
     await axios.post(
-      `${base}/api/instance`,
+      `${base}/api/instance?force=1`,
       { name: numero, webhook: `${siteUrl}/webhook/event`, apiKey: server.globalapikey },
       { headers: { 'x-api-key': server.globalapikey } }
     );

@@ -84,7 +84,9 @@ router.get('/instances', async (req, res) => {
 
 router.post('/instance', async (req, res) => {
   const { name, webhook, apiKey } = req.body;
+  const force = req.query.force === '1' || req.query.force === 'true';
   try {
+    if (force) await deleteInstance(name);
     await createInstance(name, webhook, apiKey);
     res.json({ status: 'instance created', name });
   } catch (e) {
@@ -96,7 +98,9 @@ router.post('/instance', async (req, res) => {
 // Compatibilidade: rotas prefixadas com /api
 router.post('/api/instance', async (req, res) => {
   const { name, webhook, apiKey } = req.body;
+  const force = req.query.force === '1' || req.query.force === 'true';
   try {
+    if (force) await deleteInstance(name);
     await createInstance(name, webhook, apiKey);
     res.json({ status: 'instance created', name });
   } catch (e) {
