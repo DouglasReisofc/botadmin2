@@ -347,6 +347,7 @@ async function deleteInstance(name, preserveRecord = false) {
   }
   qrCodes.delete(name);
   pairCodes.delete(name);
+  dispatch(name, 'session.deleted', { preserveRecord });
 }
 
 async function listInstances() {
