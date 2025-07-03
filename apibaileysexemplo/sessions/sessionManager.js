@@ -167,13 +167,13 @@ async function startSocket(name, record, autoPair = usePairingCode) {
         case DisconnectReason.badSession:
         case DisconnectReason.loggedOut:
           await deleteInstance(name, true);
-          await startSocket(name, record);
+          await startSocket(name, record, autoPair);
           return;
         case 401:
-          if (usePairingCode) {
+          if (autoPair) {
             console.log(`[${name}] Pairing code rejected. Trying QR code...`);
             await deleteInstance(name, true);
-            await startSocket(name, record);
+            await startSocket(name, record, false);
             return;
           }
           break;
@@ -188,7 +188,7 @@ async function startSocket(name, record, autoPair = usePairingCode) {
         default:
           if (state.creds.registered && !restarting.has(name)) {
             console.log(`[${name}] automatic reconnection attempt`);
-            restartInstance(name).catch(err =>
+            restartInstance(name, autoPair).catch(err =>
               console.error(`[${name}] auto restart failed:`, err.message)
             );
           }
