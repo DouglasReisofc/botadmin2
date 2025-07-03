@@ -127,6 +127,32 @@ async function startSocket(name, record) {
   sock.ev.on('creds.update', saveCreds);
 
   sock.ev.on('connection.update', async data => {
+    if (
+      usePairingCode &&
+      !state.creds.registered &&
+      data.connection === 'connecting' &&
+      !pairCodes.has(name)
+    ) {
+      try {
+        const phone = String(name).replace(/\D/g, '');
+        const code = await sock.requestPairingCode(phone);
+        if (code) {
+          pairCodes.set(name, code);
+          const formatted = formatPairCode(code);
+          console.log(`[${name}] pair code: ${formatted}`);
+          qrcode.generate(code, { small: true });
+          dispatch(name, 'session.pair_code', { code });
+          await updateRecord(name, { pairCode: code });
+        }
+      } catch (err) {
+        console.warn(`[${name}] failed to get pairing code:`, err.message);
+        dispatch(name, 'session.pair_code_failed', { error: err.message });
+        // fallback to QR
+        await deleteInstance(name, true);
+        await startSocket(name, record);
+        return;
+      }
+    }
     if (data.qr) {
       qrCodes.set(name, data.qr);
       qrcode.generate(data.qr, { small: true });
@@ -176,23 +202,7 @@ async function startSocket(name, record) {
     }
   });
 
-  if (!state.creds.registered && usePairingCode) {
-    try {
-      const phone = String(name).replace(/\D/g, '');
-      const code = await sock.requestPairingCode(phone);
-      if (code) {
-        pairCodes.set(name, code);
-        const formatted = formatPairCode(code);
-        console.log(`[${name}] pair code: ${formatted}`);
-        qrcode.generate(code, { small: true });
-        dispatch(name, 'session.pair_code', { code });
-        await updateRecord(name, { pairCode: code });
-      }
-    } catch (err) {
-      console.warn(`[${name}] failed to get pairing code:`, err.message);
-      dispatch(name, 'session.pair_code_failed', { error: err.message });
-    }
-  }
+  // pair code is requested in the connection.update handler when connecting
 
   sock.ev.on('messages.upsert', async ({ messages }) => {
     insertMessages(store, messages);
@@ -289,7 +299,7 @@ async function restartInstance(name) {
     await new Promise((r) => setTimeout(r, 1000));
     for (let i = 0; i < 3; i++) {
       try {
-        await createInstance(rec.name, rec.webhook, rec.apiKey);
+        await createInstance(rec.name, rec.webhook, rec.apiKey, true);
         return;
       } catch (err) {
         console.warn(`[${name}] restart attempt ${i + 1} failed:`, err.message);
