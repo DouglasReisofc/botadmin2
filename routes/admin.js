@@ -927,13 +927,15 @@ async function pairCode(req, res) {
             return res.json({ success: false, message: err.response?.data?.error || err.message });
         }
 
+        const data = {};
         if (qrRes.data?.qr) {
-            const qrUrl = await QRCode.toDataURL(qrRes.data.qr);
-            return res.json({ success: true, data: { qr: qrUrl } });
+            data.qr = await QRCode.toDataURL(qrRes.data.qr);
         }
         if (qrRes.data?.code) {
-            const code = formatPairCode(qrRes.data.code);
-            return res.json({ success: true, data: { code } });
+            data.code = formatPairCode(qrRes.data.code);
+        }
+        if (Object.keys(data).length) {
+            return res.json({ success: true, data });
         }
         res.json({ success: false, message: 'QR indisponível' });
     } catch (err) {

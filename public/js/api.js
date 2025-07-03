@@ -42,12 +42,13 @@ async function showQR(id) {
         const result = await resp.json();
         if (!result.success) throw new Error(result.message || 'falha');
         const d = result.data || {};
-        if (d.qr) {
-            box.innerHTML = `<img src="${d.qr}" alt="QR Code" class="qr-img"
-                         onerror="this.parentElement.textContent='❌ Falha ao carregar QR';" />`;
+        if (d.qr && d.code) {
+            box.innerHTML = `<img src="${d.qr}" alt="QR Code" class="qr-img" onerror="this.parentElement.textContent='❌ Falha ao carregar QR';" />` +
+                            `<pre class="codigo">${d.code}</pre><small class="tip">Ou digite este código no WhatsApp</small>`;
+        } else if (d.qr) {
+            box.innerHTML = `<img src="${d.qr}" alt="QR Code" class="qr-img" onerror="this.parentElement.textContent='❌ Falha ao carregar QR';" />`;
         } else if (d.code) {
-            box.innerHTML = `<pre class="codigo">${d.code}</pre>
-                       <small class="tip">Digite este código no WhatsApp</small>`;
+            box.innerHTML = `<pre class="codigo">${d.code}</pre><small class="tip">Digite este código no WhatsApp</small>`;
         } else if (d.status === 'conectado') {
             box.textContent = '✅ Conectado!';
         } else {
@@ -59,12 +60,13 @@ async function showQR(id) {
             const data = await res.json();
             if (data.success && data.data) {
                 const d = data.data;
-                if (d.qr) {
-                    box.innerHTML = `<img src="${d.qr}" alt="QR Code" class="qr-img"
-                                 onerror="this.parentElement.textContent='❌ Falha ao carregar QR';" />`;
+                if (d.qr && d.code) {
+                    box.innerHTML = `<img src="${d.qr}" alt="QR Code" class="qr-img" onerror="this.parentElement.textContent='❌ Falha ao carregar QR';" />` +
+                                   `<pre class="codigo">${d.code}</pre><small class="tip">Ou digite este código no WhatsApp</small>`;
+                } else if (d.qr) {
+                    box.innerHTML = `<img src="${d.qr}" alt="QR Code" class="qr-img" onerror="this.parentElement.textContent='❌ Falha ao carregar QR';" />`;
                 } else if (d.code) {
-                    box.innerHTML = `<pre class="codigo">${d.code}</pre>
-                               <small class="tip">Digite este código no WhatsApp</small>`;
+                    box.innerHTML = `<pre class="codigo">${d.code}</pre><small class="tip">Digite este código no WhatsApp</small>`;
                 } else {
                     box.textContent = 'Código indisponível';
                 }

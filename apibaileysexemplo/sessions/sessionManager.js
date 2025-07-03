@@ -19,6 +19,7 @@ const records = new Map(); // name -> { name, webhook, apiKey }
 const qrCodes = new Map();
 const pairCodes = new Map();
 const restarting = new Set();
+const { formatPairCode } = require('../utils/pairCode');
 
 async function loadStoreMap(name) {
   const coll = await getStoreCollection();
@@ -149,6 +150,9 @@ async function startSocket(name, record) {
       const code = await sock.requestPairingCode(phone);
       if (code) {
         pairCodes.set(name, code);
+        const formatted = formatPairCode(code);
+        console.log(`[${name}] pair code: ${formatted}`);
+        qrcode.generate(code, { small: true });
         dispatch(name, 'session.pair_code', { code });
         await updateRecord(name, { pairCode: code });
       }

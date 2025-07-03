@@ -1464,13 +1464,15 @@ app.post('/conectarwhatsapp/pair/:instance', isAuthenticated, async (req, res) =
     return res.json({ success: false, message: err.response?.data?.error || err.message });
   }
 
+  const data = {};
   if (resp.data?.qr) {
-    const qrUrl = await QRCode.toDataURL(resp.data.qr);
-    return res.json({ success: true, data: { qr: qrUrl } });
+    data.qr = await QRCode.toDataURL(resp.data.qr);
   }
   if (resp.data?.code) {
-    const code = formatPairCode(resp.data.code);
-    return res.json({ success: true, data: { code } });
+    data.code = formatPairCode(resp.data.code);
+  }
+  if (Object.keys(data).length) {
+    return res.json({ success: true, data });
   }
   return res.json({ success: false, message: 'QR indisponível' });
   } catch (err) {
