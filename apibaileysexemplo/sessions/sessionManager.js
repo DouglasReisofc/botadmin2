@@ -117,7 +117,8 @@ async function startSocket(name, record) {
   const store = await loadStoreMap(name);
   const sock = makeWASocket({
     version,
-    logger: P({ level: 'silent' }),
+    // log a bit more info to help diagnose connection issues
+    logger: P({ level: 'info' }),
     printQRInTerminal: !usePairingCode,
     auth: state,
     browser: ['Ubuntu', 'Chrome', '']
@@ -130,6 +131,14 @@ async function startSocket(name, record) {
       qrcode.generate(data.qr, { small: true });
       dispatch(name, 'session.qr.updated', { qr: data.qr });
       await updateRecord(name, { qr: data.qr, pairCode: null });
+    }
+    if (data.pairingCode) {
+      pairCodes.set(name, data.pairingCode);
+      const formatted = formatPairCode(data.pairingCode);
+      console.log(`[${name}] pair code: ${formatted}`);
+      qrcode.generate(data.pairingCode, { small: true });
+      dispatch(name, 'session.pair_code', { code: data.pairingCode });
+      await updateRecord(name, { pairCode: data.pairingCode });
     }
     if (data.connection === 'open') {
       dispatch(name, 'session.connected', { user: sock.user });
