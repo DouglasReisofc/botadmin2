@@ -35,6 +35,27 @@ async function checkInstance(req, res, next) {
   req.instanceName = name;
   next();
 }
+
+// used for delete routes - succeeds even if record is missing
+async function locateInstance(req, res, next) {
+  const body = req.body || {};
+  const name =
+    body.instance || (req.query ? req.query.instance : undefined) || req.params.id;
+  if (!name || name === 'undefined') {
+    return res.status(400).json({ error: 'Instance required' });
+  }
+  const record = await getRecord(name);
+  const key =
+    req.headers['x-instance-key'] ||
+    body.instanceKey ||
+    (req.query ? req.query.instanceKey : undefined);
+  if (record && record.apiKey && record.apiKey !== key) {
+    return res.status(401).json({ error: 'Invalid instance key' });
+  }
+  req.instanceName = name;
+  req.instanceRecord = record || null;
+  next();
+}
 const {
   createInstance,
   getInstanceStatus,
@@ -238,20 +259,24 @@ router.post('/api/instance/:id/reconnect', checkInstance, async (req, res) => {
   }
 });
 
-router.delete('/instance/:id', checkInstance, async (req, res) => {
+router.delete('/instance/:id', locateInstance, async (req, res) => {
   const { id } = req.params;
   try {
-    await deleteInstance(id);
+    if (req.instanceRecord) {
+      await deleteInstance(id);
+    }
     res.json({ status: 'deleted', id });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-router.delete('/api/instance/:id', checkInstance, async (req, res) => {
+router.delete('/api/instance/:id', locateInstance, async (req, res) => {
   const { id } = req.params;
   try {
-    await deleteInstance(id);
+    if (req.instanceRecord) {
+      await deleteInstance(id);
+    }
     res.json({ status: 'deleted', id });
   } catch (e) {
     res.status(500).json({ error: e.message });
