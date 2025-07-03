@@ -119,7 +119,6 @@ async function startSocket(name, record) {
     version,
     // log a bit more info to help diagnose connection issues
     logger: P({ level: 'info' }),
-    printQRInTerminal: !usePairingCode,
     auth: state,
     browser: ['Ubuntu', 'Chrome', '110.0.0.0']
   });
