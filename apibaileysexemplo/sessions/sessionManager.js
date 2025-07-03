@@ -22,6 +22,10 @@ const restarting = new Set();
 // helper lives in the project root
 const { formatPairCode } = require('../../utils/pairCode');
 
+const usePairingCode =
+  process.env.USE_PAIRING_CODE === '1' ||
+  process.env.USE_PAIRING_CODE === 'true';
+
 async function loadStoreMap(name) {
   const coll = await getStoreCollection();
   const doc = await coll.findOne({ name });
@@ -113,9 +117,10 @@ async function startSocket(name, record) {
   const store = await loadStoreMap(name);
   const sock = makeWASocket({
     version,
-    logger: P({ level: 'info' }),
-    printQRInTerminal: false,
-    auth: state
+    logger: P({ level: 'silent' }),
+    printQRInTerminal: !usePairingCode,
+    auth: state,
+    browser: ['Ubuntu', 'Chrome', '']
   });
   sock.ev.on('creds.update', saveCreds);
 
@@ -144,7 +149,7 @@ async function startSocket(name, record) {
     }
   });
 
-  if (!state.creds.registered) {
+  if (!state.creds.registered && usePairingCode) {
     try {
       await sock.waitForSocketOpen();
       const phone = String(name).replace(/\D/g, '');
@@ -220,6 +225,7 @@ function getPairCode(name) {
 }
 
 async function requestPairCode(name) {
+  if (!usePairingCode) return null;
   const session = sessions.get(name);
   if (!session) throw new Error('instance not found');
   const sock = session.sock;

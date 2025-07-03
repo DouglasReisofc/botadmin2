@@ -3,6 +3,9 @@ const router = express.Router();
 const { log } = require('../utils/logger');
 const GLOBAL_KEY =
   process.env.GLOBAL_API_KEY || 'AIAO1897AHJAKACMC817ADOU';
+const usePairingCode =
+  process.env.USE_PAIRING_CODE === '1' ||
+  process.env.USE_PAIRING_CODE === 'true';
 
 router.use((req, res, next) => {
   const key = req.headers['x-api-key'] || req.query.apiKey;
@@ -157,7 +160,9 @@ router.post('/instance/:id/pair', checkInstance, async (req, res) => {
   const { id } = req.params;
   try {
     await restartInstance(id);
-    await requestPairCode(id).catch(() => {});
+    if (usePairingCode) {
+      await requestPairCode(id).catch(() => {});
+    }
     const start = Date.now();
     while (Date.now() - start < 15000) {
       const qr = getInstanceQR(id);
@@ -177,7 +182,9 @@ router.post('/api/instance/:id/pair', checkInstance, async (req, res) => {
   const { id } = req.params;
   try {
     await restartInstance(id);
-    await requestPairCode(id).catch(() => {});
+    if (usePairingCode) {
+      await requestPairCode(id).catch(() => {});
+    }
     const start = Date.now();
     while (Date.now() - start < 15000) {
       const qr = getInstanceQR(id);
