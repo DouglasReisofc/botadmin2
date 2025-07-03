@@ -146,17 +146,10 @@ async function startSocket(name, record) {
       qrCodes.delete(name);
       await updateRecord(name, { qr: null, pairCode: null });
     } else if (data.connection === 'close') {
-      const reason = data.lastDisconnect?.error?.message;
-      dispatch(name, 'session.disconnected', { reason });
+      dispatch(name, 'session.disconnected', { reason: data.lastDisconnect?.error?.message });
       pairCodes.delete(name);
       await updateRecord(name, { qr: null, pairCode: null });
-
-      if (/Connection Terminated/i.test(reason || '') && !restarting.has(name)) {
-        console.log(`[${name}] connection terminated, restarting for re-pair`);
-        restartInstance(name).catch(err =>
-          console.error(`[${name}] auto restart failed:`, err.message)
-        );
-      } else if (state.creds.registered && !restarting.has(name)) {
+      if (state.creds.registered && !restarting.has(name)) {
         console.log(`[${name}] automatic reconnection attempt`);
         restartInstance(name).catch(err =>
           console.error(`[${name}] auto restart failed:`, err.message)
@@ -249,9 +242,8 @@ async function requestPairCode(name) {
   if (!session) throw new Error('instance not found');
   const sock = session.sock;
   try {
-    // ensure socket is fully connected before requesting the pairing code
+    // ensure the socket connection is ready before requesting the code
     await sock.waitForSocketOpen();
-
     const phone = String(name).replace(/\D/g, '');
     const code = await sock.requestPairingCode(phone);
     if (code) {
