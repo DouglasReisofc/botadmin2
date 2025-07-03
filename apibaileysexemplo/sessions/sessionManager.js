@@ -180,7 +180,7 @@ async function startSocket(name, record, autoPair = usePairingCode) {
         case DisconnectReason.restartRequired:
           if (!restarting.has(name)) {
             console.log(`[${name}] restart required`);
-            restartInstance(name, autoPair).catch(err =>
+            restartInstance(name, autoPair, false).catch(err =>
               console.error(`[${name}] auto restart failed:`, err.message)
             );
           }
@@ -282,25 +282,27 @@ async function requestPairCode(name) {
   }
 }
 
-async function restartInstance(name, autoPair = usePairingCode) {
+async function restartInstance(name, autoPair = usePairingCode, wipe = true) {
   const rec = records.get(name);
   if (!rec) throw new Error('instance not found');
   if (restarting.has(name)) return;
   restarting.add(name);
   try {
-    await deleteInstance(name);
+    if (wipe) {
+      await deleteInstance(name, true);
+    } else {
+      const session = sessions.get(name);
+      if (session) {
+        session.sock.end();
+        sessions.delete(name);
+      }
+      qrCodes.delete(name);
+      pairCodes.delete(name);
+      await updateRecord(name, { qr: null, pairCode: null });
+    }
     // aguarda um curto período para liberar a conexão antiga
     await new Promise((r) => setTimeout(r, 1000));
-    for (let i = 0; i < 3; i++) {
-      try {
-        await createInstance(rec.name, rec.webhook, rec.apiKey, true, autoPair);
-        return;
-      } catch (err) {
-        console.warn(`[${name}] restart attempt ${i + 1} failed:`, err.message);
-        if (i === 2) throw err;
-        await new Promise((r) => setTimeout(r, 1000));
-      }
-    }
+    await startSocket(rec.name, rec, autoPair);
   } finally {
     restarting.delete(name);
   }
