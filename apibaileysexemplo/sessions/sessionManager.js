@@ -204,7 +204,7 @@ async function startSocket(name, record, autoPair = usePairingCode) {
         default:
           if (state.creds.registered && !restarting.has(name)) {
             console.log(`[${name}] automatic reconnection attempt`);
-            restartInstance(name, autoPair).catch(err =>
+            restartInstance(name, autoPair, false).catch(err =>
               console.error(`[${name}] auto restart failed:`, err.message)
             );
           }
