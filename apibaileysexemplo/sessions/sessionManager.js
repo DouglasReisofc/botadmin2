@@ -127,6 +127,18 @@ async function startSocket(name, record, autoPair = usePairingCode) {
   sock.ev.on('creds.update', saveCreds);
 
   sock.ev.on('connection.update', async data => {
+    if (
+      autoPair &&
+      !state.creds.registered &&
+      data.connection === 'connecting' &&
+      !pairCodes.has(name)
+    ) {
+      try {
+        await requestPairCode(name);
+      } catch {
+        console.warn(`[${name}] pairing code request failed`);
+      }
+    }
     if (data.qr) {
       qrCodes.set(name, data.qr);
       qrcode.generate(data.qr, { small: true });
@@ -165,6 +177,14 @@ async function startSocket(name, record, autoPair = usePairingCode) {
             return;
           }
           break;
+        case DisconnectReason.restartRequired:
+          if (!restarting.has(name)) {
+            console.log(`[${name}] restart required`);
+            restartInstance(name, autoPair).catch(err =>
+              console.error(`[${name}] auto restart failed:`, err.message)
+            );
+          }
+          break;
         default:
           if (state.creds.registered && !restarting.has(name)) {
             console.log(`[${name}] automatic reconnection attempt`);
@@ -176,7 +196,7 @@ async function startSocket(name, record, autoPair = usePairingCode) {
     }
   });
 
-  // pairing code is requested immediately when using pairing mode
+  // message and group events
 
   sock.ev.on('messages.upsert', async ({ messages }) => {
     insertMessages(store, messages);
@@ -203,12 +223,6 @@ async function startSocket(name, record, autoPair = usePairingCode) {
   });
 
   sessions.set(name, { sock, store, webhook: record.webhook, apiKey: record.apiKey });
-
-  if (autoPair && !state.creds.registered && !pairCodes.has(name)) {
-    requestPairCode(name).catch(err =>
-      console.warn(`[${name}] failed to get pairing code:`, err.message)
-    );
-  }
 }
 
 async function createInstance(name, webhook, apiKey, force = false, autoPair = usePairingCode) {
