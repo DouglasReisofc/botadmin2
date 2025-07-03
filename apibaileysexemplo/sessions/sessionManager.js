@@ -121,7 +121,7 @@ async function startSocket(name, record) {
     logger: P({ level: 'info' }),
     printQRInTerminal: !usePairingCode,
     auth: state,
-    browser: ['Ubuntu', 'Chrome', '']
+    browser: ['Ubuntu', 'Chrome', '110.0.0.0']
   });
   sock.ev.on('creds.update', saveCreds);
 

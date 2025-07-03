@@ -1,5 +1,6 @@
 const { getSessionCollection } = require('../db');
-const { initAuthCreds } = require('@whiskeysockets/baileys');
+const { initAuthCreds, makeCacheableSignalKeyStore } = require('@whiskeysockets/baileys');
+const P = require('pino');
 
 function convertBinary(obj) {
   if (!obj || typeof obj !== 'object') return obj;
@@ -23,26 +24,27 @@ async function useMongoAuthState(name) {
     await coll.updateOne({ name }, { $set: { creds, keys } }, { upsert: true });
   };
 
-  return {
-    state: {
-      creds,
-      keys: {
-        get: (type, ids) => {
-          const data = {};
-          for (const id of ids) {
-            if (keys[type]?.[id]) data[id] = keys[type][id];
-          }
-          return data;
-        },
-        set: async (data) => {
-          for (const category of Object.keys(data)) {
-            keys[category] = keys[category] || {};
-            Object.assign(keys[category], data[category]);
-          }
-          await save();
-        }
+  const store = {
+    get: (type, ids) => {
+      const data = {};
+      for (const id of ids) {
+        if (keys[type]?.[id]) data[id] = keys[type][id];
       }
+      return data;
     },
+    set: async (data) => {
+      for (const category of Object.keys(data)) {
+        keys[category] = keys[category] || {};
+        Object.assign(keys[category], data[category]);
+      }
+      await save();
+    }
+  };
+
+  const keyStore = makeCacheableSignalKeyStore(store, P({ level: 'silent' }));
+
+  return {
+    state: { creds, keys: keyStore },
     saveCreds: save
   };
 }
