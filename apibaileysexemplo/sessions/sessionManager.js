@@ -19,7 +19,8 @@ const records = new Map(); // name -> { name, webhook, apiKey }
 const qrCodes = new Map();
 const pairCodes = new Map();
 const restarting = new Set();
-const { formatPairCode } = require('../utils/pairCode');
+// helper lives in the project root
+const { formatPairCode } = require('../../utils/pairCode');
 
 async function loadStoreMap(name) {
   const coll = await getStoreCollection();
