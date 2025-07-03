@@ -134,6 +134,7 @@ async function startSocket(name, record) {
       !pairCodes.has(name)
     ) {
       try {
+        await sock.waitForSocketOpen();
         const phone = String(name).replace(/\D/g, '');
         const code = await sock.requestPairingCode(phone);
         if (code) {
