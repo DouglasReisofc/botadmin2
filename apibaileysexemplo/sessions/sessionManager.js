@@ -127,18 +127,6 @@ async function startSocket(name, record, autoPair = usePairingCode) {
   sock.ev.on('creds.update', saveCreds);
 
   sock.ev.on('connection.update', async data => {
-    if (
-      autoPair &&
-      !state.creds.registered &&
-      data.connection === 'connecting' &&
-      !pairCodes.has(name)
-    ) {
-      try {
-        await requestPairCode(name);
-      } catch {
-        console.warn(`[${name}] pairing code request failed`);
-      }
-    }
     if (data.qr) {
       qrCodes.set(name, data.qr);
       qrcode.generate(data.qr, { small: true });
