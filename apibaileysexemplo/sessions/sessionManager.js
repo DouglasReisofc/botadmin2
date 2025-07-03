@@ -5,8 +5,10 @@ const {
   default: makeWASocket,
   fetchLatestBaileysVersion,
   getAggregateVotesInPollMessage,
-  downloadMediaMessage
+  downloadMediaMessage,
+  DisconnectReason
 } = require('@whiskeysockets/baileys');
+const { Boom } = require('@hapi/boom');
 const {
   getStoreCollection,
   getRecordCollection,
@@ -145,14 +147,31 @@ async function startSocket(name, record) {
       qrCodes.delete(name);
       await updateRecord(name, { qr: null, pairCode: null });
     } else if (data.connection === 'close') {
+      const statusCode = new Boom(data.lastDisconnect?.error)?.output?.statusCode;
       dispatch(name, 'session.disconnected', { reason: data.lastDisconnect?.error?.message });
       pairCodes.delete(name);
       await updateRecord(name, { qr: null, pairCode: null });
-      if (state.creds.registered && !restarting.has(name)) {
-        console.log(`[${name}] automatic reconnection attempt`);
-        restartInstance(name).catch(err =>
-          console.error(`[${name}] auto restart failed:`, err.message)
-        );
+      switch (statusCode) {
+        case DisconnectReason.badSession:
+        case DisconnectReason.loggedOut:
+          await deleteInstance(name, true);
+          await startSocket(name, record);
+          return;
+        case 401:
+          if (usePairingCode) {
+            console.log(`[${name}] Pairing code rejected. Trying QR code...`);
+            await deleteInstance(name, true);
+            await startSocket(name, record);
+            return;
+          }
+          break;
+        default:
+          if (state.creds.registered && !restarting.has(name)) {
+            console.log(`[${name}] automatic reconnection attempt`);
+            restartInstance(name).catch(err =>
+              console.error(`[${name}] auto restart failed:`, err.message)
+            );
+          }
       }
     }
   });
