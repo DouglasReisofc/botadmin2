@@ -1466,8 +1466,9 @@ app.post('/conectarwhatsapp/pair/:instance', isAuthenticated, async (req, res) =
 
   let resp;
   try {
+    const modeParam = mode ? `?mode=${mode}` : '';
     resp = await axios.post(
-      `${base}/api/instance/${api.instance}/pair`,
+      `${base}/api/instance/${api.instance}/pair${modeParam}`,
       {},
       { headers }
     );

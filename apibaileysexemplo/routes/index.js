@@ -177,9 +177,11 @@ router.get('/api/instance/:id/qr', checkInstance, (req, res) => {
 // Trigger reconnect and wait for a QR code
 router.post('/instance/:id/pair', checkInstance, async (req, res) => {
   const { id } = req.params;
+  const mode = req.query.mode;
   try {
     await restartInstance(id);
-    if (usePairingCode) {
+    const usePair = mode === 'pair' || (!mode && usePairingCode);
+    if (usePair) {
       await requestPairCode(id).catch(() => {});
     }
     const start = Date.now();
@@ -199,9 +201,11 @@ router.post('/instance/:id/pair', checkInstance, async (req, res) => {
 
 router.post('/api/instance/:id/pair', checkInstance, async (req, res) => {
   const { id } = req.params;
+  const mode = req.query.mode;
   try {
     await restartInstance(id);
-    if (usePairingCode) {
+    const usePair = mode === 'pair' || (!mode && usePairingCode);
+    if (usePair) {
       await requestPairCode(id).catch(() => {});
     }
     const start = Date.now();
