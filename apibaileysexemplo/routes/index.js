@@ -23,8 +23,12 @@ async function checkInstance(req, res, next) {
   if (!name || name === 'undefined') {
     return res.status(400).json({ error: 'Instance required' });
   }
-  const record = await getRecord(name);
-  if (!record) return res.status(404).json({ error: 'Instance not found' });
+  let record = await getRecord(name);
+  if (!record) {
+    const running = getInstance(name);
+    if (!running) return res.status(404).json({ error: 'Instance not found' });
+    record = { name };
+  }
   const key =
     req.headers['x-instance-key'] ||
     body.instanceKey ||
@@ -44,7 +48,11 @@ async function locateInstance(req, res, next) {
   if (!name || name === 'undefined') {
     return res.status(400).json({ error: 'Instance required' });
   }
-  const record = await getRecord(name);
+  let record = await getRecord(name);
+  if (!record) {
+    const running = getInstance(name);
+    if (running) record = { name };
+  }
   const key =
     req.headers['x-instance-key'] ||
     body.instanceKey ||
