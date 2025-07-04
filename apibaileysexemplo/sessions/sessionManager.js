@@ -13,6 +13,7 @@ const fs = require('fs/promises');
 const { formatPairCode } = require('../../utils/pairCode');
 const db = require('../db');
 const { getSessionPath } = db;
+const axios = require('axios');
 
 const instances = new Map();
 
@@ -41,6 +42,7 @@ async function startInstance(name, usePairingCode = false, number) {
 
   const { version } = await fetchLatestBaileysVersion();
   const { map: store, save } = await db.loadStore(name);
+  const record = (await db.loadRecords()).find(r => r.name === name) || {};
 
   const sock = makeWASocket({
     version,
@@ -60,7 +62,9 @@ async function startInstance(name, usePairingCode = false, number) {
     qr: null,
     pairCode: null,
     status: 'connecting',
-    number: number || null
+    number: number || null,
+    webhook: record.webhook || '',
+    apiKey: record.apiKey || ''
   };
   instances.set(name, session);
 
@@ -75,9 +79,46 @@ async function startInstance(name, usePairingCode = false, number) {
 
   sock.ev.on('messages.upsert', async m => {
     if (m.messages) {
-      for (const msg of m.messages) store.set(msg.key.id, msg);
+      console.log(`[${name}] 📩 messages.upsert (${m.type}) ->`, m.messages.length);
+      const masterKey = process.env.MASTER_APIKEY || 'AIAO1897AHJAKACMC817ADOU';
+      for (const msg of m.messages) {
+        store.set(msg.key.id, msg);
+        if (session.webhook) {
+          try {
+            await axios.post(
+              session.webhook,
+              { event: 'message.upsert', data: msg, instance: name },
+              { headers: { apikey: masterKey } }
+            );
+          } catch (err) {
+            console.warn(`[${name}] ⚠️ erro ao enviar webhook:`, err.message);
+          }
+        }
+      }
       await save();
     }
+  });
+
+  sock.ev.on('messages.update', u => {
+    console.log(`[${name}] 🔄 messages.update`, JSON.stringify(u, null, 2));
+  });
+  sock.ev.on('messages.delete', del => {
+    console.log(`[${name}] ❌ messages.delete`, JSON.stringify(del, null, 2));
+  });
+  sock.ev.on('chats.upsert', up => {
+    console.log(`[${name}] 💬 chats.upsert`, JSON.stringify(up, null, 2));
+  });
+  sock.ev.on('chats.update', up => {
+    console.log(`[${name}] ✏️ chats.update`, JSON.stringify(up, null, 2));
+  });
+  sock.ev.on('contacts.upsert', up => {
+    console.log(`[${name}] 👥 contacts.upsert`, JSON.stringify(up, null, 2));
+  });
+  sock.ev.on('presence.update', up => {
+    console.log(`[${name}] 👤 presence.update`, JSON.stringify(up, null, 2));
+  });
+  sock.ev.on('call', call => {
+    console.log(`[${name}] 📞 call`, JSON.stringify(call, null, 2));
   });
 
   sock.ev.on('connection.update', async update => {
@@ -105,6 +146,7 @@ async function startInstance(name, usePairingCode = false, number) {
       console.log(`[${name}] ✅ Sessão conectada com sucesso.`);
     } else if (connection === 'close') {
       session.status = 'close';
+      console.log(`[${name}] ❌ conexão encerrada`);
       const code = new Boom(lastDisconnect?.error)?.output?.statusCode;
       if (
         code === DisconnectReason.loggedOut ||
