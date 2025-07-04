@@ -30,6 +30,8 @@ const fs = require('fs');
 const fsPromises = require('fs/promises');
 const { notAuthenticated, isAuthenticated, isAdmin } = require('./funcoes/auth');
 const { conectar_db } = require('./db/connect');
+const { initDb: initSessionDb } = require('./apibaileysexemplo/db');
+const { restoreInstances } = require('./apibaileysexemplo/sessions/sessionManager');
 const {
   pegar_apikey,
   Totalregistrados,
@@ -1980,6 +1982,8 @@ app.set('json spaces', 4);
 async function startServer() {
   try {
     await conectar_db();
+    await initSessionDb();
+    await restoreInstances();
     await loadTranslations();
     await updateSitemap();
     // Run initial checks before starting the server
