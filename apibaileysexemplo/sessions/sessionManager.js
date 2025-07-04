@@ -19,11 +19,25 @@ function sanitizeName(name) {
   return name.replace(/[:\\/]/g, '-');
 }
 
-async function startInstance(name, usePairingCode = false) {
+async function startInstance(name, usePairingCode = false, number) {
   const safeName = sanitizeName(name);
   const authPath = path.join(db.sessionDir, safeName);
   await fs.mkdir(authPath, { recursive: true });
+  const credsFile = path.join(authPath, 'creds.json');
   const { state, saveCreds } = await useMultiFileAuthState(authPath);
+  try {
+    await fs.access(credsFile);
+    if (!state.creds || !state.creds.me || !state.creds.me.id) {
+      console.warn(`[${name}] ⚠️ Credenciais ausentes. Limpando sessão...`);
+      await db.deleteSessionData(name);
+      await db.deleteStore(name);
+      instances.delete(name);
+      await db.deleteRecord(name);
+      throw new Error('Sessão inválida apagada. Recrie a instância.');
+    }
+  } catch {
+    // arquivo inexistente: nova sessão
+  }
   const { version } = await fetchLatestBaileysVersion();
   const { map: store, save } = await db.loadStore(name);
 
@@ -44,7 +58,8 @@ async function startInstance(name, usePairingCode = false) {
     write: save,
     qr: null,
     pairCode: null,
-    status: 'connecting'
+    status: 'connecting',
+    number: number || null
   };
   instances.set(name, session);
 
@@ -78,13 +93,16 @@ async function startInstance(name, usePairingCode = false) {
         await db.deleteRecord(name);
         return;
       }
-      setTimeout(() => startInstance(name, usePairingCode), 1000);
+      setTimeout(() => startInstance(name, usePairingCode, session.number), 1000);
     }
   });
 
   if (usePairingCode && !state.creds.registered) {
     try {
-      session.pairCode = formatPairCode(await sock.requestPairingCode());
+      session.pairCode = formatPairCode(
+        await sock.requestPairingCode(number)
+      );
+      if (number) session.number = number;
     } catch {}
   }
 
@@ -119,10 +137,10 @@ async function deleteInstance(name) {
   await db.deleteRecord(name);
 }
 
-async function restartInstance(name, usePairingCode = false) {
+async function restartInstance(name, usePairingCode = false, number) {
   const session = instances.get(name);
   if (session) session.sock.end();
-  return startInstance(name, usePairingCode);
+  return startInstance(name, usePairingCode, number);
 }
 
 function getInstance(name) {
@@ -150,6 +168,7 @@ async function requestPairCode(name, number) {
   if (!session) throw new Error('instance not found');
   const code = await session.sock.requestPairingCode(number);
   session.pairCode = formatPairCode(code);
+  if (number) session.number = number;
   return session.pairCode;
 }
 

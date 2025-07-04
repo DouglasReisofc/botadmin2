@@ -179,11 +179,12 @@ router.get('/api/instance/:id/qr', checkInstance, (req, res) => {
 router.post('/instance/:id/pair', checkInstance, async (req, res) => {
   const { id } = req.params;
   const mode = req.query.mode;
+  const number = req.body ? req.body.number : undefined;
   try {
     const usePair = mode === 'pair' || (!mode && usePairingCode);
-    await restartInstance(id, usePair);
+    await restartInstance(id, usePair, number);
     if (usePair) {
-      await requestPairCode(id).catch(() => {});
+      await requestPairCode(id, number).catch(() => {});
     }
     const start = Date.now();
     while (Date.now() - start < 15000) {
@@ -203,11 +204,12 @@ router.post('/instance/:id/pair', checkInstance, async (req, res) => {
 router.post('/api/instance/:id/pair', checkInstance, async (req, res) => {
   const { id } = req.params;
   const mode = req.query.mode;
+  const number = req.body ? req.body.number : undefined;
   try {
     const usePair = mode === 'pair' || (!mode && usePairingCode);
-    await restartInstance(id, usePair);
+    await restartInstance(id, usePair, number);
     if (usePair) {
-      await requestPairCode(id).catch(() => {});
+      await requestPairCode(id, number).catch(() => {});
     }
     const start = Date.now();
     while (Date.now() - start < 15000) {
