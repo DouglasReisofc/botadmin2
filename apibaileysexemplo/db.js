@@ -3,7 +3,8 @@ const path = require('path');
 const { log } = require('./utils/logger');
 
 const dataDir = path.join(__dirname, 'data');
-const sessionDir = path.join(dataDir, 'sessions');
+// para compatibilidade com o script code.js, mantemos as credenciais em "auth"
+const sessionDir = path.join(__dirname, 'auth');
 const storeDir = path.join(dataDir, 'stores');
 const recordFile = path.join(dataDir, 'records.json');
 
