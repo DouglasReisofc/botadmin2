@@ -64,7 +64,14 @@ async function startInstance(name, usePairingCode = false, number) {
   };
   instances.set(name, session);
 
-  sock.ev.on('creds.update', saveCreds);
+  sock.ev.on('creds.update', async () => {
+    try {
+      await fs.mkdir(authPath, { recursive: true });
+      await saveCreds();
+    } catch (err) {
+      console.error(`[${name}] ❌ Erro ao salvar credenciais:`, err.message);
+    }
+  });
 
   sock.ev.on('messages.upsert', async m => {
     if (m.messages) {
@@ -82,7 +89,12 @@ async function startInstance(name, usePairingCode = false, number) {
       session.status = 'open';
       session.qr = null;
       session.pairCode = null;
-      await saveCreds();
+      try {
+        await fs.mkdir(authPath, { recursive: true });
+        await saveCreds();
+      } catch (err) {
+        console.error(`[${name}] ❌ Erro ao salvar credenciais:`, err.message);
+      }
       await save();
 
       if (!session.number && sock.user?.id) {
