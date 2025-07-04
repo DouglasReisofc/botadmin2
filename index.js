@@ -31,7 +31,7 @@ const fsPromises = require('fs/promises');
 const { notAuthenticated, isAuthenticated, isAdmin } = require('./funcoes/auth');
 const { conectar_db } = require('./db/connect');
 const { initDb: initSessionDb } = require('./apibaileysexemplo/db');
-const { restoreInstances } = require('./apibaileysexemplo/sessions/sessionManager');
+const { restoreInstances, syncRegisteredInstances } = require('./apibaileysexemplo/sessions/sessionManager');
 const {
   pegar_apikey,
   Totalregistrados,
@@ -1984,6 +1984,7 @@ async function startServer() {
     await conectar_db();
     await initSessionDb();
     await restoreInstances();
+    await syncRegisteredInstances();
     await loadTranslations();
     await updateSitemap();
     // Run initial checks before starting the server

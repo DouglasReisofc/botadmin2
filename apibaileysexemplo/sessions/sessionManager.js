@@ -278,11 +278,42 @@ async function getRecord(name) {
 async function restoreInstances() {
   const records = await db.loadRecords();
   for (const r of records) {
+    if (instances.has(r.name)) continue;
     try {
       await startInstance(r.name);
     } catch (err) {
       console.error(`failed to restore ${r.name}:`, err.message);
     }
+  }
+}
+
+async function syncRegisteredInstances() {
+  const base = basesiteUrl.replace(/\/+$/, '');
+  try {
+    const res = await axios.get(
+      `${base}/webhook/instances?baseUrl=${encodeURIComponent(base)}`,
+      { headers: { apikey: process.env.MASTER_APIKEY || 'AIAO1897AHJAKACMC817ADOU' } }
+    );
+    const apis = Array.isArray(res.data) ? res.data : [];
+    const records = await db.loadRecords();
+    for (const api of apis) {
+      const record = records.find(r => r.name === api.instance);
+      if (!record) {
+        try {
+          await createInstance(api.instance, api.webhook, api.globalapikey);
+        } catch (err) {
+          console.error(`failed to create ${api.instance}:`, err.message);
+        }
+      } else if (!instances.has(api.instance)) {
+        try {
+          await startInstance(api.instance);
+        } catch (err) {
+          console.error(`failed to start ${api.instance}:`, err.message);
+        }
+      }
+    }
+  } catch (err) {
+    console.error('failed to sync instances:', err.message);
   }
 }
 
@@ -299,5 +330,6 @@ module.exports = {
   getPairCode,
   requestPairCode,
   restoreInstances,
+  syncRegisteredInstances,
   getSession
 };
