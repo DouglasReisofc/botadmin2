@@ -191,7 +191,10 @@ async function createInstance(name, webhook, apiKey, force = false) {
 async function updateInstance(name, data) {
   await db.updateRecord(name, data);
   const session = instances.get(name);
-  if (session && data.webhook !== undefined) session.webhook = data.webhook;
+  if (session) {
+    if (data.webhook !== undefined) session.webhook = data.webhook;
+    if (data.apiKey !== undefined) session.apiKey = data.apiKey;
+  }
   return session;
 }
 
