@@ -12,31 +12,29 @@ const fs = require('fs/promises');
 // reuse util defined at project root
 const { formatPairCode } = require('../../utils/pairCode');
 const db = require('../db');
+const { getSessionPath } = db;
 
 const instances = new Map();
 
-function sanitizeName(name) {
-  return name.replace(/[:\\/]/g, '-');
-}
-
 async function startInstance(name, usePairingCode = false, number) {
-  const safeName = sanitizeName(name);
-  const authPath = path.join(db.sessionDir, safeName);
+  const authPath = getSessionPath(name);
   await fs.mkdir(authPath, { recursive: true });
   const credsFile = path.join(authPath, 'creds.json');
   const { state, saveCreds } = await useMultiFileAuthState(authPath);
-  try {
-    await fs.access(credsFile);
-    if (!state.creds || !state.creds.me || !state.creds.me.id) {
-      console.warn(`[${name}] ⚠️ Credenciais ausentes. Limpando sessão...`);
-      await db.deleteSessionData(name);
-      await db.deleteStore(name);
-      instances.delete(name);
-      await db.deleteRecord(name);
-      throw new Error('Sessão inválida apagada. Recrie a instância.');
-    }
-  } catch {
-    // arquivo inexistente: nova sessão
+  const credsExists = await fs
+    .access(credsFile)
+    .then(() => true)
+    .catch(() => false);
+  if (
+    credsExists &&
+    (!state.creds || !state.creds.me || !state.creds.me.id)
+  ) {
+    console.warn(`[${name}] ⚠️ Credenciais ausentes. Limpando sessão...`);
+    await db.deleteSessionData(name);
+    await db.deleteStore(name);
+    instances.delete(name);
+    await db.deleteRecord(name);
+    throw new Error('Sessão inválida apagada. Recrie a instância.');
   }
   const { version } = await fetchLatestBaileysVersion();
   const { map: store, save } = await db.loadStore(name);

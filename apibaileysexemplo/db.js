@@ -6,6 +6,10 @@ function safeName(name) {
   return name.replace(/[:\\/]/g, '-');
 }
 
+function getSessionPath(name) {
+  return path.join(sessionDir, safeName(name));
+}
+
 const dataDir = path.join(__dirname, 'data');
 // para compatibilidade com o script code.js, mantemos as credenciais em "auth"
 const sessionDir = path.join(__dirname, 'auth');
@@ -112,5 +116,7 @@ module.exports = {
   loadRecords,
   saveRecord,
   deleteRecord,
-  updateRecord
+  updateRecord,
+  safeName,
+  getSessionPath
 };
