@@ -78,6 +78,15 @@ async function startInstance(name, usePairingCode = false, number) {
       session.status = 'open';
       session.qr = null;
       session.pairCode = null;
+      await saveCreds();
+      await save();
+
+      if (!session.number && sock.user?.id) {
+        session.number = sock.user.id.split(':')[0];
+        await db.updateRecord(name, { number: session.number });
+      }
+
+      console.log(`[${name}] ✅ Sessão conectada com sucesso.`);
     } else if (connection === 'close') {
       session.status = 'close';
       const code = new Boom(lastDisconnect?.error)?.output?.statusCode;
@@ -97,11 +106,15 @@ async function startInstance(name, usePairingCode = false, number) {
 
   if (usePairingCode && !state.creds.registered) {
     try {
-      session.pairCode = formatPairCode(
-        await sock.requestPairingCode(number)
-      );
-      if (number) session.number = number;
-    } catch {}
+      const code = await sock.requestPairingCode(number);
+      session.pairCode = formatPairCode(code);
+      if (number) {
+        session.number = number;
+        await db.updateRecord(name, { number });
+      }
+    } catch (err) {
+      console.error(`[${name}] ❌ Erro ao solicitar pairing code:`, err.message);
+    }
   }
 
   return session;
@@ -166,7 +179,10 @@ async function requestPairCode(name, number) {
   if (!session) throw new Error('instance not found');
   const code = await session.sock.requestPairingCode(number);
   session.pairCode = formatPairCode(code);
-  if (number) session.number = number;
+  if (number) {
+    session.number = number;
+    await db.updateRecord(name, { number });
+  }
   return session.pairCode;
 }
 
