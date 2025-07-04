@@ -24,15 +24,6 @@ async function startInstance(name, usePairingCode = false) {
   const authPath = path.join(db.sessionDir, safeName);
   await fs.mkdir(authPath, { recursive: true });
   const { state, saveCreds } = await useMultiFileAuthState(authPath);
-  // if creds are missing, bail out and force new session creation
-  if (!state.creds || !state.creds.me || !state.creds.me.id) {
-    console.warn(`[${name}] \u26a0\ufe0f Credenciais ausentes. Limpando sessão...`);
-    await db.deleteSessionData(name);
-    await db.deleteStore(name);
-    await db.deleteRecord(name);
-    instances.delete(name);
-    throw new Error('Sessão inválida apagada. Recrie a instância.');
-  }
   const { version } = await fetchLatestBaileysVersion();
   const { map: store, save } = await db.loadStore(name);
 
