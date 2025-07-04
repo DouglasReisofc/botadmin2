@@ -1,6 +1,7 @@
 const axios = require('axios');
 const P = require('pino');
 const qrcode = require('qrcode-terminal');
+const readline = require('readline');
 const {
   default: makeWASocket,
   fetchLatestBaileysVersion,
@@ -26,6 +27,26 @@ const { formatPairCode } = require('../../utils/pairCode');
 const usePairingCode =
   process.env.USE_PAIRING_CODE === '1' ||
   process.env.USE_PAIRING_CODE === 'true';
+
+// util para entrada via terminal quando disponível
+function ask(question) {
+  return new Promise(resolve => {
+    if (!process.stdin.isTTY) return resolve('');
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+    rl.question(question, ans => {
+      rl.close();
+      resolve(ans);
+    });
+  });
+}
+
+// número a ser usado ao solicitar código de pareamento
+function getPairingNumber(name) {
+  const env = process.env[`PAIRING_NUMBER_${name}`] || process.env.PAIRING_NUMBER;
+  if (env && /^\d{10,15}$/.test(env)) return env;
+  if (/^\d{10,15}$/.test(name)) return name;
+  return null;
+}
 
 // Tratamento global de erros
 process.on('uncaughtException', (err) => {
@@ -195,7 +216,13 @@ async function startSocket(name, record, autoPair = usePairingCode) {
       !pairCodes.has(name)
     ) {
       try {
-        const phone = String(name).replace(/\D/g, '');
+        let phone = getPairingNumber(name);
+        if (!phone) {
+          phone = (await ask('📱 Digite seu número completo (ex: 5599999999999): ')).trim();
+        }
+        if (!/^\d{10,15}$/.test(phone)) {
+          throw new Error('número inválido para pareamento');
+        }
         const code = await sock.requestPairingCode(phone);
         if (code) {
           pairCodes.set(name, code);
@@ -374,7 +401,13 @@ async function requestPairCode(name) {
   const sock = session.sock;
   try {
     await sock.waitForSocketOpen();
-    const phone = String(name).replace(/\D/g, '');
+    let phone = getPairingNumber(name);
+    if (!phone) {
+      phone = (await ask('📱 Digite seu número completo (ex: 5599999999999): ')).trim();
+    }
+    if (!/^\d{10,15}$/.test(phone)) {
+      throw new Error('número inválido para pareamento');
+    }
     const code = await sock.requestPairingCode(phone);
 
     if (code) {
