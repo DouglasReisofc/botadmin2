@@ -176,11 +176,13 @@ async function startInstance(name, usePairingCode = false, number) {
         instances.delete(name);
         return;
       }
-      setTimeout(() => {
-        startInstance(name, usePairingCode, session.number).catch(err => {
-          console.error(`[${name}] failed to restart:`, err.message);
-        });
-      }, 1000);
+      if (code !== DisconnectReason.restartRequired) {
+        setTimeout(() => {
+          startInstance(name, usePairingCode, session.number).catch(err => {
+            console.error(`[${name}] failed to restart:`, err.message);
+          });
+        }, 1000);
+      }
     }
   });
 
