@@ -238,8 +238,16 @@ async function startSocket(name, record, autoPair = usePairingCode) {
       await updateRecord(name, { qr: null, pairCode: null });
 
       // Tratamento específico para erro XML
-      if (data.lastDisconnect?.error?.output?.payload?.xmlNotWellFormed) {
-        console.log(`[${name}] ⚠️ Erro XML detectado - Recriando sessão com QR em 10s`);
+      const errMsg = data.lastDisconnect?.error?.message || '';
+      const errNode = data.lastDisconnect?.error?.data;
+      const isXmlError =
+        /xml-not-well-formed/i.test(errMsg) ||
+        (errNode?.content?.[0]?.tag === 'xml-not-well-formed');
+
+      if (isXmlError) {
+        console.log(
+          `[${name}] ⚠️ Erro XML detectado - Recriando sessão com QR em 10s`
+        );
         await deleteInstance(name, true);
         setTimeout(() => startSocket(name, record, false), 10000);
         return;
