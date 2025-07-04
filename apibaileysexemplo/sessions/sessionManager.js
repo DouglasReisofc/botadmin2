@@ -45,7 +45,11 @@ async function startInstance(name, usePairingCode = false, number) {
 
   const { version } = await fetchLatestBaileysVersion();
   const { map: store, save } = await db.loadStore(name);
-  const record = (await db.loadRecords()).find(r => r.name === name) || {};
+  let record = (await db.loadRecords()).find(r => r.name === name);
+  if (!record) {
+    record = { name, webhook: DEFAULT_WEBHOOK, apiKey: '' };
+    await db.saveRecord(record);
+  }
 
   const sock = makeWASocket({
     version,
@@ -170,10 +174,13 @@ async function startInstance(name, usePairingCode = false, number) {
         await db.deleteSessionData(name);
         await db.deleteStore(name);
         instances.delete(name);
-        await db.deleteRecord(name);
         return;
       }
-      setTimeout(() => startInstance(name, usePairingCode, session.number), 1000);
+      setTimeout(() => {
+        startInstance(name, usePairingCode, session.number).catch(err => {
+          console.error(`[${name}] failed to restart:`, err.message);
+        });
+      }, 1000);
     }
   });
 
@@ -204,7 +211,12 @@ async function createInstance(name, webhook, apiKey, force = false) {
 }
 
 async function updateInstance(name, data) {
-  await db.updateRecord(name, data);
+  const record = await getRecord(name);
+  if (record) {
+    await db.updateRecord(name, data);
+  } else {
+    await db.saveRecord({ name, ...data });
+  }
   const session = instances.get(name);
   if (session) {
     if (data.webhook !== undefined) session.webhook = data.webhook;
