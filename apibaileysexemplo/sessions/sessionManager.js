@@ -7,7 +7,6 @@ const {
 } = require('@whiskeysockets/baileys');
 const pino = require('pino');
 const path = require('path');
-const fs = require('fs/promises');
 const { Boom } = require('@hapi/boom');
 // reuse util defined at project root
 const { formatPairCode } = require('../../utils/pairCode');
