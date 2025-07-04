@@ -120,18 +120,6 @@ router.post('/instance', async (req, res) => {
   }
 });
 
-// Compatibilidade: rotas prefixadas com /api
-router.post('/api/instance', async (req, res) => {
-  const { name, webhook, apiKey } = req.body;
-  const force = req.query.force === '1' || req.query.force === 'true';
-  try {
-    await createInstance(name, webhook, apiKey, force);
-    res.json({ status: 'instance created', name });
-  } catch (e) {
-    const status = /exists/i.test(e.message) ? 409 : 500;
-    res.status(status).json({ error: e.message });
-  }
-});
 
 router.put('/instance/:id', checkInstance, async (req, res) => {
   const { id } = req.params;
@@ -140,22 +128,12 @@ router.put('/instance/:id', checkInstance, async (req, res) => {
   res.json({ status: 'updated', id });
 });
 
-router.put('/api/instance/:id', checkInstance, async (req, res) => {
-  const { id } = req.params;
-  const session = await updateInstance(id, req.body);
-  if (!session) return res.status(404).json({ error: 'Instance not found' });
-  res.json({ status: 'updated', id });
-});
 
 router.get('/instance/:id/status', checkInstance, (req, res) => {
   const { id } = req.params;
   res.json({ status: getInstanceStatus(id) });
 });
 
-router.get('/api/instance/:id/status', checkInstance, (req, res) => {
-  const { id } = req.params;
-  res.json({ status: getInstanceStatus(id) });
-});
 
 router.get('/instance/:id/qr', checkInstance, (req, res) => {
   const { id } = req.params;
@@ -166,14 +144,6 @@ router.get('/instance/:id/qr', checkInstance, (req, res) => {
   res.json({ qr });
 });
 
-router.get('/api/instance/:id/qr', checkInstance, (req, res) => {
-  const { id } = req.params;
-  const qr = getInstanceQR(id);
-  if (!qr) {
-    return res.status(404).json({ error: 'QR not available' });
-  }
-  res.json({ qr });
-});
 
 // Trigger reconnect and wait for a QR code
 router.post('/instance/:id/pair', checkInstance, async (req, res) => {
@@ -201,30 +171,6 @@ router.post('/instance/:id/pair', checkInstance, async (req, res) => {
   }
 });
 
-router.post('/api/instance/:id/pair', checkInstance, async (req, res) => {
-  const { id } = req.params;
-  const mode = req.query.mode;
-  const number = req.body ? req.body.number : undefined;
-  try {
-    const usePair = mode === 'pair' || (!mode && usePairingCode);
-    await restartInstance(id, usePair, number);
-    if (usePair) {
-      await requestPairCode(id, number).catch(() => {});
-    }
-    const start = Date.now();
-    while (Date.now() - start < 15000) {
-      const qr = getInstanceQR(id);
-      const code = getPairCode(id);
-      if (qr || code) {
-        return res.json({ qr: qr || null, code: code || null });
-      }
-      await new Promise(r => setTimeout(r, 1000));
-    }
-    res.status(404).json({ error: 'QR not available' });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
 
 router.post('/instance/:id/restart', checkInstance, async (req, res) => {
   const { id } = req.params;
@@ -236,15 +182,6 @@ router.post('/instance/:id/restart', checkInstance, async (req, res) => {
   }
 });
 
-router.post('/api/instance/:id/restart', checkInstance, async (req, res) => {
-  const { id } = req.params;
-  try {
-    await restartInstance(id);
-    res.json({ status: 'restarted', id });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
 
 router.post('/instance/:id/reconnect', checkInstance, async (req, res) => {
   const { id } = req.params;
@@ -256,15 +193,6 @@ router.post('/instance/:id/reconnect', checkInstance, async (req, res) => {
   }
 });
 
-router.post('/api/instance/:id/reconnect', checkInstance, async (req, res) => {
-  const { id } = req.params;
-  try {
-    await restartInstance(id);
-    res.json({ status: 'reconnected', id });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
 
 router.delete('/instance/:id', locateInstance, async (req, res) => {
   const { id } = req.params;
@@ -278,17 +206,6 @@ router.delete('/instance/:id', locateInstance, async (req, res) => {
   }
 });
 
-router.delete('/api/instance/:id', locateInstance, async (req, res) => {
-  const { id } = req.params;
-  try {
-    if (req.instanceRecord) {
-      await deleteInstance(id);
-    }
-    res.json({ status: 'deleted', id });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
 
 router.post('/message', checkInstance, sendMessage);
 router.post('/message/media', checkInstance, sendMedia);
