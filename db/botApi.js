@@ -51,7 +51,14 @@ const botApiSchema = new mongoose.Schema({
     // 🔥 Dados da sessão WhatsApp vinculada
     sessionStatus: {
         type: String,
-        enum: ['inicializando', 'conectado', 'desconectado', 'falha_auth'],
+        enum: [
+            'inicializando',
+            'conectado',
+            'desconectado',
+            'falha_auth',
+            'aguardando_qr',
+            'aguardando_pareamento'
+        ],
         default: 'desconectado'
     },
 
