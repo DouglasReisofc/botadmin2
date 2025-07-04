@@ -53,9 +53,12 @@ router.post('/event', checkKey, async (req, res) => {
       server_url: bot?.baseUrl,
       apikey: bot?.globalapikey
     });
-    if (bot?.webhook) {
+    const thisEndpoint = `${req.protocol}://${req.get('host')}${req.baseUrl}/event`;
+    const targetWebhook = bot?.webhook?.replace(/\/+$/, '');
+    if (targetWebhook && targetWebhook !== thisEndpoint.replace(/\/+$/, '')) {
       try {
-        await axios.post(bot.webhook, { event, data, instance });
+        await axios.post(targetWebhook, { event, data, instance });
+        console.log('[webhook/event] encaminhado para', targetWebhook);
       } catch (err) {
         console.warn('⚠️ Falha ao reenviar evento para webhook da instância:', err.message);
       }
