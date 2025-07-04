@@ -9,7 +9,8 @@ const pino = require('pino');
 const path = require('path');
 const fs = require('fs/promises');
 const { Boom } = require('@hapi/boom');
-const { formatPairCode } = require('../utils/pairCode');
+// reuse util defined at project root
+const { formatPairCode } = require('../../utils/pairCode');
 const db = require('../db');
 
 const instances = new Map();
