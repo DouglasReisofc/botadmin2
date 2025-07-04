@@ -8,14 +8,21 @@ const {
 const pino = require('pino');
 const path = require('path');
 const { Boom } = require('@hapi/boom');
+const fs = require('fs/promises');
 // reuse util defined at project root
 const { formatPairCode } = require('../../utils/pairCode');
 const db = require('../db');
 
 const instances = new Map();
 
+function sanitizeName(name) {
+  return name.replace(/[:\\/]/g, '-');
+}
+
 async function startInstance(name, usePairingCode = false) {
-  const authPath = path.join(db.sessionDir, name);
+  const safeName = sanitizeName(name);
+  const authPath = path.join(db.sessionDir, safeName);
+  await fs.mkdir(authPath, { recursive: true });
   const { state, saveCreds } = await useMultiFileAuthState(authPath);
   const { version } = await fetchLatestBaileysVersion();
   const { map: store, save } = await db.loadStore(name);

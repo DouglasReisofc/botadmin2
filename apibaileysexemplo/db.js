@@ -2,6 +2,10 @@ const fs = require('fs/promises');
 const path = require('path');
 const { log } = require('./utils/logger');
 
+function safeName(name) {
+  return name.replace(/[:\\/]/g, '-');
+}
+
 const dataDir = path.join(__dirname, 'data');
 // para compatibilidade com o script code.js, mantemos as credenciais em "auth"
 const sessionDir = path.join(__dirname, 'auth');
@@ -38,7 +42,7 @@ async function writeJSON(file, data) {
 
 async function loadStore(name) {
   await ensureDirs();
-  const file = path.join(storeDir, `${name}.json`);
+  const file = path.join(storeDir, `${safeName(name)}.json`);
   const data = await readJSON(file, { messages: [] });
   const map = new Map(data.messages);
   async function save() {
@@ -48,12 +52,12 @@ async function loadStore(name) {
 }
 
 async function deleteStore(name) {
-  const file = path.join(storeDir, `${name}.json`);
+  const file = path.join(storeDir, `${safeName(name)}.json`);
   await fs.rm(file, { force: true });
 }
 
 async function deleteSessionData(name) {
-  const dir = path.join(sessionDir, name);
+  const dir = path.join(sessionDir, safeName(name));
   await fs.rm(dir, { recursive: true, force: true });
 }
 
