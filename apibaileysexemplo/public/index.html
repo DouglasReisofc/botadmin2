@@ -33,7 +33,16 @@
     </div>
   </div>
   <div class="card mb-3">
-    <ul id="sessionList" class="list-group list-group-flush"></ul>
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span>Instances</span>
+      <button id="refreshBtn" class="btn btn-sm btn-secondary">Refresh</button>
+    </div>
+    <table class="table mb-0">
+      <thead>
+        <tr><th>Name</th><th>Status</th><th>Actions</th></tr>
+      </thead>
+      <tbody id="instancesBody"></tbody>
+    </table>
   </div>
 
   <div class="card mb-3 p-3">
@@ -142,17 +151,25 @@ async function loadSessions() {
     log(data);
     return;
   }
-  const list = document.getElementById('sessionList');
-  list.innerHTML = '';
+  const body = document.getElementById('instancesBody');
+  body.innerHTML = '';
   data.instances.forEach(s => {
     const opt = document.createElement('option');
-    opt.value = s.id;
-    opt.textContent = `${s.id} (${s.status})`;
+    opt.value = s.name;
+    opt.textContent = `${s.name} (${s.status})`;
     sel.appendChild(opt);
-    const li = document.createElement('li');
-    li.className = 'list-group-item';
-    li.textContent = `${s.id} (${s.status})`;
-    list.appendChild(li);
+
+    const tr = document.createElement('tr');
+    const statusBadge = s.connected ?
+      '<span class="badge bg-success">connected</span>' :
+      '<span class="badge bg-secondary">' + s.status + '</span>';
+    tr.innerHTML = `<td>${s.name}</td><td>${statusBadge}</td>` +
+                   `<td>` +
+                   `<button class="btn btn-sm btn-primary me-1" onclick="pairInstance('${s.name}')">QR</button>` +
+                   `<button class="btn btn-sm btn-warning me-1" onclick="restartInstance('${s.name}')">Restart</button>` +
+                   `<button class="btn btn-sm btn-danger" onclick="deleteInstance('${s.name}')">Delete</button>` +
+                   `</td>`;
+    body.appendChild(tr);
   });
   if (prev) {
     sel.value = prev;
@@ -300,6 +317,37 @@ async function deleteCurrent() {
   loadSessions();
 }
 
+async function restartInstance(id) {
+  const res = await fetch(`/api/instance/${id}/reconnect`, {
+    method: 'POST',
+    headers: {
+      'x-api-key': globalInput.value,
+      'x-instance-key': instanceKeyInput.value
+    }
+  });
+  await res.json().catch(() => {});
+  startPolling(id);
+}
+
+async function deleteInstance(id) {
+  if (!confirm('Delete this instance?')) return;
+  const res = await fetch(`/api/instance/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'x-api-key': globalInput.value,
+      'x-instance-key': instanceKeyInput.value
+    }
+  });
+  await res.json().catch(() => {});
+  loadSessions();
+}
+
+async function pairInstance(id) {
+  selectInput.value = id;
+  localStorage.setItem('instanceSelect', id);
+  await restartInstance(id);
+}
+
 function startPolling(id) {
   if (poll) clearInterval(poll);
   fetchStatus(id); // initial
@@ -340,6 +388,7 @@ document.getElementById('deleteBtn').addEventListener('click', deleteCurrent);
 document.getElementById('sendMediaBtn').addEventListener('click', sendMedia);
 document.getElementById('sendPollBtn').addEventListener('click', sendPoll);
 document.getElementById('deleteMsgBtn').addEventListener('click', deleteMessage);
+document.getElementById('refreshBtn').addEventListener('click', loadSessions);
 document.getElementById('docs-tab').addEventListener('shown.bs.tab', loadDocs);
 async function loadDocs(){
   const res = await fetch('/README.md');

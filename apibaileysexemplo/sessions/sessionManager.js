@@ -254,7 +254,9 @@ async function listInstances() {
   return records.map(r => ({
     name: r.name,
     webhook: r.webhook,
-    status: getInstanceStatus(r.name)
+    number: r.number || null,
+    status: getInstanceStatus(r.name),
+    connected: getInstanceStatus(r.name) === 'open'
   }));
 }
 
