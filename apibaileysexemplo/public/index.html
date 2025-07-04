@@ -175,7 +175,7 @@ async function loadSessions() {
     sel.value = prev;
   }
   if (!sel.value && data.instances.length) {
-    sel.value = data.instances[0].id;
+    sel.value = data.instances[0].name;
   }
   if (sel.value) startPolling(sel.value);
 }
