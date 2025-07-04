@@ -265,8 +265,8 @@ async function startSocket(name, record, autoPair = usePairingCode) {
 
         case DisconnectReason.restartRequired:
           if (!restarting.has(name)) {
-            console.log(`[${name}] 🔄 Reinício necessário - Reiniciando em 5s`);
-            setTimeout(() => restartInstance(name, autoPair, false), 5000);
+            console.log(`[${name}] 🔄 Reinício necessário - Reconectando...`);
+            restartInstance(name, false, false);
           }
           break;
 
