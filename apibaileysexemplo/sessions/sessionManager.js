@@ -14,6 +14,9 @@ const { formatPairCode } = require('../../utils/pairCode');
 const db = require('../db');
 const { getSessionPath } = db;
 const axios = require('axios');
+const { basesiteUrl } = require('../../configuracao');
+
+const DEFAULT_WEBHOOK = `${basesiteUrl}/webhook/event`;
 
 const instances = new Map();
 
@@ -63,10 +66,25 @@ async function startInstance(name, usePairingCode = false, number) {
     pairCode: null,
     status: 'connecting',
     number: number || null,
-    webhook: record.webhook || '',
+    webhook: record.webhook || DEFAULT_WEBHOOK,
     apiKey: record.apiKey || ''
   };
   instances.set(name, session);
+
+  const masterKey = process.env.MASTER_APIKEY || 'AIAO1897AHJAKACMC817ADOU';
+
+  async function dispatchWebhook(event, data) {
+    if (!session.webhook) return;
+    try {
+      await axios.post(
+        session.webhook,
+        { event, data, instance: name, apikey: session.apiKey },
+        { headers: { apikey: masterKey } }
+      );
+    } catch (err) {
+      console.warn(`[${name}] ⚠️ erro ao enviar webhook:`, err.message);
+    }
+  }
 
   sock.ev.on('creds.update', async () => {
     try {
@@ -80,25 +98,9 @@ async function startInstance(name, usePairingCode = false, number) {
   sock.ev.on('messages.upsert', async m => {
     if (m.messages) {
       console.log(`[${name}] 📩 messages.upsert (${m.type}) ->`, m.messages.length);
-      const masterKey = process.env.MASTER_APIKEY || 'AIAO1897AHJAKACMC817ADOU';
       for (const msg of m.messages) {
         store.set(msg.key.id, msg);
-        if (session.webhook) {
-          try {
-            await axios.post(
-              session.webhook,
-              {
-                event: 'message.upsert',
-                data: msg,
-                instance: name,
-                apikey: session.apiKey
-              },
-              { headers: { apikey: masterKey } }
-            );
-          } catch (err) {
-            console.warn(`[${name}] ⚠️ erro ao enviar webhook:`, err.message);
-          }
-        }
+        await dispatchWebhook('message.upsert', msg);
       }
       await save();
     }
@@ -106,30 +108,38 @@ async function startInstance(name, usePairingCode = false, number) {
 
   sock.ev.on('messages.update', u => {
     console.log(`[${name}] 🔄 messages.update`, JSON.stringify(u, null, 2));
+    dispatchWebhook('messages.update', u).catch(() => {});
   });
   sock.ev.on('messages.delete', del => {
     console.log(`[${name}] ❌ messages.delete`, JSON.stringify(del, null, 2));
+    dispatchWebhook('messages.delete', del).catch(() => {});
   });
   sock.ev.on('chats.upsert', up => {
     console.log(`[${name}] 💬 chats.upsert`, JSON.stringify(up, null, 2));
+    dispatchWebhook('chats.upsert', up).catch(() => {});
   });
   sock.ev.on('chats.update', up => {
     console.log(`[${name}] ✏️ chats.update`, JSON.stringify(up, null, 2));
+    dispatchWebhook('chats.update', up).catch(() => {});
   });
   sock.ev.on('contacts.upsert', up => {
     console.log(`[${name}] 👥 contacts.upsert`, JSON.stringify(up, null, 2));
+    dispatchWebhook('contacts.upsert', up).catch(() => {});
   });
   sock.ev.on('presence.update', up => {
     console.log(`[${name}] 👤 presence.update`, JSON.stringify(up, null, 2));
+    dispatchWebhook('presence.update', up).catch(() => {});
   });
   sock.ev.on('call', call => {
     console.log(`[${name}] 📞 call`, JSON.stringify(call, null, 2));
+    dispatchWebhook('call', call).catch(() => {});
   });
 
   sock.ev.on('connection.update', async update => {
     const { connection, lastDisconnect, qr, pairingCode } = update;
     if (qr) session.qr = qr;
     if (pairingCode) session.pairCode = formatPairCode(pairingCode);
+    dispatchWebhook('connection.update', update).catch(() => {});
 
     if (connection === 'open') {
       session.status = 'open';
@@ -189,7 +199,7 @@ async function createInstance(name, webhook, apiKey, force = false) {
   if (existing.some(r => r.name === name)) {
     if (!force) throw new Error('instance exists');
   }
-  await db.saveRecord({ name, webhook: webhook || '', apiKey: apiKey || '' });
+  await db.saveRecord({ name, webhook: webhook || DEFAULT_WEBHOOK, apiKey: apiKey || '' });
   return startInstance(name);
 }
 
