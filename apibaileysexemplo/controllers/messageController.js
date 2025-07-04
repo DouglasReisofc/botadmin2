@@ -3,6 +3,18 @@ const { downloadMediaMessage } = require("@whiskeysockets/baileys");
 const { getInstance, getSession } = require('../sessions/sessionManager');
 const { log } = require('../utils/logger');
 
+async function ensureConnected(sock) {
+  try {
+    if (typeof sock.waitForSocketOpen === 'function') {
+      await sock.waitForSocketOpen();
+    }
+  } catch {
+    const err = new Error('not_connected');
+    err.status = 503;
+    throw err;
+  }
+}
+
 function buildQuoted(jid, quotedId) {
   if (!quotedId) return undefined;
   return {
@@ -18,6 +30,7 @@ async function sendMessage(req, res) {
     return res.status(404).json({ error: 'Instance not found' });
   }
   try {
+    await ensureConnected(session);
     log(`[sendMessage] ${instance} -> ${number}`);
     const jid = `${number}@s.whatsapp.net`;
     await session.sendMessage(
@@ -38,6 +51,7 @@ async function sendMedia(req, res) {
   if (!session) return res.status(404).json({ error: 'Instance not found' });
   if (!media || !mimetype) return res.status(400).json({ error: 'media and mimetype required' });
   try {
+    await ensureConnected(session);
     log(`[sendMedia] ${instance} -> ${number} (${mimetype})`);
     const buffer = Buffer.from(media, 'base64');
     const jid = `${number}@s.whatsapp.net`;
@@ -62,6 +76,7 @@ async function deleteMessage(req, res) {
   const session = getInstance(instance);
   if (!session) return res.status(404).json({ error: 'Instance not found' });
   try {
+    await ensureConnected(session);
     log(`[deleteMessage] ${instance} -> ${number} ${messageId}`);
     const jid = `${number}@s.whatsapp.net`;
     await session.sendMessage(jid, {
@@ -79,6 +94,7 @@ async function sendPoll(req, res) {
   const session = getSession(instance);
   if (!session) return res.status(404).json({ error: 'Instance not found' });
   try {
+    await ensureConnected(session.sock);
     const jid = `${number}@s.whatsapp.net`;
     log(`[sendPoll] ${instance} -> ${number}`);
     const sent = await session.sock.sendMessage(jid, {
@@ -109,6 +125,7 @@ async function sendReaction(req, res) {
   const session = getInstance(instance);
   if (!session) return res.status(404).json({ error: 'Instance not found' });
   try {
+    await ensureConnected(session);
     await session.sendMessage(key.remoteJid, { react: { text: reaction, key } });
     res.json({ status: 'ok' });
   } catch (e) {
@@ -122,6 +139,7 @@ async function editMessage(req, res) {
   const session = getInstance(instance);
   if (!session) return res.status(404).json({ error: 'Instance not found' });
   try {
+    await ensureConnected(session);
     await session.sendMessage(chatId, { text, edit: messageId });
     res.json({ status: 'edited' });
   } catch (e) {
@@ -135,6 +153,7 @@ async function forwardWithMention(req, res) {
   const session = getSession(instance);
   if (!session) return res.status(404).json({ error: 'Instance not found' });
   try {
+    await ensureConnected(session.sock);
     const jid = `${number}@s.whatsapp.net`;
     const msg = await session.store.loadMessage(jid, messageId);
     if (!msg) return res.status(404).json({ error: 'Message not found' });
@@ -152,6 +171,7 @@ async function convertQuotedToSticker(req, res) {
   const session = getSession(instance);
   if (!session) return res.status(404).json({ error: 'Instance not found' });
   try {
+    await ensureConnected(session.sock);
     const id = quotedId || messageId;
     const msg = await session.store.loadMessage(remoteJid, id);
     if (!msg) return res.status(404).json({ error: 'Message not found' });
@@ -169,6 +189,7 @@ async function downloadMedia(req, res) {
   const session = getSession(instance);
   if (!session) return res.status(404).json({ error: 'Instance not found' });
   try {
+    await ensureConnected(session.sock);
     const msg = await session.store.loadMessage(remoteJid, messageId);
     if (!msg) return res.status(404).json({ error: 'Message not found' });
     const buffer = await downloadMediaMessage(msg, 'buffer', {}, { logger: P({ level: 'error' }), reuploadRequest: session.sock.updateMediaMessage });
@@ -184,6 +205,7 @@ async function sendStickerFromUrl(req, res) {
   const session = getInstance(instance);
   if (!session) return res.status(404).json({ error: 'Instance not found' });
   try {
+    await ensureConnected(session);
     const jid = `${number}@s.whatsapp.net`;
     await session.sendMessage(jid, { sticker: { url } }, { quoted: buildQuoted(jid, quotedId) });
     res.json({ status: 'sticker sent' });
