@@ -18,7 +18,7 @@ app.get('/README.md', (req, res) => {
 const PORT = process.env.PORT || 3000;
 initDb()
   .then(() => {
-    console.log('MongoDB connected');
+    console.log('Storage initialized');
     return restoreInstances();
   })
   .then(() => {

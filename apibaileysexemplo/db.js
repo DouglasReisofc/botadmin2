@@ -1,45 +1,111 @@
-const { MongoClient } = require('mongodb');
+const fs = require('fs/promises');
+const path = require('path');
 const { log } = require('./utils/logger');
 
-// Default connection string points to the shared Mongo server
-const mongoUri =
-  process.env.MONGO_URI ||
-  'mongodb://admin:Shinobi7766@150.230.85.70:27017/?authSource=admin';
-const client = new MongoClient(mongoUri);
-let db;
+const dataDir = path.join(__dirname, 'data');
+const sessionDir = path.join(dataDir, 'sessions');
+const storeDir = path.join(dataDir, 'stores');
+const recordFile = path.join(dataDir, 'records.json');
+
+async function ensureDirs() {
+  await fs.mkdir(sessionDir, { recursive: true });
+  await fs.mkdir(storeDir, { recursive: true });
+  try {
+    await fs.access(recordFile);
+  } catch {
+    await fs.writeFile(recordFile, '[]');
+  }
+}
 
 async function initDb() {
-  if (!db) {
-    log(`[db] connecting to ${mongoUri}`);
-    await client.connect();
-    db = client.db();
-    await db.collection('session_records').createIndex(
-      { name: 1 },
-      { unique: true }
-    );
-    log('[db] connected');
+  await ensureDirs();
+  log(`[db] using file storage at ${dataDir}`);
+}
+
+async function readJSON(file, def) {
+  try {
+    const txt = await fs.readFile(file, 'utf8');
+    return JSON.parse(txt);
+  } catch {
+    return def;
   }
-  return db;
 }
 
-async function getSessionCollection() {
-  const database = await initDb();
-  return database.collection('sessions');
+async function writeJSON(file, data) {
+  await fs.writeFile(file, JSON.stringify(data, null, 2));
 }
 
-async function getStoreCollection() {
-  const database = await initDb();
-  return database.collection('stores');
+async function loadStore(name) {
+  await ensureDirs();
+  const file = path.join(storeDir, `${name}.json`);
+  const data = await readJSON(file, { messages: [] });
+  const map = new Map(data.messages);
+  async function save() {
+    await writeJSON(file, { messages: Array.from(map.entries()) });
+  }
+  return { map, save };
 }
 
-async function getRecordCollection() {
-  const database = await initDb();
-  return database.collection('session_records');
+async function deleteStore(name) {
+  const file = path.join(storeDir, `${name}.json`);
+  await fs.rm(file, { force: true });
+}
+
+async function deleteSessionData(name) {
+  const dir = path.join(sessionDir, name);
+  await fs.rm(dir, { recursive: true, force: true });
+}
+
+async function getRecords() {
+  await ensureDirs();
+  return (await readJSON(recordFile, [])) || [];
+}
+
+async function saveRecords(records) {
+  await writeJSON(recordFile, records);
+}
+
+async function loadRecords() {
+  return getRecords();
+}
+
+async function saveRecord(record) {
+  const records = await getRecords();
+  const idx = records.findIndex(r => r.name === record.name);
+  if (idx >= 0) {
+    records[idx] = { ...records[idx], ...record };
+  } else {
+    records.push(record);
+  }
+  await saveRecords(records);
+}
+
+async function deleteRecord(name) {
+  const records = await getRecords();
+  const idx = records.findIndex(r => r.name === name);
+  if (idx >= 0) {
+    records.splice(idx, 1);
+    await saveRecords(records);
+  }
+}
+
+async function updateRecord(name, data) {
+  const records = await getRecords();
+  const idx = records.findIndex(r => r.name === name);
+  if (idx >= 0) {
+    records[idx] = { ...records[idx], ...data };
+    await saveRecords(records);
+  }
 }
 
 module.exports = {
   initDb,
-  getSessionCollection,
-  getStoreCollection,
-  getRecordCollection
+  sessionDir,
+  loadStore,
+  deleteStore,
+  deleteSessionData,
+  loadRecords,
+  saveRecord,
+  deleteRecord,
+  updateRecord
 };

@@ -12,11 +12,15 @@ const {
 } = require('@whiskeysockets/baileys');
 const { Boom } = require('@hapi/boom');
 const {
-  getStoreCollection,
-  getRecordCollection,
-  getSessionCollection
+  loadStore,
+  deleteStore,
+  deleteSessionData,
+  loadRecords: loadRecordsFromDb,
+  saveRecord: saveRecordToDb,
+  deleteRecord: deleteRecordFromDb,
+  updateRecord: updateRecordInDb
 } = require('../db');
-const { useMongoAuthState } = require('./authState');
+const { useFileAuthState } = require('./authState');
 
 const sessions = new Map();
 const records = new Map();
@@ -59,23 +63,7 @@ process.on('unhandledRejection', (reason) => {
 });
 
 async function loadStoreMap(name) {
-  const coll = await getStoreCollection();
-  const doc = await coll.findOne({ name });
-  const map = new Map(doc?.messages || []);
-
-  async function save() {
-    try {
-      await coll.updateOne(
-        { name },
-        { $set: { messages: Array.from(map.entries()) } },
-        { upsert: true }
-      );
-    } catch (err) {
-      console.error(`[${name}] store save failed:`, err.message);
-    }
-  }
-
-  return { map, save };
+  return loadStore(name);
 }
 
 function insertMessages(store, messages) {
@@ -99,8 +87,7 @@ function cloneRaw(obj) {
 }
 
 async function loadRecords() {
-  const coll = await getRecordCollection();
-  const arr = await coll.find().toArray();
+  const arr = await loadRecordsFromDb();
 
   records.clear();
   qrCodes.clear();
@@ -114,22 +101,15 @@ async function loadRecords() {
 }
 
 async function saveRecord(record) {
-  const coll = await getRecordCollection();
-  await coll.updateOne(
-    { name: record.name },
-    { $set: record },
-    { upsert: true }
-  );
+  await saveRecordToDb(record);
 }
 
 async function deleteRecord(name) {
-  const coll = await getRecordCollection();
-  await coll.deleteOne({ name });
+  await deleteRecordFromDb(name);
 }
 
 async function updateRecord(name, data) {
-  const coll = await getRecordCollection();
-  await coll.updateOne({ name }, { $set: data });
+  await updateRecordInDb(name, data);
 }
 
 async function dispatch(name, event, data) {
@@ -155,7 +135,7 @@ async function dispatch(name, event, data) {
 }
 
 async function startSocket(name, record, autoPair = usePairingCode) {
-  const { state, saveCreds } = await useMongoAuthState(name);
+  const { state, saveCreds } = await useFileAuthState(name);
   const { version } = await fetchLatestBaileysVersion();
   const store = await loadStoreMap(name);
   const keyStore = makeCacheableSignalKeyStore(state.keys, P({ level: 'silent' }));
@@ -482,15 +462,13 @@ async function deleteInstance(name, preserveRecord = false) {
   }
 
   try {
-    const coll = await getStoreCollection();
-    await coll.deleteOne({ name });
+    await deleteStore(name);
   } catch (err) {
     console.error(`[${name}] failed to delete store:`, err.message);
   }
 
   try {
-    const sessColl = await getSessionCollection();
-    await sessColl.deleteOne({ name });
+    await deleteSessionData(name);
   } catch (err) {
     console.error(`[${name}] failed to delete session:`, err.message);
   }
@@ -508,9 +486,7 @@ async function deleteInstance(name, preserveRecord = false) {
 }
 
 async function listInstances() {
-  const coll = await getRecordCollection();
-  const docs = await coll.find().toArray();
-
+  const docs = await loadRecordsFromDb();
   return docs.map(r => ({
     name: r.name,
     webhook: r.webhook,

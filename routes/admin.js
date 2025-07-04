@@ -950,9 +950,9 @@ async function qrData(req, res) {
         const api = await BotApi.findById(req.params.id).lean();
         if (!api) return res.json({ success: false, message: 'API não encontrada' });
 
-        const { getRecordCollection } = require('../apibaileysexemplo/db');
-        const coll = await getRecordCollection();
-        const rec = await coll.findOne({ name: api.instance });
+        const { loadRecords } = require('../apibaileysexemplo/db');
+        const recs = await loadRecords();
+        const rec = recs.find(r => r.name === api.instance);
         if (!rec || (!rec.qr && !rec.pairCode)) {
             return res.json({ success: false, message: 'QR indisponível' });
         }
