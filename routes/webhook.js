@@ -28,7 +28,7 @@ router.post('/update/:instance', checkKey, async (req, res) => {
 });
 
 router.post('/event', checkKey, async (req, res) => {
-  const { event, data, instance } = req.body;
+  const { event, data, instance, server_url: bodyUrl, apikey: bodyKey } = req.body;
   if (!event) return res.status(400).json({ error: 'missing event' });
   try {
     console.log('[webhook/event] recebido', {
@@ -46,12 +46,14 @@ router.post('/event', checkKey, async (req, res) => {
     if (!bot && instance) {
       console.warn('⚠️ Webhook event for unknown instance:', instance);
     }
+    const serverUrl = bot?.baseUrl || bodyUrl;
+    const apiKey = bot?.globalapikey || bodyKey;
     await webhookHandler({
       event,
       data,
       instance,
-      server_url: bot?.baseUrl,
-      apikey: bot?.globalapikey
+      server_url: serverUrl,
+      apikey: apiKey
     });
     const thisEndpoint = `${req.protocol}://${req.get('host')}${req.baseUrl}/event`;
     const targetWebhook = bot?.webhook?.replace(/\/+$/, '');
@@ -61,8 +63,8 @@ router.post('/event', checkKey, async (req, res) => {
           event,
           data,
           instance,
-          server_url: bot?.baseUrl,
-          apikey: bot?.globalapikey
+          server_url: serverUrl,
+          apikey: apiKey
         });
         console.log('[webhook/event] encaminhado para', targetWebhook);
       } catch (err) {

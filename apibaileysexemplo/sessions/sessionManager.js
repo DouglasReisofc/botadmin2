@@ -87,7 +87,12 @@ async function startInstance(name, usePairingCode = false, number) {
           try {
             await axios.post(
               session.webhook,
-              { event: 'message.upsert', data: msg, instance: name },
+              {
+                event: 'message.upsert',
+                data: msg,
+                instance: name,
+                apikey: session.apiKey
+              },
               { headers: { apikey: masterKey } }
             );
           } catch (err) {
