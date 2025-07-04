@@ -1,3 +1,4 @@
+
 const {
   default: makeWASocket,
   useMultiFileAuthState,
@@ -9,7 +10,6 @@ const pino = require('pino');
 const path = require('path');
 const { Boom } = require('@hapi/boom');
 const fs = require('fs/promises');
-// reuse util defined at project root
 const { formatPairCode } = require('../../utils/pairCode');
 const db = require('../db');
 const { getSessionPath } = db;
@@ -18,13 +18,15 @@ const instances = new Map();
 
 async function startInstance(name, usePairingCode = false, number) {
   const authPath = getSessionPath(name);
-  await fs.mkdir(authPath, { recursive: true });
-  const credsFile = path.join(authPath, 'creds.json');
+  await fs.mkdir(authPath, { recursive: true }); // Garante que o diretório existe
   const { state, saveCreds } = await useMultiFileAuthState(authPath);
+  const credsFile = path.join(authPath, 'creds.json');
+
   const credsExists = await fs
     .access(credsFile)
     .then(() => true)
     .catch(() => false);
+
   if (
     credsExists &&
     (!state.creds || !state.creds.me || !state.creds.me.id)
@@ -36,6 +38,7 @@ async function startInstance(name, usePairingCode = false, number) {
     await db.deleteRecord(name);
     throw new Error('Sessão inválida apagada. Recrie a instância.');
   }
+
   const { version } = await fetchLatestBaileysVersion();
   const { map: store, save } = await db.loadStore(name);
 
@@ -62,6 +65,7 @@ async function startInstance(name, usePairingCode = false, number) {
   instances.set(name, session);
 
   sock.ev.on('creds.update', saveCreds);
+
   sock.ev.on('messages.upsert', async m => {
     if (m.messages) {
       for (const msg of m.messages) store.set(msg.key.id, msg);
@@ -179,10 +183,7 @@ async function requestPairCode(name, number) {
   if (!session) throw new Error('instance not found');
   const code = await session.sock.requestPairingCode(number);
   session.pairCode = formatPairCode(code);
-  if (number) {
-    session.number = number;
-    await db.updateRecord(name, { number });
-  }
+  if (number) session.number = number;
   return session.pairCode;
 }
 
