@@ -18,9 +18,11 @@ const {
   loadRecords: loadRecordsFromDb,
   saveRecord: saveRecordToDb,
   deleteRecord: deleteRecordFromDb,
-  updateRecord: updateRecordInDb
+  updateRecord: updateRecordInDb,
+  sessionDir
 } = require('../db');
-const { useFileAuthState } = require('./authState');
+const path = require('path');
+const { useMultiFileAuthState } = require('@whiskeysockets/baileys');
 
 const sessions = new Map();
 const records = new Map();
@@ -135,7 +137,8 @@ async function dispatch(name, event, data) {
 }
 
 async function startSocket(name, record, autoPair = usePairingCode) {
-  const { state, saveCreds } = await useFileAuthState(name);
+  const dir = path.join(sessionDir, name);
+  const { state, saveCreds } = await useMultiFileAuthState(dir);
   const { version } = await fetchLatestBaileysVersion();
   const store = await loadStoreMap(name);
   const keyStore = makeCacheableSignalKeyStore(state.keys, P({ level: 'silent' }));
