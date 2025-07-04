@@ -27,11 +27,16 @@ function closeModal(id) {
         modal.removeEventListener('click', modal._closer);
         modal._closer = null;
     }
+    if (id === 'qrModal' && qrInterval) {
+        clearInterval(qrInterval);
+        qrInterval = null;
+    }
 }
 
 // ================== QR / PAREAMENTO ==================
 
 let currentApiId = null;
+let qrInterval = null;
 
 function showQR(id) {
     currentApiId = id;
@@ -53,10 +58,13 @@ async function solicitarTipo(tipo) {
         if (d.qr && d.code) {
             box.innerHTML = `<img src="${d.qr}" alt="QR Code" class="qr-img" onerror="this.parentElement.textContent='❌ Falha ao carregar QR';" />` +
                             `<pre class="codigo">${d.code}</pre><small class="tip">Ou digite este código no WhatsApp</small>`;
+            startWatch(currentApiId);
         } else if (d.qr) {
             box.innerHTML = `<img src="${d.qr}" alt="QR Code" class="qr-img" onerror="this.parentElement.textContent='❌ Falha ao carregar QR';" />`;
+            startWatch(currentApiId);
         } else if (d.code) {
             box.innerHTML = `<pre class="codigo">${d.code}</pre><small class="tip">Digite este código no WhatsApp</small>`;
+            startWatch(currentApiId);
         } else if (d.status === 'conectado') {
             box.textContent = '✅ Conectado!';
         } else {
@@ -71,10 +79,13 @@ async function solicitarTipo(tipo) {
                 if (d.qr && d.code) {
                     box.innerHTML = `<img src="${d.qr}" alt="QR Code" class="qr-img" onerror="this.parentElement.textContent='❌ Falha ao carregar QR';" />` +
                                    `<pre class="codigo">${d.code}</pre><small class="tip">Ou digite este código no WhatsApp</small>`;
+                    startWatch(currentApiId);
                 } else if (d.qr) {
                     box.innerHTML = `<img src="${d.qr}" alt="QR Code" class="qr-img" onerror="this.parentElement.textContent='❌ Falha ao carregar QR';" />`;
+                    startWatch(currentApiId);
                 } else if (d.code) {
                     box.innerHTML = `<pre class="codigo">${d.code}</pre><small class="tip">Digite este código no WhatsApp</small>`;
+                    startWatch(currentApiId);
                 } else {
                     box.textContent = 'Código indisponível';
                 }
@@ -85,6 +96,25 @@ async function solicitarTipo(tipo) {
             box.textContent = 'Erro: ' + err.message;
         }
     }
+}
+
+function startWatch(id) {
+    clearInterval(qrInterval);
+    qrInterval = setInterval(async () => {
+        try {
+            const res = await fetch(`/admin/api/${id}/status`);
+            const j = await res.json();
+            if (j.status === 'connected') {
+                const box = document.getElementById('qrCodigo');
+                if (box) box.textContent = '✅ Conectado!';
+                clearInterval(qrInterval);
+                qrInterval = null;
+                setTimeout(() => closeModal('qrModal'), 600);
+            }
+        } catch (e) {
+            console.error('[watch] erro', e);
+        }
+    }, 1000);
 }
 
 // ================== ABRIR/FECHAR MODALS DE API ==================

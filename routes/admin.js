@@ -1017,6 +1017,17 @@ router.post('/api/:id/deleteSession', isAuthenticated, isAdmin, async (req, res)
     }
 });
 
+router.get('/api/:id/status', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+        const api = await BotApi.findById(req.params.id);
+        if (!api) return res.json({ success: false, message: 'API não encontrada' });
+        const result = await callInstance(api, 'get', '/status');
+        res.json({ success: true, status: result.data.status });
+    } catch (err) {
+        res.json({ success: false, message: err.message });
+    }
+});
+
 
 
 
