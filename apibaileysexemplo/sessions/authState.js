@@ -1,5 +1,5 @@
 const { getSessionCollection } = require('../db');
-const { initAuthCreds, makeCacheableSignalKeyStore } = require('@whiskeysockets/baileys');
+const { initAuthCreds } = require('@whiskeysockets/baileys');
 const P = require('pino');
 
 function convertBinary(obj) {
@@ -41,10 +41,8 @@ async function useMongoAuthState(name) {
     }
   };
 
-  const keyStore = makeCacheableSignalKeyStore(store, P({ level: 'silent' }));
-
   return {
-    state: { creds, keys: keyStore },
+    state: { creds, keys: store },
     saveCreds: save
   };
 }

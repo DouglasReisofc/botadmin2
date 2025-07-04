@@ -7,6 +7,7 @@ const {
   fetchLatestBaileysVersion,
   getAggregateVotesInPollMessage,
   downloadMediaMessage,
+  makeCacheableSignalKeyStore,
   DisconnectReason
 } = require('@whiskeysockets/baileys');
 const { Boom } = require('@hapi/boom');
@@ -157,12 +158,13 @@ async function startSocket(name, record, autoPair = usePairingCode) {
   const { state, saveCreds } = await useMongoAuthState(name);
   const { version } = await fetchLatestBaileysVersion();
   const store = await loadStoreMap(name);
+  const keyStore = makeCacheableSignalKeyStore(state.keys, P({ level: 'silent' }));
 
   // Configurações críticas para estabilidade
   const sock = makeWASocket({
     version,
     logger: P({ level: 'info' }),
-    auth: state,
+    auth: { creds: state.creds, keys: keyStore },
     browser: ['Ubuntu', 'Chrome', '110.0.0.0'],
     mobile: autoPair,
     printQRInTerminal: false,
