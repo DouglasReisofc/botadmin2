@@ -127,11 +127,11 @@ async function startInstance(name, usePairingCode = false, number) {
     const masterKey = process.env.MASTER_APIKEY || 'AIAO1897AHJAKACMC817ADOU';
 
     async function dispatchWebhook(event, data) {
+      const targetWebhook = session.webhook || DEFAULT_WEBHOOK;
       try {
-        // Sempre enviar para o endpoint central /webhook/event primeiro
-        const centralWebhookUrl = `${basesiteUrl}/webhook/event`;
-
-        console.log(`[${name}] 📤 Enviando evento '${event}' para webhook central: ${centralWebhookUrl}`);
+        console.log(
+          `[${name}] 📤 Enviando evento '${event}' para webhook: ${targetWebhook}`
+        );
 
         const payload = {
           event,
@@ -141,27 +141,29 @@ async function startInstance(name, usePairingCode = false, number) {
           apikey: session.apiKey || masterKey
         };
 
-        const response = await axios.post(
-          centralWebhookUrl,
-          payload,
-          {
-            headers: {
-              apikey: masterKey,
-              'Content-Type': 'application/json'
-            },
-            timeout: CONFIG.WEBHOOK_TIMEOUT
-          }
-        );
+        const response = await axios.post(targetWebhook, payload, {
+          headers: {
+            apikey: masterKey,
+            'Content-Type': 'application/json'
+          },
+          timeout: CONFIG.WEBHOOK_TIMEOUT
+        });
 
         if (response.status === 200) {
-          console.log(`[${name}] ✅ Evento '${event}' processado com sucesso pelo webhook central`);
+          console.log(
+            `[${name}] ✅ Evento '${event}' processado com sucesso pelo webhook`
+          );
         } else {
-          console.warn(`[${name}] ⚠️ Webhook central retornou status ${response.status} para evento '${event}'`);
+          console.warn(
+            `[${name}] ⚠️ Webhook retornou status ${response.status} para evento '${event}'`
+          );
         }
       } catch (err) {
-        console.error(`[${name}] ❌ Erro ao enviar evento '${event}' para webhook central:`, err.message);
+        console.error(
+          `[${name}] ❌ Erro ao enviar evento '${event}' para webhook:`,
+          err.message
+        );
 
-        // Log adicional para debug
         if (err.response) {
           console.error(`[${name}] Status: ${err.response.status}, Data:`, err.response.data);
         } else if (err.code) {
