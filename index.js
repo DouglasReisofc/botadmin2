@@ -31,8 +31,22 @@ const fs = require('fs');
 const fsPromises = require('fs/promises');
 const { notAuthenticated, isAuthenticated, isAdmin } = require('./funcoes/auth');
 const { conectar_db } = require('./db/connect');
-const { initDb: initSessionDb } = require('./apibaileysexemplo/db');
-const { restoreInstances, syncRegisteredInstances } = require('./apibaileysexemplo/sessions/sessionManager');
+let initSessionDb,
+    restoreInstances,
+    syncRegisteredInstances;
+let baileysAvailable = false;
+const baileysDir = path.join(__dirname, 'apibaileysexemplo');
+if (fs.existsSync(baileysDir)) {
+  try {
+    ({ initDb: initSessionDb } = require('./apibaileysexemplo/db'));
+    ({ restoreInstances, syncRegisteredInstances } = require('./apibaileysexemplo/sessions/sessionManager'));
+    baileysAvailable = true;
+  } catch (err) {
+    console.warn('Baileys modules not loaded:', err.message);
+  }
+} else {
+  console.warn('Baileys directory not found, skipping WhatsApp integration');
+}
 const {
   pegar_apikey,
   Totalregistrados,
@@ -1991,34 +2005,40 @@ async function startServer() {
     console.log('✅ Banco de dados conectado');
 
     // Inicializar banco de sessões Baileys
-    console.log('📦 Inicializando storage de sessões...');
-    await initSessionDb();
-    console.log('✅ Storage de sessões inicializado');
+    if (baileysAvailable) {
+      console.log('📦 Inicializando storage de sessões...');
+      await initSessionDb();
+      console.log('✅ Storage de sessões inicializado');
+    } else {
+      console.log('📦 Módulos Baileys não disponíveis - pulando inicialização de sessões');
+    }
 
     // Carregar traduções
     console.log('🌐 Carregando traduções...');
     await loadTranslations();
     console.log('✅ Traduções carregadas');
 
-    // Aguardar um pouco antes de restaurar instâncias
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    if (baileysAvailable) {
+      // Aguardar um pouco antes de restaurar instâncias
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
-    // Restaurar instâncias Baileys
-    console.log('🔄 Restaurando instâncias WhatsApp...');
-    try {
-      await restoreInstances();
-      console.log('✅ Instâncias WhatsApp restauradas');
-    } catch (err) {
-      console.warn('⚠️ Erro ao restaurar instâncias:', err.message);
-    }
+      // Restaurar instâncias Baileys
+      console.log('🔄 Restaurando instâncias WhatsApp...');
+      try {
+        await restoreInstances();
+        console.log('✅ Instâncias WhatsApp restauradas');
+      } catch (err) {
+        console.warn('⚠️ Erro ao restaurar instâncias:', err.message);
+      }
 
-    // Sincronizar instâncias registradas
-    console.log('🔄 Sincronizando instâncias registradas...');
-    try {
-      await syncRegisteredInstances();
-      console.log('✅ Instâncias sincronizadas');
-    } catch (err) {
-      console.warn('⚠️ Erro ao sincronizar instâncias:', err.message);
+      // Sincronizar instâncias registradas
+      console.log('🔄 Sincronizando instâncias registradas...');
+      try {
+        await syncRegisteredInstances();
+        console.log('✅ Instâncias sincronizadas');
+      } catch (err) {
+        console.warn('⚠️ Erro ao sincronizar instâncias:', err.message);
+      }
     }
 
     // Atualizar sitemap
