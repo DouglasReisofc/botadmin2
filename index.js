@@ -35,6 +35,7 @@ let initSessionDb,
     restoreInstances,
     syncRegisteredInstances;
 let baileysAvailable = false;
+const INIT_BAILEYS_ON_START = process.env.INIT_BAILEYS_ON_START === 'true';
 const baileysDir = path.join(__dirname, 'apibaileysexemplo');
 if (fs.existsSync(baileysDir)) {
   try {
@@ -2005,10 +2006,12 @@ async function startServer() {
     console.log('✅ Banco de dados conectado');
 
     // Inicializar banco de sessões Baileys
-    if (baileysAvailable) {
+    if (baileysAvailable && INIT_BAILEYS_ON_START) {
       console.log('📦 Inicializando storage de sessões...');
       await initSessionDb();
       console.log('✅ Storage de sessões inicializado');
+    } else if (baileysAvailable) {
+      console.log('📦 Integração Baileys disponível - inicialização automática desativada');
     } else {
       console.log('📦 Módulos Baileys não disponíveis - pulando inicialização de sessões');
     }
@@ -2018,7 +2021,7 @@ async function startServer() {
     await loadTranslations();
     console.log('✅ Traduções carregadas');
 
-    if (baileysAvailable) {
+    if (baileysAvailable && INIT_BAILEYS_ON_START) {
       // Aguardar um pouco antes de restaurar instâncias
       await new Promise(resolve => setTimeout(resolve, 2000));
 
