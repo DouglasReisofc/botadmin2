@@ -944,24 +944,23 @@ async function pairCode(req, res) {
     }
 }
 
-// Obtém QR ou código salvo diretamente do banco
+// Obtém QR ou código salvo diretamente da API externa
 async function qrData(req, res) {
     try {
         const api = await BotApi.findById(req.params.id).lean();
         if (!api) return res.json({ success: false, message: 'API não encontrada' });
 
-        const { loadRecords } = require('../apibaileysexemplo/db');
-        const recs = await loadRecords();
-        const rec = recs.find(r => r.name === api.instance);
-        if (!rec || (!rec.qr && !rec.pairCode)) {
-            return res.json({ success: false, message: 'QR indisponível' });
-        }
+        const qrRes = await callInstance(api, 'get', '/qrdata');
         const data = {};
-        if (rec.pairCode) data.code = formatPairCode(rec.pairCode);
-        if (rec.qr) data.qr = await QRCode.toDataURL(rec.qr);
-        res.json({ success: true, data });
+        if (qrRes.data?.code) data.code = formatPairCode(qrRes.data.code);
+        if (qrRes.data?.qr) data.qr = await QRCode.toDataURL(qrRes.data.qr);
+
+        if (Object.keys(data).length) {
+            return res.json({ success: true, data });
+        }
+        res.json({ success: false, message: 'QR indisponível' });
     } catch (err) {
-        res.json({ success: false, message: err.message });
+        res.json({ success: false, message: err.response?.data?.error || err.message });
     }
 }
 

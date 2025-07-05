@@ -5,7 +5,6 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "start:baileys": "node apibaileysexemplo/index.js",
     "test": "node tests/phone.test.js"
   },
   "repository": {
