@@ -6,9 +6,65 @@ const axios = require('axios');
 
 const MASTER_APIKEY = process.env.MASTER_APIKEY || 'AIAO1897AHJAKACMC817ADOU';
 
+// Configurações melhoradas para webhooks
+const WEBHOOK_CONFIG = {
+  timeout: 15000, // 15 segundos
+  retryAttempts: 3,
+  retryDelay: 2000, // 2 segundos
+  maxConcurrentRequests: 10
+};
+
+// Controle de rate limiting
+const requestQueue = new Map();
+let activeRequests = 0;
+
 function checkKey(req, res, next) {
   const key = req.headers['apikey'] || req.query.apikey;
   if (key !== MASTER_APIKEY) return res.status(401).json({ error: 'invalid apikey' });
+  next();
+}
+
+// Função para fazer requisições HTTP com retry
+async function makeHttpRequestWithRetry(url, data, headers, attempts = 0) {
+  try {
+    const response = await axios.post(url, data, {
+      headers,
+      timeout: WEBHOOK_CONFIG.timeout,
+      validateStatus: (status) => status < 500 // Retry apenas em erros 5xx
+    });
+
+    return response;
+  } catch (error) {
+    const isLastAttempt = attempts >= WEBHOOK_CONFIG.retryAttempts - 1;
+    const shouldRetry = error.code === 'ECONNABORTED' ||
+      error.code === 'ENOTFOUND' ||
+      error.code === 'ECONNRESET' ||
+      (error.response && error.response.status >= 500);
+
+    if (!isLastAttempt && shouldRetry) {
+      console.warn(`⚠️ Tentativa ${attempts + 1} falhou, tentando novamente em ${WEBHOOK_CONFIG.retryDelay}ms:`, error.message);
+      await new Promise(resolve => setTimeout(resolve, WEBHOOK_CONFIG.retryDelay));
+      return makeHttpRequestWithRetry(url, data, headers, attempts + 1);
+    }
+
+    throw error;
+  }
+}
+
+// Middleware para controle de rate limiting
+function rateLimitMiddleware(req, res, next) {
+  if (activeRequests >= WEBHOOK_CONFIG.maxConcurrentRequests) {
+    return res.status(429).json({
+      error: 'Too many concurrent requests',
+      retryAfter: 1000
+    });
+  }
+
+  activeRequests++;
+  res.on('finish', () => {
+    activeRequests--;
+  });
+
   next();
 }
 
@@ -59,23 +115,36 @@ router.post('/event', checkKey, async (req, res) => {
     const targetWebhook = bot?.webhook?.replace(/\/+$/, '');
     if (targetWebhook && targetWebhook !== thisEndpoint.replace(/\/+$/, '')) {
       try {
-        await axios.post(
+        const webhookData = {
+          event,
+          data,
+          instance,
+          server_url: serverUrl,
+          apikey: apiKey
+        };
+
+        const response = await makeHttpRequestWithRetry(
           targetWebhook,
+          webhookData,
           {
-            event,
-            data,
-            instance,
-            server_url: serverUrl,
-            apikey: apiKey
-          },
-          { headers: { apikey: MASTER_APIKEY } }
+            apikey: MASTER_APIKEY,
+            'Content-Type': 'application/json'
+          }
         );
-        console.log('[webhook/event] encaminhado para', targetWebhook);
+
+        console.log(`[webhook/event] ✅ Encaminhado para ${targetWebhook} - Status: ${response.status}`);
       } catch (err) {
-        console.warn(
-          '⚠️ Falha ao reenviar evento para webhook da instância:',
+        console.error(
+          `❌ Falha definitiva ao reenviar evento para webhook da instância (${targetWebhook}):`,
           err.message
         );
+
+        // Log adicional para debug
+        if (err.response) {
+          console.error(`   Status: ${err.response.status}, Data:`, err.response.data);
+        } else if (err.code) {
+          console.error(`   Código de erro: ${err.code}`);
+        }
       }
     }
     res.json({ success: true });

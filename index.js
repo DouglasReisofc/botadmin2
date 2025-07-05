@@ -23,6 +23,7 @@ const userRouters = require('./routes/users');
 const premiumRouters = require('./rotas/premium');
 const adminRouter = require('./routes/admin');
 const webhookRoutes = require('./routes/webhook');
+const apiMessageRoutes = require('./routes/apiMessage');
 const Deposit = require('./db/deposits');
 const { verificarPagamentoPix } = require('./db/pagamento');
 const ConfigPagamento = require('./db/configpagamentos');
@@ -472,7 +473,7 @@ app.get('/', async (req, res) => {
     const country = info.country || 'UNK';
     const ua = req.get('User-Agent') || '';
     const referer = req.headers['referer'] || req.headers['referrer'] || '';
-    VisitLog.create({ ip, country, userAgent: ua, path: '/', referer }).catch(() => {});
+    VisitLog.create({ ip, country, userAgent: ua, path: '/', referer }).catch(() => { });
 
     res.render('index', {
       layout: false,
@@ -519,7 +520,7 @@ app.post('/logvisit', async (req, res) => {
     path,
     referer: referrer,
     details: info
-  }).catch(() => {});
+  }).catch(() => { });
 
   const location = [info.city, info.region, info.country].filter(Boolean).join(', ');
   const provider = info.connection?.org || info.connection?.isp || '';
@@ -528,7 +529,7 @@ app.post('/logvisit', async (req, res) => {
   if (provider) text += ` - ${provider}`;
   if (referrer) text += `\nReferrer: ${referrer}`;
 
-  enviarTelegramSite(text).catch(() => {});
+  enviarTelegramSite(text).catch(() => { });
 
   res.json({ success: true });
 });
@@ -852,7 +853,7 @@ app.post('/meus-anuncios', isAuthenticated, upload.single('arquivo'), async (req
           .on('end', resolve)
           .on('error', reject);
       });
-      await fsPromises.unlink(tempIn).catch(() => {});
+      await fsPromises.unlink(tempIn).catch(() => { });
       type = 'video';
     } else if (file.mimetype.startsWith('image/')) {
       const ext = path.extname(file.originalname).toLowerCase();
@@ -915,7 +916,7 @@ app.post('/meus-anuncios/editar/:id', isAuthenticated, upload.single('arquivo'),
             .on('end', resolve)
             .on('error', reject);
         });
-        await fsPromises.unlink(tempIn).catch(() => {});
+        await fsPromises.unlink(tempIn).catch(() => { });
         update.fileName = outName;
         update.type = 'video';
       } else if (req.file.mimetype.startsWith('image/')) {
@@ -1025,9 +1026,9 @@ app.get('/l/:code', async (req, res) => {
     const country = req.headers['cf-ipcountry'] || '';
     const ua = req.get('user-agent') || '';
     const app = (/WhatsApp/i.test(ua) ? 'WhatsApp' :
-                /Telegram/i.test(ua) ? 'Telegram' :
-                /Instagram/i.test(ua) ? 'Instagram' :
-                /Facebook/i.test(ua) ? 'Facebook' : 'Web');
+      /Telegram/i.test(ua) ? 'Telegram' :
+        /Instagram/i.test(ua) ? 'Instagram' :
+          /Facebook/i.test(ua) ? 'Facebook' : 'Web');
     short.logs.push({ ip, country, app, userAgent: ua });
     await short.save();
     if (short.ad) {
@@ -1444,61 +1445,61 @@ app.post('/conectarwhatsapp/pair/:instance', isAuthenticated, async (req, res) =
     const api = await BotApi.findOne({ instance: req.params.instance, user: req.user._id });
     if (!api) return res.json({ success: false, message: 'Instância não encontrada' });
 
-  const base = (api.baseUrl || '').replace(/\/+$/, '');
-  const headers = { 'x-api-key': api.globalapikey, 'x-instance-key': api.apikey };
-  const mode = req.query.mode;
+    const base = (api.baseUrl || '').replace(/\/+$/, '');
+    const headers = { 'x-api-key': api.globalapikey, 'x-instance-key': api.apikey };
+    const mode = req.query.mode;
 
-  if (mode === 'qr') {
-    try {
-      await axios.post(`${base}/api/instance/${api.instance}/restart`, {}, { headers });
-    } catch {}
-    const start = Date.now();
-    while (Date.now() - start < 15000) {
+    if (mode === 'qr') {
       try {
-        const qrOnly = await axios.get(`${base}/api/instance/${api.instance}/qr`, { headers });
+        await axios.post(`${base}/api/instance/${api.instance}/restart`, {}, { headers });
+      } catch { }
+      const start = Date.now();
+      while (Date.now() - start < 15000) {
+        try {
+          const qrOnly = await axios.get(`${base}/api/instance/${api.instance}/qr`, { headers });
+          if (qrOnly.data?.qr) {
+            const qrUrl = await QRCode.toDataURL(qrOnly.data.qr);
+            return res.json({ success: true, data: { qr: qrUrl } });
+          }
+        } catch { }
+        await new Promise(r => setTimeout(r, 1000));
+      }
+      return res.json({ success: false, message: 'QR indisponível' });
+    }
+
+    let resp;
+    try {
+      const modeParam = mode ? `?mode=${mode}` : '';
+      resp = await axios.post(
+        `${base}/api/instance/${api.instance}/pair${modeParam}`,
+        {},
+        { headers }
+      );
+    } catch (err) {
+      try {
+        const qrOnly = await axios.get(
+          `${base}/api/instance/${api.instance}/qr`,
+          { headers }
+        );
         if (qrOnly.data?.qr) {
           const qrUrl = await QRCode.toDataURL(qrOnly.data.qr);
           return res.json({ success: true, data: { qr: qrUrl } });
         }
-      } catch {}
-      await new Promise(r => setTimeout(r, 1000));
+      } catch { }
+      return res.json({ success: false, message: err.response?.data?.error || err.message });
+    }
+
+    const data = {};
+    if (resp.data?.qr) {
+      data.qr = await QRCode.toDataURL(resp.data.qr);
+    }
+    if (resp.data?.code) {
+      data.code = formatPairCode(resp.data.code);
+    }
+    if (Object.keys(data).length) {
+      return res.json({ success: true, data });
     }
     return res.json({ success: false, message: 'QR indisponível' });
-  }
-
-  let resp;
-  try {
-    const modeParam = mode ? `?mode=${mode}` : '';
-    resp = await axios.post(
-      `${base}/api/instance/${api.instance}/pair${modeParam}`,
-      {},
-      { headers }
-    );
-  } catch (err) {
-    try {
-      const qrOnly = await axios.get(
-        `${base}/api/instance/${api.instance}/qr`,
-        { headers }
-      );
-      if (qrOnly.data?.qr) {
-        const qrUrl = await QRCode.toDataURL(qrOnly.data.qr);
-        return res.json({ success: true, data: { qr: qrUrl } });
-      }
-    } catch {}
-    return res.json({ success: false, message: err.response?.data?.error || err.message });
-  }
-
-  const data = {};
-  if (resp.data?.qr) {
-    data.qr = await QRCode.toDataURL(resp.data.qr);
-  }
-  if (resp.data?.code) {
-    data.code = formatPairCode(resp.data.code);
-  }
-  if (Object.keys(data).length) {
-    return res.json({ success: true, data });
-  }
-  return res.json({ success: false, message: 'QR indisponível' });
   } catch (err) {
     res.json({ success: false, message: err.response?.data?.error || err.message });
   }
@@ -1897,7 +1898,7 @@ cron.schedule('*/1 * * * *', async () => {
       }
     }
   } catch (err) {
-  console.error('🔥 Erro geral na cron de anúncios:', err.message);
+    console.error('🔥 Erro geral na cron de anúncios:', err.message);
   }
 }, {
   scheduled: true,
@@ -1909,7 +1910,7 @@ cron.schedule('*/1 * * * *', async () => {
   try {
     const planoFree = await Plano.findOne({ isFree: true, active: true });
     if (!planoFree) return;
-    const horaAtual = new Date().toTimeString().slice(0,5);
+    const horaAtual = new Date().toTimeString().slice(0, 5);
     if (!planoFree.adTimes.includes(horaAtual)) return;
     const bots = await BotConfig.find({}).populate('botApi').populate('user');
     for (const bot of bots) {
@@ -1942,11 +1943,11 @@ cron.schedule('*/1 * * * *', async () => {
           ad.fileName);
         bot.freeAds.count += 1;
         await bot.save();
-      } catch(err) {
+      } catch (err) {
         console.error('Erro envio free ad:', err.message);
       }
     }
-  } catch(err) {
+  } catch (err) {
     console.error('Erro cron plano free:', err.message);
   }
 }, { scheduled: true, timezone: 'America/Sao_Paulo' });
@@ -1968,6 +1969,7 @@ app.get('/lang', (req, res) => {
   res.redirect(backURL);
 });
 app.use('/webhook', webhookRoutes);
+app.use('/api', apiMessageRoutes);
 
 app.use(function (req, res, next) {
   if (res.statusCode == '200') {
@@ -1981,22 +1983,109 @@ app.set('json spaces', 4);
 
 async function startServer() {
   try {
+    console.log('🚀 Iniciando BotAdmin2 - Sistema Completo...');
+
+    // Conectar ao banco de dados principal
+    console.log('📦 Conectando ao banco de dados...');
     await conectar_db();
+    console.log('✅ Banco de dados conectado');
+
+    // Inicializar banco de sessões Baileys
+    console.log('📦 Inicializando storage de sessões...');
     await initSessionDb();
-    await restoreInstances();
-    await syncRegisteredInstances();
+    console.log('✅ Storage de sessões inicializado');
+
+    // Carregar traduções
+    console.log('🌐 Carregando traduções...');
     await loadTranslations();
-    await updateSitemap();
-    // Run initial checks before starting the server
-    await abrirefechargruposautomatico();
-    await processarSorteios();
-    app.listen(PORT, () => {
-      console.log(`Equipevip API está rodando no host: http://localhost:${PORT}`);
+    console.log('✅ Traduções carregadas');
+
+    // Aguardar um pouco antes de restaurar instâncias
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Restaurar instâncias Baileys
+    console.log('🔄 Restaurando instâncias WhatsApp...');
+    try {
+      await restoreInstances();
+      console.log('✅ Instâncias WhatsApp restauradas');
+    } catch (err) {
+      console.warn('⚠️ Erro ao restaurar instâncias:', err.message);
+    }
+
+    // Sincronizar instâncias registradas
+    console.log('🔄 Sincronizando instâncias registradas...');
+    try {
+      await syncRegisteredInstances();
+      console.log('✅ Instâncias sincronizadas');
+    } catch (err) {
+      console.warn('⚠️ Erro ao sincronizar instâncias:', err.message);
+    }
+
+    // Atualizar sitemap
+    console.log('🗺️ Atualizando sitemap...');
+    try {
+      await updateSitemap();
+      console.log('✅ Sitemap atualizado');
+    } catch (err) {
+      console.warn('⚠️ Erro ao atualizar sitemap:', err.message);
+    }
+
+    // Executar verificações iniciais
+    console.log('🔍 Executando verificações iniciais...');
+    try {
+      await abrirefechargruposautomatico();
+      await processarSorteios();
+      console.log('✅ Verificações iniciais concluídas');
+    } catch (err) {
+      console.warn('⚠️ Erro nas verificações iniciais:', err.message);
+    }
+
+    // Iniciar servidor HTTP
+    const server = app.listen(PORT, () => {
+      console.log('\n🎉 ===== SERVIDOR INICIADO COM SUCESSO =====');
+      console.log(`🌐 BotAdmin2 está rodando em: http://localhost:${PORT}`);
+      console.log(`📊 Painel Admin: http://localhost:${PORT}/admin`);
+      console.log(`🤖 API Baileys: http://localhost:${PORT}/api`);
+      console.log(`💚 Health Check: http://localhost:${PORT}/health`);
+      console.log('============================================\n');
     });
+
+    // Graceful shutdown
+    process.on('SIGTERM', () => {
+      console.log('🛑 Recebido SIGTERM, encerrando servidor...');
+      server.close(() => {
+        console.log('✅ Servidor encerrado graciosamente');
+        process.exit(0);
+      });
+    });
+
+    process.on('SIGINT', () => {
+      console.log('🛑 Recebido SIGINT, encerrando servidor...');
+      server.close(() => {
+        console.log('✅ Servidor encerrado graciosamente');
+        process.exit(0);
+      });
+    });
+
   } catch (err) {
-    console.error('Erro ao iniciar servidor:', err);
+    console.error('❌ Erro crítico ao iniciar servidor:', err);
+    console.error('Stack trace:', err.stack);
+    process.exit(1);
   }
 }
+
+// Capturar erros não tratados
+process.on('uncaughtException', (err) => {
+  console.error('❌ Exceção não capturada:', err);
+  console.error('Stack trace:', err.stack);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Promise rejeitada não tratada:', reason);
+  console.error('Promise:', promise);
+  // Não encerrar o processo para promises rejeitadas, apenas logar
+});
 
 startServer();
 module.exports = { app, loadTranslations };

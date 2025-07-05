@@ -1,102 +1,338 @@
-📞 API WhatsApp com Baileys – Projeto #apibaileys
-Crie uma API robusta para integração com o WhatsApp usando a biblioteca Baileys,
- com foco em múltiplos agentes (sessions), envio de mensagens, recebimento de eventos e controle via HTTP.
+# 🚀 Baileys API - Versão Melhorada
 
-🛠️ Requisitos
-Node.js 18+
+Uma API robusta e confiável para WhatsApp usando a biblioteca Baileys, com melhorias significativas em estabilidade, reconexão e gerenciamento de sessões.
 
-TypeScript (opcional, mas recomendado)
+## ✨ Principais Melhorias
 
-Yarn ou NPM
+### 🔄 Gerenciamento de Conexão Aprimorado
+- **Reconexão Inteligente**: Sistema de reconexão com backoff exponencial
+- **Monitoramento de Saúde**: Verificação contínua do status da conexão
+- **Limpeza Automática**: Remoção automática de sessões corrompidas
+- **Timeout Configurável**: Timeouts ajustáveis para diferentes cenários
 
-Defina `GLOBAL_API_KEY` para proteger as rotas da API.
-Crie um arquivo `.env` definindo `GLOBAL_API_KEY`, `PORT` e `MONGO_URI`.
+### 📱 Sistema de Pareamento Robusto
+- **Retry Automático**: Tentativas automáticas em caso de falha
+- **Validação de Código**: Validação rigorosa dos códigos de pareamento
+- **Formatação Inteligente**: Formatação automática dos códigos (XXXX-XXXX)
+- **Detecção de Expiração**: Verificação automática de códigos expirados
 
-MongoDB em `mongodb://admin:Shinobi7766@150.230.85.70:27017/?authSource=admin` (para armazenar sessões e o store de mensagens; altere usando a variável `MONGO_URI`)
+### 💬 Envio de Mensagens Confiável
+- **Retry com Backoff**: Sistema de retry inteligente para mensagens
+- **Validação de Entrada**: Validação completa dos dados de entrada
+- **Verificação de Conexão**: Verificação de conexão antes do envio
+- **Suporte a Mídia**: Melhor suporte para diferentes tipos de mídia
 
-Redis (opcional, para filas/eventos em tempo real)
+### 📊 Sistema de Logging Avançado
+- **Logs Estruturados**: Logs em formato JSON para melhor análise
+- **Categorização**: Logs separados por tipo (conexão, mensagens, erros)
+- **Rotação Automática**: Limpeza automática de logs antigos
+- **Debug Detalhado**: Modo debug para desenvolvimento
 
-🚀 Começando o Projeto
-1. Inicialize o Projeto
-bash
-Copiar
-Editar
-mkdir apibaileys
-cd apibaileys
-npm init -y
-npm install @whiskeysockets/baileys express cors qrcode-terminal
-2. Estrutura Básica
-Crie a estrutura inicial:
-
-pgsql
-Copiar
-Editar
-apibaileys/
-├── index.js
-├── sessions/
-│   └── sessionManager.js
-├── controllers/
-│   └── messageController.js
-├── routes/
-│   └── index.js
-└── utils/
-    └── logger.js
-
-## Executando
-
-Instale as dependências e inicie o servidor:
+## 🛠️ Instalação
 
 ```bash
+# Instalar dependências
 npm install
-node index.js
+
+# Configurar variáveis de ambiente (opcional)
+cp .env.example .env
+
+# Iniciar o servidor
+npm start
 ```
 
-Acesse `http://localhost:3000` para visualizar o painel.
+## 📋 Configuração
 
-Os logs detalhados do Baileys são suprimidos (nível `silent`) para manter a
-saída do console limpa.
+As configurações estão centralizadas no arquivo `config/settings.js`:
 
- O painel possui uma aba **Docs** que carrega este README automaticamente.
- As instâncias disponíveis são atualizadas a cada 5 segundos, facilitando a seleção de conexões ativas. Todas elas ficam salvas em MongoDB e são restauradas quando o servidor inicia. O store de mensagens também é persistido no banco, permitindo descriptografar mensagens e enquetes. Eventos `poll.create` e `poll.update` enviados ao webhook incluem os resultados agregados calculados com `getAggregateVotesInPollMessage`, revelando o nome das opções e os votantes. A decodificação usa a mensagem original guardada no MongoDB. O servidor testa a conexão com o banco ao iniciar e encerra caso não consiga se conectar.
- Após escanear o QR code (ou quando o `connection.update` indica `isNewLogin`), a sessão é reiniciada automaticamente para completar o pareamento.
+```javascript
+const { settings, getSetting, setSetting } = require('./config/settings');
 
-Todas as rotas exigem o cabeçalho `x-api-key` com a chave definida em `GLOBAL_API_KEY`. As rotas que manipulam uma instância também exigem o cabeçalho `x-instance-key` com a chave própria daquela instância.
+// Obter configuração
+const timeout = getSetting('connection.connectTimeoutMs');
 
-### Endpoints principais
+// Definir configuração
+setSetting('connection.maxReconnectAttempts', 10);
+```
 
-- `GET /api/instances` – lista todas as instâncias salvas no banco com seu status.
-- `POST /api/instance` – cria uma instância `{ name, webhook?, apiKey }`.
-- `PUT /api/instance/:id` – atualiza dados da instância.
-- `DELETE /api/instance/:id` – remove a instância.
-- `POST /api/instance/:id/reconnect` – reconecta a instância.
-- `GET /api/instance/:id/status` – retorna o status da instância.
-- `GET /api/instance/:id/qr` – obtém o QR code para autenticação.
-- `POST /api/message` – envia texto `{ instance, number, message, ghost?, quotedId? }`.
-- `POST /api/message/media` – envia mídia base64 `{ instance, number, mimetype, media, caption?, ghost?, quotedId? }`.
-- `POST /api/message/poll` – envia enquetes `{ instance, number, question, options[], multiple? }`.
-- `POST /api/message/delete` – remove uma mensagem `{ instance, number, messageId }`.
-- `POST /api/chat/markMessageAsRead/:id` – marca mensagens como lidas passando `{ readMessages: [{ remoteJid, id }] }` no corpo.
+### Principais Configurações
 
-#### Ações de Grupos
+- **connection.maxReconnectAttempts**: Máximo de tentativas de reconexão (padrão: 5)
+- **connection.reconnectBaseDelay**: Delay base para reconexão (padrão: 1000ms)
+- **messaging.maxRetryAttempts**: Tentativas de retry para mensagens (padrão: 2)
+- **messaging.maxFileSize**: Tamanho máximo de arquivo (padrão: 64MB)
 
-- `POST /api/group` – cria um grupo passando `instance`, `subject` e `participants`.
-- `GET /api/group/:id` – obtém dados do grupo usando `instance` na query.
-- `POST /api/group/:id/subject` – altera o assunto do grupo.
-- `POST /api/group/:id/add` – adiciona participantes.
-- `POST /api/group/:id/remove` – remove participantes.
-- `POST /api/group/:id/promote` – promove participantes.
-- `POST /api/group/:id/demote` – rebaixa participantes.
-- `POST /api/group/:id/leave` – sai do grupo.
-- `GET /api/group/:id/invite` – recupera o link/convite do grupo.
-- `POST /api/group/:id/invite/revoke` – revoga o link do grupo.
-- `POST /api/group/join` – entra em um grupo usando `code` ou `link`.
-- `GET /api/group/invite/:code` – obtém informações de um convite.
-- `POST /api/group/:id/description` – define a descrição do grupo.
-- `POST /api/group/:id/setting` – atualiza configurações (`announcement`, `locked`).
-- `POST /api/group/:id/ephemeral` – define duração de mensagens temporárias.
-- `GET /api/groups` – lista todos os grupos da instância.
+## 🔌 Endpoints da API
 
-#### Ações de Contatos
-- `GET /api/contact/:id/status` – busca o status do contato informando `instance` na query.
-- `POST /api/contact/:id/block` – bloqueia o contato.
-- `POST /api/contact/:id/unblock` – desbloqueia o contato.
+### Gerenciamento de Instâncias
+
+#### Criar Instância
+```http
+POST /api/instance
+Content-Type: application/json
+x-api-key: YOUR_API_KEY
+
+{
+  "name": "instance_name",
+  "webhook": "https://your-webhook.com/endpoint",
+  "apiKey": "instance_api_key"
+}
+```
+
+#### Obter Status da Instância
+```http
+GET /api/instance/{instance_name}/status
+x-api-key: YOUR_API_KEY
+x-instance-key: INSTANCE_KEY
+```
+
+#### Gerar QR Code ou Código de Pareamento
+```http
+POST /api/instance/{instance_name}/pair?mode=pair
+x-api-key: YOUR_API_KEY
+x-instance-key: INSTANCE_KEY
+
+{
+  "number": "5511999999999"
+}
+```
+
+#### Reiniciar Instância
+```http
+POST /api/instance/{instance_name}/restart
+x-api-key: YOUR_API_KEY
+x-instance-key: INSTANCE_KEY
+```
+
+#### Deletar Instância
+```http
+DELETE /api/instance/{instance_name}
+x-api-key: YOUR_API_KEY
+x-instance-key: INSTANCE_KEY
+```
+
+### Envio de Mensagens
+
+#### Enviar Mensagem de Texto
+```http
+POST /api/message
+x-api-key: YOUR_API_KEY
+x-instance-key: INSTANCE_KEY
+
+{
+  "instance": "instance_name",
+  "number": "5511999999999",
+  "message": "Olá! Esta é uma mensagem de teste.",
+  "ghost": false,
+  "quotedId": "optional_message_id"
+}
+```
+
+#### Enviar Mídia
+```http
+POST /api/message/media
+x-api-key: YOUR_API_KEY
+x-instance-key: INSTANCE_KEY
+
+{
+  "instance": "instance_name",
+  "number": "5511999999999",
+  "caption": "Legenda da mídia",
+  "media": "base64_encoded_media",
+  "mimetype": "image/jpeg",
+  "ghost": false,
+  "quotedId": "optional_message_id"
+}
+```
+
+#### Enviar Enquete
+```http
+POST /api/message/poll
+x-api-key: YOUR_API_KEY
+x-instance-key: INSTANCE_KEY
+
+{
+  "instance": "instance_name",
+  "number": "5511999999999",
+  "question": "Qual sua cor favorita?",
+  "options": ["Azul", "Verde", "Vermelho", "Amarelo"],
+  "multiple": false
+}
+```
+
+### Monitoramento
+
+#### Health Check
+```http
+GET /health
+```
+
+#### Status do Servidor
+```http
+GET /status
+```
+
+## 🔧 Recursos Avançados
+
+### Sistema de Retry Inteligente
+
+O sistema implementa retry com backoff exponencial:
+
+```javascript
+const retryHandler = require('./utils/retryHandler');
+
+// Retry para código de pareamento
+const code = await retryHandler.retryPairingCode(
+  async (number) => await sock.requestPairingCode(number),
+  phoneNumber,
+  { maxAttempts: 3, baseDelay: 2000 }
+);
+
+// Retry para envio de mensagem
+const result = await retryHandler.retryMessageSend(
+  async () => await sock.sendMessage(jid, content),
+  { maxAttempts: 2, baseDelay: 1000 }
+);
+```
+
+### Gerenciamento de Conexão
+
+```javascript
+const connectionManager = require('./utils/connectionManager');
+
+// Verificar saúde da conexão
+const health = connectionManager.getConnectionHealth(sock);
+
+// Aguardar conexão
+await connectionManager.waitForConnection(sock, 10000);
+
+// Gerenciar reconexão
+await connectionManager.handleReconnection(instanceName, restartFunction);
+```
+
+### Logging Avançado
+
+```javascript
+const { logger } = require('./utils/logger');
+
+// Log de conexão
+logger.connection('instance_name', 'connected', { user: userInfo });
+
+// Log de mensagem
+logger.message('instance_name', 'sent', 'target_number', 'text', true);
+
+// Log de código de pareamento
+logger.pairCode('instance_name', 'phone_number', 'XXXX-XXXX', true);
+```
+
+## 🐛 Solução de Problemas
+
+### Problemas Comuns
+
+1. **Instância não conecta**
+   - Verifique se o número está correto
+   - Confirme se o código de pareamento foi inserido
+   - Verifique os logs em `logs/connections.log`
+
+2. **Mensagens não são enviadas**
+   - Verifique se a instância está conectada
+   - Confirme se o número de destino é válido
+   - Verifique os logs em `logs/messages.log`
+
+3. **Reconexão constante**
+   - Verifique a estabilidade da internet
+   - Confirme se não há múltiplas instâncias com o mesmo número
+   - Verifique os logs de erro em `logs/error.log`
+
+### Logs Disponíveis
+
+- `logs/app.log` - Logs gerais da aplicação
+- `logs/error.log` - Logs de erro
+- `logs/connections.log` - Logs de conexão
+- `logs/messages.log` - Logs de mensagens
+- `logs/pairing.log` - Logs de pareamento
+- `logs/debug.log` - Logs de debug (apenas em modo desenvolvimento)
+
+## 📈 Monitoramento
+
+### Métricas Disponíveis
+
+O endpoint `/status` fornece informações detalhadas:
+
+```json
+{
+  "status": "running",
+  "instances": 3,
+  "details": [
+    {
+      "name": "instance1",
+      "status": "open",
+      "connected": true,
+      "number": "5511999999999"
+    }
+  ]
+}
+```
+
+### Health Check
+
+O endpoint `/health` fornece informações básicas do servidor:
+
+```json
+{
+  "status": "ok",
+  "timestamp": "2024-01-01T12:00:00.000Z",
+  "uptime": 3600,
+  "memory": {
+    "rss": 50000000,
+    "heapTotal": 30000000,
+    "heapUsed": 20000000
+  }
+}
+```
+
+## 🔒 Segurança
+
+- **Autenticação por API Key**: Todas as requisições requerem chave de API
+- **Validação de Entrada**: Validação rigorosa de todos os parâmetros
+- **Sanitização**: Limpeza automática de dados de entrada
+- **Rate Limiting**: Controle de taxa de requisições (configurável)
+
+## 🚀 Performance
+
+- **Conexões Persistentes**: Reutilização de conexões WebSocket
+- **Cache Inteligente**: Cache de mensagens e contatos
+- **Cleanup Automático**: Limpeza automática de recursos não utilizados
+- **Otimização de Memória**: Gerenciamento eficiente de memória
+
+## 📝 Changelog
+
+### v2.0.0 - Melhorias Principais
+- ✅ Sistema de reconexão inteligente
+- ✅ Retry automático para mensagens
+- ✅ Logging estruturado
+- ✅ Validação robusta de entrada
+- ✅ Configurações centralizadas
+- ✅ Melhor tratamento de erros
+- ✅ Health checks e monitoramento
+- ✅ Cleanup automático de sessões
+
+## 🤝 Contribuição
+
+1. Fork o projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+
+## 🆘 Suporte
+
+Para suporte, abra uma issue no GitHub ou entre em contato através dos canais oficiais.
+
+---
+
+**Desenvolvido com ❤️ para a comunidade brasileira**

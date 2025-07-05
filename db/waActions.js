@@ -15,16 +15,35 @@ function headers(apiKey, instanceKey = apiKey) {
 }
 
 async function sendText(serverUrl, apiKey, instance, number, text, quoted = null, mentionAll = false, mentionIds = []) {
-  const base = sanitizeBase(serverUrl);
-  const payload = { instance, number, message: text };
-  if (quoted) payload.quotedId = typeof quoted === 'string' ? quoted : quoted.key?.id;
-  if (mentionAll) payload.mentionAll = true;
-  if (mentionIds) {
-    const arr = Array.isArray(mentionIds) ? mentionIds : [mentionIds];
-    if (arr.length) payload.mentionIds = arr;
+  try {
+    const base = sanitizeBase(serverUrl);
+    const payload = { instance, number, message: text };
+
+    if (quoted) payload.quotedId = typeof quoted === 'string' ? quoted : quoted.key?.id;
+    if (mentionAll) payload.mentionAll = true;
+    if (mentionIds) {
+      const arr = Array.isArray(mentionIds) ? mentionIds : [mentionIds];
+      if (arr.length) payload.mentionIds = arr;
+    }
+
+    console.log(`[waActions] 📤 Enviando texto para ${number} via instância ${instance}`);
+
+    const { data } = await axios.post(`${base}/api/send-message`, payload, {
+      headers: headers(apiKey),
+      timeout: 15000
+    });
+
+    const messageId = data?.messageId || data?.id || null;
+    console.log(`[waActions] ✅ Texto enviado com sucesso. MessageId: ${messageId}`);
+
+    return messageId;
+  } catch (err) {
+    console.error(`[waActions] ❌ Erro ao enviar texto para ${number}:`, err.message);
+    if (err.response) {
+      console.error(`[waActions] Status: ${err.response.status}, Data:`, err.response.data);
+    }
+    throw err;
   }
-  const { data } = await axios.post(`${base}/api/message`, payload, { headers: headers(apiKey) });
-  return data?.messageId || data?.id || null;
 }
 
 async function sendMedia(serverUrl, apiKey, instance, number, mediatype, mimetype, caption, media, fileName, quoted = null, mentionAll = false, mentionIds = []) {
@@ -159,7 +178,7 @@ async function desfixarMensagem(serverUrl, apiKey, instance, remoteJid, quotedId
 async function openGroupWindow(serverUrl, apiKey, instance, groupJid) {
   const base = sanitizeBase(serverUrl);
   const payload = { instance, id: groupJid };
-  await axios.post(`${base}/api/group/${groupJid}/open`, payload, { headers: headers(apiKey) }).catch(() => {});
+  await axios.post(`${base}/api/group/${groupJid}/open`, payload, { headers: headers(apiKey) }).catch(() => { });
 }
 
 // Converte uma mensagem (própria ou citada) em figurinha

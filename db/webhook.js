@@ -107,12 +107,39 @@ async function printCaixaEventoDetalhado({ evento, data, instance, server_url, a
 module.exports = async function webhookHandler({ event, data, server_url, apikey, instance }) {
     try {
         console.log('\n🔔 Webhook Recebido → Evento:', event);
-        console.dir(data, { depth: null });
+
+        // Log detalhado apenas para eventos importantes
+        if (['message.upsert', 'connection.update', 'call'].includes(event)) {
+            console.dir(data, { depth: 2 });
+        } else {
+            console.log(`[${event}] Dados básicos:`, {
+                chatId: data?.chatId || data?.key?.remoteJid || data?.id?.remoteJid,
+                type: data?.type || 'unknown',
+                length: Array.isArray(data) ? data.length : 'single'
+            });
+        }
 
         if (!instance) {
             console.warn(`⚠️ [${event}] Instance não foi fornecida no webhook. Verifique a chamada do dispatchWebhook.`);
             return;
         }
+
+        // Tratamento específico para eventos do Baileys
+        const baileyEventMappings = {
+            'message.upsert': 'message_upsert',
+            'messages.upsert': 'message_upsert',
+            'messages.update': 'messages_update',
+            'messages.delete': 'messages_delete',
+            'chats.upsert': 'chats_upsert',
+            'chats.update': 'chats_update',
+            'contacts.upsert': 'contacts_upsert',
+            'presence.update': 'presence_update',
+            'connection.update': 'connection_update',
+            'call': 'call'
+        };
+
+        // Mapear evento do Baileys para nome de arquivo
+        const eventFileName = baileyEventMappings[event] || event.replace(/\./g, '_');
 
         await printCaixaEventoDetalhado({
             evento: event,
@@ -122,12 +149,11 @@ module.exports = async function webhookHandler({ event, data, server_url, apikey
             apikey
         });
 
-        const eventFileName = event.replace(/\./g, '_');
         // Determina idioma do grupo se aplicável
         let lang = 'ptbr';
         try {
             const gid = data?.chatId || data?.id?.remoteJid || data?.id?.remote || data?.key?.remoteJid || data?.groupId;
-            if (gid) {
+            if (gid && gid.endsWith('@g.us')) {
                 const botCfg = await BotConfig.findOne({ groupId: gid });
                 if (botCfg?.language) lang = botCfg.language;
             }
@@ -135,35 +161,85 @@ module.exports = async function webhookHandler({ event, data, server_url, apikey
             console.warn('⚠️ Falha ao obter idioma do grupo:', err.message);
         }
 
+        // Tentar handler específico do idioma primeiro
         const langPath = path.join(__dirname, 'whatsapp_lang', lang, `${eventFileName}.js`);
-        const handlerPath = fs.existsSync(langPath) ? langPath : path.join(__dirname, 'whatsapp', `${eventFileName}.js`);
+        const handlerPath = path.join(__dirname, 'whatsapp', `${eventFileName}.js`);
 
-        if (fs.existsSync(handlerPath)) {
-            const handler = require(handlerPath);
-            if (typeof handler === 'function') {
-                await handler({ event, data, server_url, apikey, instance });
-                return;
-            } else {
-                console.warn(`⚠️ Handler encontrado (${eventFileName}.js) não é uma função válida.`);
+        let handlerFound = false;
+
+        // Tentar handler específico do idioma
+        if (fs.existsSync(langPath)) {
+            try {
+                const handler = require(langPath);
+                if (typeof handler === 'function') {
+                    console.log(`🌐 Usando handler de idioma: ${lang}/${eventFileName}.js`);
+                    await handler({ event, data, server_url, apikey, instance });
+                    handlerFound = true;
+                }
+            } catch (err) {
+                console.error(`❌ Erro no handler de idioma ${lang}/${eventFileName}.js:`, err.message);
             }
         }
 
-        // 🛑 Fallback para message.upsert
-        if (event === 'message.upsert' || (data?.key && data?.message)) {
+        // Tentar handler padrão se não encontrou o específico do idioma
+        if (!handlerFound && fs.existsSync(handlerPath)) {
+            try {
+                const handler = require(handlerPath);
+                if (typeof handler === 'function') {
+                    console.log(`📁 Usando handler padrão: ${eventFileName}.js`);
+                    await handler({ event, data, server_url, apikey, instance });
+                    handlerFound = true;
+                }
+            } catch (err) {
+                console.error(`❌ Erro no handler padrão ${eventFileName}.js:`, err.message);
+            }
+        }
+
+        // 🛑 Fallback especial para eventos de mensagem do Baileys
+        if (!handlerFound && (event === 'message.upsert' || event === 'messages.upsert' || (data?.key && data?.message))) {
+            console.log(`↩️ Tentando fallback para message.upsert...`);
+
             const langFallback = path.join(__dirname, 'whatsapp_lang', lang, 'message_upsert.js');
             const defaultFallback = path.join(__dirname, 'whatsapp', 'message_upsert.js');
-            const fallbackPath = fs.existsSync(langFallback) ? langFallback : defaultFallback;
-            if (fs.existsSync(fallbackPath)) {
-                const fallbackHandler = require(fallbackPath);
-                if (typeof fallbackHandler === 'function') {
-                    console.log(`↩️ Usando fallback handler: ${path.basename(fallbackPath)}`);
-                    await fallbackHandler({ event, data, server_url, apikey, instance });
-                    return;
+
+            if (fs.existsSync(langFallback)) {
+                try {
+                    const fallbackHandler = require(langFallback);
+                    if (typeof fallbackHandler === 'function') {
+                        console.log(`🌐 Usando fallback de idioma: ${lang}/message_upsert.js`);
+                        await fallbackHandler({ event: 'message.upsert', data, server_url, apikey, instance });
+                        handlerFound = true;
+                    }
+                } catch (err) {
+                    console.error(`❌ Erro no fallback de idioma:`, err.message);
+                }
+            }
+
+            if (!handlerFound && fs.existsSync(defaultFallback)) {
+                try {
+                    const fallbackHandler = require(defaultFallback);
+                    if (typeof fallbackHandler === 'function') {
+                        console.log(`📁 Usando fallback padrão: message_upsert.js`);
+                        await fallbackHandler({ event: 'message.upsert', data, server_url, apikey, instance });
+                        handlerFound = true;
+                    }
+                } catch (err) {
+                    console.error(`❌ Erro no fallback padrão:`, err.message);
                 }
             }
         }
 
-        console.log(`⚠️ Nenhum handler encontrado para o evento: ${event}`);
+        if (!handlerFound) {
+            console.log(`⚠️ Nenhum handler encontrado para o evento: ${event} (mapeado para: ${eventFileName})`);
+
+            // Log dos handlers disponíveis para debug
+            try {
+                const availableHandlers = fs.readdirSync(path.join(__dirname, 'whatsapp')).filter(f => f.endsWith('.js'));
+                console.log(`📂 Handlers disponíveis: ${availableHandlers.join(', ')}`);
+            } catch (err) {
+                console.warn('⚠️ Erro ao listar handlers disponíveis:', err.message);
+            }
+        }
 
     } catch (err) {
         console.error(`❌ Erro no webhookHandler (${event}):\n`, err);

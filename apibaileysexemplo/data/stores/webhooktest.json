@@ -1,0 +1,331 @@
+{
+  "messages": [
+    [
+      "4E85CF1A3CE8A82E8F4C6790A54DCB2C",
+      {
+        "key": {
+          "remoteJid": "559292625826@s.whatsapp.net",
+          "fromMe": true,
+          "id": "4E85CF1A3CE8A82E8F4C6790A54DCB2C"
+        },
+        "messageTimestamp": 1751718318,
+        "broadcast": false,
+        "status": 2,
+        "message": {
+          "protocolMessage": {
+            "type": "INITIAL_SECURITY_NOTIFICATION_SETTING_SYNC",
+            "initialSecurityNotificationSettingSync": {
+              "securityNotificationEnabled": false
+            }
+          }
+        }
+      }
+    ],
+    [
+      "82A4D88BB09DCF084C5E81AD1FBC9CF3",
+      {
+        "key": {
+          "remoteJid": "559292625826@s.whatsapp.net",
+          "fromMe": true,
+          "id": "82A4D88BB09DCF084C5E81AD1FBC9CF3"
+        },
+        "messageTimestamp": 1751718318,
+        "broadcast": false,
+        "status": 2,
+        "message": {
+          "protocolMessage": {
+            "type": "APP_STATE_SYNC_KEY_SHARE",
+            "appStateSyncKeyShare": {
+              "keys": [
+                {
+                  "keyId": {
+                    "keyId": "AAAAAP0Q"
+                  },
+                  "keyData": {
+                    "keyData": "36zPUvirE0FQMqmKTU+U683pmrGtp4xuiti+f65oIwM=",
+                    "fingerprint": {
+                      "rawId": 1158664244,
+                      "currentIndex": 1,
+                      "deviceIndexes": [
+                        0,
+                        1
+                      ]
+                    },
+                    "timestamp": "1751715175693"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ],
+    [
+      "FCE465A5967683C551E24CDBD5E157D2",
+      {
+        "key": {
+          "remoteJid": "559292625826@s.whatsapp.net",
+          "fromMe": true,
+          "id": "FCE465A5967683C551E24CDBD5E157D2"
+        },
+        "messageTimestamp": 1751718318,
+        "broadcast": false,
+        "status": 2,
+        "message": {
+          "protocolMessage": {
+            "type": "HISTORY_SYNC_NOTIFICATION",
+            "historySyncNotification": {
+              "fileSha256": "FBQuJWTirEEFGUTXHK9JAK0CRu3C3EHID39tM7I+/mc=",
+              "fileLength": "3603",
+              "mediaKey": "gOTqLwJR87Qp2RqItrMMhHNcMuhijNPmVvK5xUnMWpI=",
+              "fileEncSha256": "T4OAK/vPbyXjQiN2utxsTSGSVtl/SADvUrvErC0SN14=",
+              "directPath": "/v/t62.31111-24/11962088_1487704359306867_1306928635135784408_n.enc?ccb=11-4&oh=01_Q5Aa1wG0SIpH7deMhtsRFKyBwRAoScE3pZEj61LoyslX_Ad_Bg&oe=68908CF3&_nc_sid=5e03e0",
+              "syncType": "INITIAL_BOOTSTRAP",
+              "encHandle": "AQEKtal4KUddU0lidvJ8gi4d9LZLU72AO2tVcYs4roqRk6V1q0lQJ3qdXx3XaAOIwu5coxiUG7SwFM5XhTYlbuGrQi5nGMs7HdvZmZZJOABfGXiUVN3ZcuzhllHEx1O1BiY"
+            }
+          }
+        }
+      }
+    ],
+    [
+      "5FD4C471AD46330937DABFA484E8A166",
+      {
+        "key": {
+          "remoteJid": "559292625826@s.whatsapp.net",
+          "fromMe": true,
+          "id": "5FD4C471AD46330937DABFA484E8A166"
+        },
+        "messageTimestamp": 1751718318,
+        "broadcast": false,
+        "status": 2,
+        "message": {
+          "protocolMessage": {
+            "type": "HISTORY_SYNC_NOTIFICATION",
+            "historySyncNotification": {
+              "fileSha256": "Dkz0UDP7mcehngS0gGsvG5+AMt/EXgSRgfazdoKo/ME=",
+              "fileLength": "10",
+              "mediaKey": "GwapnG6gP9NFBtCU9ru9b3YZX3xMZc6sJbZ7yE/mqIM=",
+              "fileEncSha256": "k04sBcPzfd0OY0LjG4UJhHwpuNxawHOuyIK6vWZTqhE=",
+              "directPath": "/v/t62.31111-24/19115219_1350699132666975_6309508131497030102_n.enc?ccb=11-4&oh=01_Q5Aa1wFO0AvaOghOzqF3rasNWveUf9f8AoGOxdtW70voHya08A&oe=6890A3C5&_nc_sid=5e03e0",
+              "syncType": "INITIAL_STATUS_V3",
+              "encHandle": "AQFzRnJEdGGYK9XDnu2klh0JwseRGsdtZbhdDrj86DXC_xY1kxy25bUXT4cjezkDnZDFQkLmxEra_GXxeiY8n-ijPxhi-rAs3Eq8f1HtAoX3Z3XFcVdtL-QsS-edfSejcsI"
+            }
+          }
+        }
+      }
+    ],
+    [
+      "A30C6E0CFD07B82E83F023C46082BC74",
+      {
+        "key": {
+          "remoteJid": "559292625826@s.whatsapp.net",
+          "fromMe": true,
+          "id": "A30C6E0CFD07B82E83F023C46082BC74"
+        },
+        "messageTimestamp": 1751718318,
+        "broadcast": false,
+        "status": 2,
+        "message": {
+          "protocolMessage": {
+            "type": "HISTORY_SYNC_NOTIFICATION",
+            "historySyncNotification": {
+              "fileSha256": "obIjorHHoLp89E30PQsim4yIAeSSU6tQUc9w3i1MaO8=",
+              "fileLength": "82",
+              "mediaKey": "uLfVFRzcVBCUxW+ec/echLJAbWHUrXP5jVG47mXd31Q=",
+              "fileEncSha256": "bC4n8p9aFMIp4pHDxPVO92P2vLssDjbtN0yPc12t9uc=",
+              "directPath": "/v/t62.31111-24/11782225_1233848091240637_5149761745240213010_n.enc?ccb=11-4&oh=01_Q5Aa1wFTxl-ufnXEbI6AwN_b4dWXxODoiNxytEYx9dCntL55Ug&oe=689096CB&_nc_sid=5e03e0",
+              "syncType": "PUSH_NAME",
+              "chunkOrder": 1
+            }
+          }
+        }
+      }
+    ],
+    [
+      "ECFF55B1AD8F543BA9A6822A3453458C",
+      {
+        "key": {
+          "remoteJid": "559292625826@s.whatsapp.net",
+          "fromMe": true,
+          "id": "ECFF55B1AD8F543BA9A6822A3453458C"
+        },
+        "messageTimestamp": 1751718319,
+        "broadcast": false,
+        "status": 2,
+        "message": {
+          "protocolMessage": {
+            "type": "HISTORY_SYNC_NOTIFICATION",
+            "historySyncNotification": {
+              "fileSha256": "NxNmy97OHVTpvjaj19/Vo++VySfHtgIDK0kiyd3fjo8=",
+              "fileLength": "10",
+              "mediaKey": "WcyQUT7SmeGxrtHO94JV2/Kz9gyNOfHqj0eKw1zunuQ=",
+              "fileEncSha256": "7khyGpc9wt0U409ewH74KitGRpwxwI8C7aCMq7L0d8g=",
+              "directPath": "/v/t62.31111-24/382981461_764246619508860_1774946456602353228_n.enc?ccb=11-4&oh=01_Q5Aa1wGeY5CYWN7UZnWE5dq06biw0afCmH-_h7xELGmhxhYRdA&oe=68906E9A&_nc_sid=5e03e0",
+              "syncType": "NON_BLOCKING_DATA",
+              "encHandle": "AQGQN91HXqrS8JLnbZsClt9KUgBXz2cvGN1RP_tzncwBmH021rxtNR6H5umMMOzAC4AuY1Zueaaong-kdG0mSoJ5JPuTf_TPD0fjRYG8cvtV5sANrRg8k1QJ2TpLJYgpjVQ"
+            }
+          }
+        }
+      }
+    ],
+    [
+      "FCECD8BB371ED12DC7CC8671CC79877E",
+      {
+        "key": {
+          "remoteJid": "559292625826@s.whatsapp.net",
+          "fromMe": true,
+          "id": "FCECD8BB371ED12DC7CC8671CC79877E"
+        },
+        "messageTimestamp": 1751718319,
+        "broadcast": false,
+        "status": 2,
+        "message": {
+          "protocolMessage": {
+            "type": "HISTORY_SYNC_NOTIFICATION",
+            "historySyncNotification": {
+              "fileSha256": "/XmCF6tzgZGC6sYr8VvnGP+hYmD1hym9m4HTMW6b56A=",
+              "fileLength": "6601",
+              "mediaKey": "Wgfsvl00CD1/97FUdyEy8K8vwmd94rag+GJVFcspY2Y=",
+              "fileEncSha256": "VFMhklEfgyx8DImui8OEBlYYXr38JSWpPvJIh5RCQBY=",
+              "directPath": "/v/t62.31111-24/25241946_711094251717829_5943263687633224927_n.enc?ccb=11-4&oh=01_Q5Aa1wFjAKPVR7_QUsAipWkltvzhnl7DZnxQssdc0w7ca9CEQQ&oe=68909407&_nc_sid=5e03e0",
+              "syncType": "RECENT",
+              "chunkOrder": 1,
+              "progress": 100,
+              "oldestMsgInChunkTimestampSec": "1751327978",
+              "encHandle": "AQHTdmJjtjt_k_XI1XMc6KNNrQhO34r2tEMbtfCmbXktWxqo8rAD7BjqAFvPtV8hSzOzw2jBTf251sDA14Ah723ukDvf1tagCDbEew-F-EywLin3WGQL4b7j59M5-MZvp6o"
+            }
+          }
+        }
+      }
+    ],
+    [
+      "3EB02F09DCC4B26A0D612C",
+      {
+        "key": {
+          "remoteJid": "559295333643@s.whatsapp.net",
+          "fromMe": false,
+          "id": "3EB02F09DCC4B26A0D612C"
+        },
+        "messageTimestamp": 1751718344,
+        "pushName": "Douglas Reis",
+        "broadcast": false,
+        "message": {
+          "extendedTextMessage": {
+            "text": "!menu",
+            "contextInfo": {
+              "ephemeralSettingTimestamp": "1751682810",
+              "disappearingMode": {
+                "initiator": "CHANGED_IN_CHAT",
+                "trigger": "CHAT_SETTING",
+                "initiatedByMe": false
+              }
+            },
+            "inviteLinkGroupTypeV2": "DEFAULT"
+          },
+          "messageContextInfo": {
+            "deviceListMetadata": {
+              "senderKeyHash": "eYrkepftbi1nxw==",
+              "senderTimestamp": "1751669778",
+              "senderAccountType": "E2EE",
+              "receiverAccountType": "E2EE",
+              "recipientKeyHash": "kAV4F8cAo988Wg==",
+              "recipientTimestamp": "1751718309"
+            },
+            "deviceListMetadataVersion": 2,
+            "messageSecret": "fp4bHrQUZkkPOcvUoGBaxMBO1TxrPmqtGLwkwPP7vEY=",
+            "limitSharingV2": {
+              "trigger": "UNKNOWN",
+              "initiatedByMe": false
+            }
+          }
+        }
+      }
+    ],
+    [
+      "3EB035D0980ADD956A1473",
+      {
+        "key": {
+          "remoteJid": "559295333643@s.whatsapp.net",
+          "fromMe": false,
+          "id": "3EB035D0980ADD956A1473"
+        },
+        "messageTimestamp": 1751718447,
+        "pushName": "Douglas Reis",
+        "broadcast": false,
+        "message": {
+          "extendedTextMessage": {
+            "text": "!menu",
+            "contextInfo": {
+              "ephemeralSettingTimestamp": "1751682810",
+              "disappearingMode": {
+                "initiator": "CHANGED_IN_CHAT",
+                "trigger": "CHAT_SETTING",
+                "initiatedByMe": false
+              }
+            },
+            "inviteLinkGroupTypeV2": "DEFAULT"
+          },
+          "messageContextInfo": {
+            "deviceListMetadata": {
+              "senderKeyHash": "eYrkepftbi1nxw==",
+              "senderTimestamp": "1751669778",
+              "senderAccountType": "E2EE",
+              "receiverAccountType": "E2EE",
+              "recipientKeyHash": "kAV4F8cAo988Wg==",
+              "recipientTimestamp": "1751718309"
+            },
+            "deviceListMetadataVersion": 2,
+            "messageSecret": "ZvZTkopn/qY8R7zoyCEf4KQ+/hkzzzCdl+aVf8ZEM7U=",
+            "limitSharingV2": {
+              "trigger": "UNKNOWN",
+              "initiatedByMe": false
+            }
+          }
+        }
+      }
+    ],
+    [
+      "3EB0F31E9066E1BEBBE0DB",
+      {
+        "key": {
+          "remoteJid": "559295333643@s.whatsapp.net",
+          "fromMe": false,
+          "id": "3EB0F31E9066E1BEBBE0DB"
+        },
+        "messageTimestamp": 1751719151,
+        "pushName": "Douglas Reis",
+        "broadcast": false,
+        "message": {
+          "extendedTextMessage": {
+            "text": "!menu",
+            "contextInfo": {
+              "ephemeralSettingTimestamp": "1751682810",
+              "disappearingMode": {
+                "initiator": "CHANGED_IN_CHAT",
+                "trigger": "CHAT_SETTING",
+                "initiatedByMe": false
+              }
+            },
+            "inviteLinkGroupTypeV2": "DEFAULT"
+          },
+          "messageContextInfo": {
+            "deviceListMetadata": {
+              "senderKeyHash": "eYrkepftbi1nxw==",
+              "senderTimestamp": "1751669778",
+              "senderAccountType": "E2EE",
+              "receiverAccountType": "E2EE",
+              "recipientKeyHash": "kAV4F8cAo988Wg==",
+              "recipientTimestamp": "1751718309"
+            },
+            "deviceListMetadataVersion": 2,
+            "messageSecret": "8MQA4ae5R+XeO+5VxLHWNxOvtNqs200JoBhCWJqvNOU=",
+            "limitSharingV2": {
+              "trigger": "UNKNOWN",
+              "initiatedByMe": false
+            }
+          }
+        }
+      }
+    ]
+  ]
+}

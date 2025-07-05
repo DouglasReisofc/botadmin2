@@ -1,1 +1,8 @@
-[]
+[
+  {
+    "name": "webhooktest",
+    "webhook": "http://localhost:7766/webhook/event",
+    "apiKey": "",
+    "number": "559292625826"
+  }
+]

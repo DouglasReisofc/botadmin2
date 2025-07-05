@@ -167,7 +167,7 @@ async function salvarGifComoPng(groupId, base64Video) {
             .save(pngPath);
     });
 
-    await fs.unlink(videoPath).catch(() => {});
+    await fs.unlink(videoPath).catch(() => { });
     return { filePath: pngPath, fileName: `${baseName}.png` };
 }
 
@@ -250,13 +250,17 @@ function collectMentions({ message, contextInfo, data, msgOriginal, argsStr }) {
 module.exports = async function handleMessageUpsert({ data, msgOriginal, server_url, apikey, instance }) {
     data = normalizeEvent(data);
     msgOriginal = msgOriginal || data.msgOriginal || data;
+
+    // Fix para server_url vazio - usar basesiteUrl como fallback
+    const serverUrl = server_url || basesiteUrl;
+
     /* ───────────── DADOS BÁSICOS ────────────────────────────────────── */
     const { key, message, type, hasMedia, contextInfo } = data;
     const { remoteJid, id, participant } = key;
 
     // Marca a mensagem como lida independentemente do processamento
     try {
-        await markMessageAsRead(server_url, apikey, instance, remoteJid);
+        await markMessageAsRead(serverUrl, apikey, instance, remoteJid);
     } catch (err) {
         console.warn('markMessageAsRead falhou:', err.message);
     }
@@ -266,7 +270,7 @@ module.exports = async function handleMessageUpsert({ data, msgOriginal, server_
 
     if (isPv) {
         await sendText(
-            server_url,
+            serverUrl,
             apikey,
             instance,
             remoteJid,
@@ -549,7 +553,7 @@ module.exports = async function handleMessageUpsert({ data, msgOriginal, server_
                         $push: {
                             messages: {
                                 $each: [
-                                    { role: 'user', author: userName, authorNumber: senderId, content: text || (messageType==='sticker'?'[sticker]':'[imagem]'), timestamp: new Date() },
+                                    { role: 'user', author: userName, authorNumber: senderId, content: text || (messageType === 'sticker' ? '[sticker]' : '[imagem]'), timestamp: new Date() },
                                     { role: 'assistant', author: 'BOT', authorNumber: '', content: desc.trim(), timestamp: new Date() }
                                 ],
                                 $slice: -MAX_MEM
@@ -870,7 +874,7 @@ module.exports = async function handleMessageUpsert({ data, msgOriginal, server_
             let entrada = text;
 
             // Descrição de imagem ou figurinha
-            if ((['image','sticker'].includes(messageType) || isGif) && messageHasMedia && bot.comandos?.lerimagem) {
+            if ((['image', 'sticker'].includes(messageType) || isGif) && messageHasMedia && bot.comandos?.lerimagem) {
                 try {
                     const media = await downloadMedia(server_url, apikey, instance, remoteJid, id);
                     if (media?.base64) {
@@ -891,7 +895,7 @@ module.exports = async function handleMessageUpsert({ data, msgOriginal, server_
                                     $push: {
                                         messages: {
                                             $each: [
-                                                pushUser(userName, userNumber, text || (messageType==='sticker'?'[sticker]':'[imagem]')),
+                                                pushUser(userName, userNumber, text || (messageType === 'sticker' ? '[sticker]' : '[imagem]')),
                                                 pushBot(desc.trim())
                                             ],
                                             $slice: -MAX_MEM
@@ -988,7 +992,7 @@ module.exports = async function handleMessageUpsert({ data, msgOriginal, server_
             let entrada = text;
 
             // Descrição de imagem ou figurinha
-            if ((['image','sticker'].includes(messageType) || isGif) && messageHasMedia && bot.comandos?.lerimagem) {
+            if ((['image', 'sticker'].includes(messageType) || isGif) && messageHasMedia && bot.comandos?.lerimagem) {
                 try {
                     const media = await downloadMedia(server_url, apikey, instance, remoteJid, id);
                     if (media?.base64) {
@@ -1009,7 +1013,7 @@ module.exports = async function handleMessageUpsert({ data, msgOriginal, server_
                                     $push: {
                                         messages: {
                                             $each: [
-                                                pushUser(userName, userNumber, text || (messageType==='sticker'?'[sticker]':'[imagem]')),
+                                                pushUser(userName, userNumber, text || (messageType === 'sticker' ? '[sticker]' : '[imagem]')),
                                                 pushBot(desc.trim())
                                             ],
                                             $slice: -MAX_MEM
@@ -1159,14 +1163,14 @@ só analise com cuidado cada resposta`;
                     replyObj
                 );
 
-        } else if (r.responseText) {
-            // Apenas texto (sem mídia)
-            await sendText(server_url, apikey, instance, remoteJid, r.responseText, replyObj);
-        }
+            } else if (r.responseText) {
+                // Apenas texto (sem mídia)
+                await sendText(server_url, apikey, instance, remoteJid, r.responseText, replyObj);
+            }
 
-        break; // Aciona apenas uma resposta
+            break; // Aciona apenas uma resposta
+        }
     }
-}
 
     // Resposta rápida para consultar prefixos
     const queryLower = text.trim().toLowerCase();
@@ -3036,7 +3040,7 @@ só analise com cuidado cada resposta`;
                 try {
                     const url = new URL(link);
                     isValido = url.hostname.includes(dominioEsperado);
-                } catch {}
+                } catch { }
 
                 if (!isValido) {
                     await sendText(
